@@ -35,7 +35,6 @@ GLuint	 NCLDebug::g_glArr				= NULL;
 GLuint	 NCLDebug::g_glBuf				= NULL;
 GLuint	 NCLDebug::g_glBufCapacity		= NULL;
 Vector4* NCLDebug::g_glBufPtr			= NULL;
-GLsync   NCLDebug::g_glBufLock			= NULL;
 size_t	 NCLDebug::g_glBufOffsets[9];
 
 GLuint NCLDebug::g_glLogFontTex			= NULL;
@@ -820,13 +819,6 @@ void NCLDebug::_BuildRenderVBO()
 	
 	g_glBufOffsets[8] = offsets[16];
 
-	
-	//Wait for buffer to stop being used for renderering
-	GLenum waitReturn = GL_UNSIGNALED;
-	while (waitReturn != GL_ALREADY_SIGNALED && waitReturn != GL_CONDITION_SATISFIED)
-	{
-		waitReturn = glClientWaitSync(g_glBufLock, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
-	}
 
 	glBindVertexArray(g_glArr);
 	if (g_glBufCapacity < max_size)
@@ -938,8 +930,6 @@ void NCLDebug::_RenderDebugDepthTested()
 	glBindVertexArray(g_glArr);
 	_RenderDrawlist(&g_glBufOffsets[0]);
 	glBindVertexArray(0);
-
-	g_glBufLock = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 }
 
 void NCLDebug::_RenderDebugNonDepthTested()
@@ -954,8 +944,6 @@ void NCLDebug::_RenderDebugNonDepthTested()
 	_RenderDrawlist(&g_glBufOffsets[4]);
 	glEnable(GL_DEPTH_TEST);
 	glBindVertexArray(0);
-
-	g_glBufLock = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 }
 
 //This Function has been abstracted from previous set of draw calls as to avoid supersampling the font bitmap.. which is bad enough as it is.
@@ -979,8 +967,6 @@ void NCLDebug::_RenderDebugClipSpace()
 		glDrawArrays(GL_LINES, (g_glBufOffsets[8] + g_vCharsLogStart) >> 1, (g_vChars.size()-g_vCharsLogStart) >> 1);
 		
 		glBindVertexArray(0);
-
-		g_glBufLock = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 	}
 }
 
@@ -1028,7 +1014,7 @@ void NCLDebug::_LoadShaders()
 	//Create Buffers
 	glGenVertexArrays(1, &g_glArr);
 	glGenBuffers(1, &g_glBuf);
-	g_glBufLock = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+	//g_glBufLock = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
 	//Load Font Texture
 	g_glLogFontTex = _GenerateFontBitmap(LOG_TEXT_FONT, LOG_TEXT_SIZE, false, false, false);

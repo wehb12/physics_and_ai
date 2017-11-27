@@ -19,8 +19,7 @@ uint shadowCycleKey = 4;
 //  - Releases all global components and memory
 //  - Optionally prints out an error message and
 //    stalls the runtime if requested.
-void Quit(bool error = false, const std::string &reason = "")
-{
+void Quit(bool error = false, const std::string &reason = "") {
 	//Release Singletons
 	SceneManager::Release();
 	PhysicsEngine::Release();
@@ -28,8 +27,7 @@ void Quit(bool error = false, const std::string &reason = "")
 	Window::Destroy();
 
 	//Show console reason before exit
-	if (error)
-	{
+	if (error) {
 		std::cout << reason << std::endl;
 		system("PAUSE");
 		exit(-1);
@@ -130,10 +128,9 @@ int main()
 	//Create main game-loop
 	while (Window::GetWindow().UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE)) {
 		//Start Timing
-		timer_physics.BeginTimingSection();
+		
 		float dt = Window::GetWindow().GetTimer()->GetTimedMS() * 0.001f;	//How many milliseconds since last update?
-
-																			//Update Performance Timers (Show results every second)
+																		//Update Performance Timers (Show results every second)
 		timer_total.UpdateRealElapsedTime(dt);
 		timer_physics.UpdateRealElapsedTime(dt);
 		timer_update.UpdateRealElapsedTime(dt);
@@ -145,7 +142,7 @@ int main()
 		//Handle Keyboard Inputs
 		HandleKeyboardInputs();
 
-		timer_physics.EndTimingSection();
+		
 		timer_total.BeginTimingSection();
 
 		//Update Scene
@@ -153,9 +150,10 @@ int main()
 		SceneManager::Instance()->GetCurrentScene()->OnUpdateScene(dt);
 		timer_update.EndTimingSection();
 
-		//Update Physics
+		//Update Physics	
+		timer_physics.BeginTimingSection();
 		PhysicsEngine::Instance()->Update(dt);
-		
+		timer_physics.EndTimingSection();
 
 		//Render Scene
 		timer_render.BeginTimingSection();

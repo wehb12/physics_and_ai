@@ -247,7 +247,6 @@ protected:
 	static size_t	g_glBufOffsets[9];
 	static GLuint   g_glBufCapacity;
 	static Vector4* g_glBufPtr;
-	static GLsync   g_glBufLock;
 
 	static GLuint	g_glLogFontTex;
 	static GLuint	g_glDefaultFontTex;
