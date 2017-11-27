@@ -1,0 +1,26 @@
+﻿  NCLDebug.cpp
+  Window.cpp
+  Shader.cpp
+  RenderNode.cpp
+  Quaternion.cpp
+  Plane.cpp
+  OGLRenderer.cpp
+  OBJMesh.cpp
+  Mouse.cpp
+  Mesh.cpp
+  MD5Node.cpp
+  MD5Mesh.cpp
+  MD5FileData.cpp
+  MD5Anim.cpp
+  Matrix4.cpp
+  Matrix3.cpp
+  Keyboard.cpp
+  HeightMap.cpp
+  GameTimer.cpp
+  Frustum.cpp
+  Generating Code...
+  Compiling...
+  CubeRobot.cpp
+  Camera.cpp
+  Generating Code...
+  nclgl.vcxproj -> D:\Uni\Physics & AI\Build\Debug\nclgl.lib
