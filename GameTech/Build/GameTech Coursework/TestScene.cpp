@@ -121,6 +121,23 @@ void TestScene::OnInitializeScene()
 	create_ball_cube(Vector3(8.0f, 0.5f, 12.0f), Vector3(0.3f, 0.3f, 0.3f), 0.1f);
 	create_ball_cube(Vector3(-8.0f, 0.5f, -12.0f), Vector3(0.2f, 0.2f, 0.2f), 0.1f);
 	create_ball_cube(Vector3(8.0f, 0.5f, -12.0f), Vector3(0.5f, 0.5f, 0.5f), 0.1f);
+
+	GameObject* sphere = BuildSphereObject(
+		"my_sphere",					// Optional: Name
+		Vector3(0.0f, 8.0f, 7.0f),				// Position
+		1.0f,			// Half-Dimensions
+		true,				// Physics Enabled?
+		10.f,				// Physical Mass (must have physics enabled)
+		true,				// Physically Collidable (has collision shape)
+		true,				// Dragable by user?
+		Vector4(1.0f, 0.0f, 0.0f, 1.0f));// Render color
+	sphere->Physics()->SetForce(Vector3(0.0f, -1, 0.0f));
+	PhysicsNode* point = new PhysicsNode();
+	point->SetPosition(Vector3(0.0f, 8.0f, 0.0f));
+	DistanceConstraint* constr = new DistanceConstraint(sphere->Physics(), point, Vector3(0.0f, 8.0f, 7.0f), Vector3(0.0f, 8.0f, 0.0f));
+	PhysicsEngine::Instance()->AddConstraint(constr);
+	PhysicsEngine::Instance()->AddPhysicsObject(point);
+	this->AddGameObject(sphere);
 }
 
 void TestScene::OnCleanupScene()

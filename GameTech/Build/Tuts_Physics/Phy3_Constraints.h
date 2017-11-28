@@ -62,9 +62,6 @@ public:
 				handle->Physics()->GetPosition(),	//Attachment Position on Object A	-> Currently the centre
 				ball->Physics()->GetPosition());	//Attachment Position on Object B	-> Currently the centre  
 			PhysicsEngine::Instance()->AddConstraint(constraint);
-		
-
-
 
 
 		//Create Hanging Cube (Attached by corner)

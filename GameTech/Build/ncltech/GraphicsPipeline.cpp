@@ -251,7 +251,7 @@ void GraphicsPipeline::RenderScene()
 		GLint uModelMtx = glGetUniformLocation(shaderShadow->GetProgram(), "uModelMtx");
 
 		RenderAllObjects(false,
-			[&](RenderNode* node)
+		[&](RenderNode* node)
 			{
 				glUniformMatrix4fv(uModelMtx, 1, GL_FALSE, (float*)&node->GetWorldTransform());
 			}
@@ -395,6 +395,7 @@ void GraphicsPipeline::RenderAllObjects(bool renderTransparentBothSides, std::fu
 {
 	for (RenderNode* node : renderlistOpaque)
 	{
+		//cout << "WAT" << endl;
 		perObjectFunc(node);
 		node->GetMesh()->Draw();
 	}

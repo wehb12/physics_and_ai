@@ -46,13 +46,6 @@ void Initialize()
 }
 
 
-
-
-
-
-
-
-
 //------------------------------------
 //---------Default main loop----------
 //------------------------------------
@@ -68,7 +61,8 @@ void Initialize()
 
 
 
-void Quit(bool error, const string &reason) {
+void Quit(bool error, const string &reason)
+{
 	//Release Singletons
 	SceneManager::Release();
 	GraphicsPipeline::Release();
@@ -175,7 +169,8 @@ int main()
 	Window::GetWindow().GetTimer()->GetTimedMS();
 
 	//Create main game-loop
-	while (Window::GetWindow().UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE)) {
+	while (Window::GetWindow().UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE))
+	{
 		//Start Timing
 		float dt = Window::GetWindow().GetTimer()->GetTimedMS() * 0.001f;	//How many milliseconds since last update?
 		timer_total.BeginTimingSection();

@@ -47,8 +47,6 @@ public:
 		PhysicsEngine::Instance()->SetGravity(Vector3(0.0f, 0.0f, 0.0f));		//No Gravity!
 		PhysicsEngine::Instance()->SetDampingFactor(1.0f);						//No Damping!
 
-
-
 	//Create Ground
 		this->AddGameObject(CommonUtils::BuildCuboidObject(
 			"Ground",								//Friendly ID/Name

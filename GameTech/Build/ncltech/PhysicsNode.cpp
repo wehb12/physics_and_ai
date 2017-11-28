@@ -4,7 +4,21 @@
 
 void PhysicsNode::IntegrateForVelocity(float dt)
 {
-	/* TUTORIAL 2 CODE */
+	if (invMass > 0.0f)
+	{
+		//Semi-Implicit Euler Method
+		/*
+		linVelocity += force * invMass * dt;
+		angVelocity += invInertia * torque * dt;
+		*/
+		//RK2 method
+		Vector3 linVelocity_p1 = linVelocity + force * invMass * dt;
+		linVelocity = (linVelocity + linVelocity_p1) * 0.5;
+		Vector3 angVelocity_p1 = invInertia * angVelocity + torque * dt;
+		angVelocity = (angVelocity + angVelocity_p1) * 0.5;
+	}
+	linVelocity = linVelocity * PhysicsEngine::Instance()->GetDampingFactor();
+	angVelocity = angVelocity * PhysicsEngine::Instance()->GetDampingFactor();
 }
 
 /* Between these two functions the physics engine will solve for velocity
@@ -14,7 +28,9 @@ void PhysicsNode::IntegrateForVelocity(float dt)
 
 void PhysicsNode::IntegrateForPosition(float dt)
 {
-	/* TUTORIAL 2 CODE */
+	position += linVelocity * dt;
+	orientation = orientation + Quaternion(angVelocity * dt * 0.5f, 0.0f) * orientation;
+	orientation.Normalise();
 
 	//Finally: Notify any listener's that this PhysicsNode has a new world transform.
 	// - This is used by GameObject to set the worldTransform of any RenderNode's. 

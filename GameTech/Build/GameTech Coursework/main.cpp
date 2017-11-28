@@ -113,6 +113,24 @@ void HandleKeyboardInputs()
 
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_G))
 		show_perf_metrics = !show_perf_metrics;
+
+	//fire a sphere in the direction the camera is looking
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_F))
+	{
+		GameObject* sphere = CommonUtils::BuildSphereObject(
+			"fired_sphere",					// Optional: Name
+			GraphicsPipeline::Instance()->GetCamera()->GetPosition(),		// Position
+			0.2f,				// Half-Dimensions
+			true,				// Physics Enabled?
+			10.f,				// Physical Mass (must have physics enabled)
+			true,				// Physically Collidable (has collision shape)
+			true,				// Dragable by user?
+			Vector4(1.0f, 1.0f, 0.0f, 1.0f));// Render color
+		Matrix4 view = GraphicsPipeline::Instance()->GetCamera()->BuildViewMatrix();
+		Vector3 dir = Vector3(5 * view[2], 5 * view[6], 5 * view[10]);
+		sphere->Physics()->SetForce(-dir);
+		SceneManager::Instance()->GetCurrentScene()->AddGameObject(sphere);
+	}
 }
 
 

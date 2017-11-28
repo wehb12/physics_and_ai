@@ -92,7 +92,7 @@ void PhysicsEngine::Update(float deltaTime)
 			updateRealTimeAccum -= updateTimestep;
 
 			//Additional IsPaused check here incase physics was paused inside one of it's components for debugging or otherwise
-			if (!isPaused) UpdatePhysics(); 
+			if (!isPaused) UpdatePhysics();
 		}
 
 		if (updateRealTimeAccum >= updateTimestep)
