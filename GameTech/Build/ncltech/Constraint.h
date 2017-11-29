@@ -33,7 +33,7 @@ Description:
 class Constraint
 {
 public:
-	Constraint() {}
+	Constraint() { }
 
 
 	// Apply Velocity Impulse to object(s) in order to satisfy given constraint

@@ -78,7 +78,7 @@ public:
 			handle->Physics()->SetInverseMass(0.0f);
 
 			ball = CommonUtils::BuildCuboidObject("",
-				Vector3(7.f, 7.f, -5.0f),				//Position
+				Vector3(7.0f, 7.0f, -5.0f),				//Position
 				Vector3(0.5f, 0.5f, 0.5f),				//Half Dimensions
 				true,									//Has Physics Object
 				1.0f,									//Inverse Mass = 1 / 1kg mass
@@ -94,9 +94,6 @@ public:
 				ball->Physics(),													//Physics Object B
 				handle->Physics()->GetPosition() + Vector3(1.0f, 0.0f, 0.0f),		//Attachment Position on Object A	-> Currently the far right edge
 				ball->Physics()->GetPosition() + Vector3(-0.5f, -0.5f, -0.5f)));	//Attachment Position on Object B	-> Currently the far left edge 
-		
-
-
 	}
 
 };

@@ -25,7 +25,7 @@ void DistanceConstraint::ApplyImpulse()
 	// Compute the velocity of objects A and B at the point of contact
 
 	Vector3 v0 = pnodeA->GetLinearVelocity() + Vector3::Cross(pnodeA->GetAngularVelocity(), r1);
-	Vector3 v1 = pnodeB->GetLinearVelocity() - Vector3::Cross(pnodeB->GetAngularVelocity(), r2);
+	Vector3 v1 = pnodeB->GetLinearVelocity() + Vector3::Cross(pnodeB->GetAngularVelocity(), r2);
 
 	// Relative velocity in constraint direction
 	float abnVel = Vector3::Dot(v0 - v1, abn);
@@ -37,10 +37,10 @@ void DistanceConstraint::ApplyImpulse()
 	float invConstraintMassLin = pnodeA->GetInverseMass() + pnodeB->GetInverseMass();
 	
 	float invConstraintMassRot = Vector3::Dot(abn,
-		Vector3::Cross(pnodeA->GetInverseInertia()
+		(Vector3::Cross(pnodeA->GetInverseInertia()
 		* Vector3::Cross(r1, abn), r1)
 		+ Vector3::Cross(pnodeB->GetInverseInertia()
-		* Vector3::Cross(r2, abn), r2));
+		* Vector3::Cross(r2, abn), r2)));
 	
 	float constraintMass = invConstraintMassLin + invConstraintMassRot;
 	
