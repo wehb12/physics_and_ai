@@ -58,7 +58,7 @@ public:
 	void	Sleep()		{awake = false;} 
 
 	std::vector<RenderNode*>::const_iterator GetChildIteratorStart()	{return children.begin();}
-	std::vector<RenderNode*>::const_iterator GetChildIteratorEnd()	{return children.end();}
+	std::vector<RenderNode*>::const_iterator GetChildIteratorEnd()		{return children.end();}
 
 	static bool		CompareByCameraDistance(RenderNode*a,RenderNode*b) ;
 	static bool		CompareByZ(RenderNode*a,RenderNode*b) ;

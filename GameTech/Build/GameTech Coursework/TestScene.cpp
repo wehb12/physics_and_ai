@@ -133,10 +133,14 @@ void TestScene::OnInitializeScene()
 		Vector4(1.0f, 0.0f, 0.0f, 1.0f));// Render color
 	sphere->Physics()->SetForce(Vector3(0.0f, -1, 0.0f));
 	PhysicsNode* point = new PhysicsNode();
+	RenderNode* pointRen = new RenderNode();
+	pointRen->SetBoundingRadius(1.0f);
+	GameObject* pointObj = new GameObject("point", pointRen, point);
 	point->SetPosition(Vector3(0.0f, 8.0f, 0.0f));
+	point->SetParent(pointObj);
 	DistanceConstraint* constr = new DistanceConstraint(sphere->Physics(), point, Vector3(0.0f, 8.0f, 7.0f), Vector3(0.0f, 8.0f, 0.0f));
 	PhysicsEngine::Instance()->AddConstraint(constr);
-	PhysicsEngine::Instance()->AddPhysicsObject(point);
+	this->AddGameObject(pointObj);
 	this->AddGameObject(sphere);
 }
 

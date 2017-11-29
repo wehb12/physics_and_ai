@@ -147,6 +147,8 @@ public:
 					cc_pos.z + sint * 0.9f));
 			}
 		}
+		if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_O))
+			PhysicsEngine::Instance()->ToggleOctrees();
 
 		uint drawFlags = PhysicsEngine::Instance()->GetDebugDrawFlags();
 

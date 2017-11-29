@@ -62,15 +62,26 @@ Description:
 #define DEBUGDRAW_FLAGS_COLLISIONVOLUMES		0x4
 #define DEBUGDRAW_FLAGS_COLLISIONNORMALS		0x8
 
+//define the max number of objects per octree zone
+#define MAX_OBJECTS 5
+#define MIN_OCTANT_SIZE 5.0f
+
 struct CollisionPair	//Forms the output of the broadphase collision detection
 {
 	PhysicsNode* pObjectA;
 	PhysicsNode* pObjectB;
 };
 
+struct Octree
+{
+	Vector3 pos;
+	Vector3 dimensions;
+	Octree* child;
+};
+
 class PhysicsEngine : public TSingleton<PhysicsEngine>
 {
-	friend class TSingleton < PhysicsEngine > ;
+	friend class TSingleton <PhysicsEngine>;
 public:
 	//Reset Default Values like gravity/timestep - called when scene is switched out
 	void SetDefaults();
@@ -83,14 +94,11 @@ public:
 	//Add Constraints
 	void AddConstraint(Constraint* c) { constraints.push_back(c); }
 	
-
 	//Update Physics Engine
 	void Update(float deltaTime);			//DeltaTime here is 'seconds' since last update not milliseconds
 	
 	//Debug draw all physics objects, manifolds and constraints
 	void DebugRender();
-
-
 
 	//Getters / Setters 
 	inline bool IsPaused() const				{ return isPaused; }
@@ -110,6 +118,8 @@ public:
 
 	inline float GetDeltaTime() const			{ return updateTimestep; }
 
+	inline void ToggleOctrees()					{ useOctree = !useOctree; }
+
 	void PrintPerformanceTimers(const Vector4& color)
 	{
 		perfUpdate.PrintOutputToStatusEntry(color,		"    Integration :");
@@ -127,6 +137,13 @@ protected:
 
 	//Handles broadphase collision detection
 	void BroadPhaseCollisions();
+	//Populates the lists for each octree zone
+	void PopulateOctree(Octree* tree, std::vector<PhysicsNode*> nodeList);
+	//delete all heap Octree structs
+	void TerminateOctree(Octree* tree);
+	//Checks to see if a node is in a zone
+	//Populates a second list with inzone nodes
+	bool InZone(Vector3 pos, Vector3 dims, PhysicsNode* pnode);
 
 	//Handles narrowphase collision detection
 	void NarrowPhaseCollisions();
@@ -139,8 +156,9 @@ protected:
 	Vector3		gravity;
 	float		dampingFactor;
 
-
 	std::vector<CollisionPair>  broadphaseColPairs;
+	Octree*						root;
+	bool						useOctree;
 
 	std::vector<PhysicsNode*>	physicsNodes;
 

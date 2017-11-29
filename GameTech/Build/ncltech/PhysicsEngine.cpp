@@ -6,7 +6,6 @@
 #include <omp.h>
 #include <algorithm>
 
-
 void PhysicsEngine::SetDefaults()
 {
 	//Variables set here /will/ be reset with each scene
@@ -20,6 +19,9 @@ PhysicsEngine::PhysicsEngine()
 {
 	//Variables set here will /not/ be reset with each scene
 	isPaused = false;  
+	useOctree = false;
+	root = new Octree;
+	root->child = NULL;
 	debugDrawFlags = DEBUGDRAW_FLAGS_MANIFOLD | DEBUGDRAW_FLAGS_CONSTRAINT;
 
 	SetDefaults();
@@ -28,6 +30,7 @@ PhysicsEngine::PhysicsEngine()
 PhysicsEngine::~PhysicsEngine()
 {
 	RemoveAllPhysicsObjects();
+	TerminateOctree(root);
 }
 
 void PhysicsEngine::AddPhysicsObject(PhysicsNode* obj)
@@ -74,7 +77,6 @@ void PhysicsEngine::RemoveAllPhysicsObjects()
 	physicsNodes.clear();
 }
 
-
 void PhysicsEngine::Update(float deltaTime)
 {
 	//The physics engine should run independantly to the renderer
@@ -103,7 +105,6 @@ void PhysicsEngine::Update(float deltaTime)
 		}
 	}
 }
-
 
 void PhysicsEngine::UpdatePhysics()
 {
@@ -155,39 +156,156 @@ void PhysicsEngine::UpdatePhysics()
 
 void PhysicsEngine::BroadPhaseCollisions()
 {
-	broadphaseColPairs.clear();
-
-	PhysicsNode *pnodeA, *pnodeB;
-	//	The broadphase needs to build a list of all potentially colliding objects in the world,
-	//	which then get accurately assesed in narrowphase. If this is too coarse then the system slows down with
-	//	the complexity of narrowphase collision checking, if this is too fine then collisions may be missed.
-
-	//	Brute force approach.
-	//  - For every object A, assume it could collide with every other object.. 
-	//    even if they are on the opposite sides of the world.
-	if (physicsNodes.size() > 0)
+	if (useOctree)
 	{
-		for (size_t i = 0; i < physicsNodes.size() - 1; ++i)
-		{
-			for (size_t j = i + 1; j < physicsNodes.size(); ++j)
-			{
-				pnodeA = physicsNodes[i];
-				pnodeB = physicsNodes[j];
+		broadphaseColPairs.clear();
 
-				//Check they both atleast have collision shapes
-				if (pnodeA->GetCollisionShape() != NULL
-					&& pnodeB->GetCollisionShape() != NULL)
+		root->pos = Vector3(0.0f, 0.0f, 0.0f);
+		//arbitrary - assign differently later (??) // - searchable token
+		root->dimensions = Vector3(100.0f, 100.0f, 100.0f);
+		PopulateOctree(root, physicsNodes);
+	}
+	else
+	{
+		broadphaseColPairs.clear();
+
+		PhysicsNode *pnodeA, *pnodeB;
+		//	The broadphase needs to build a list of all potentially colliding objects in the world,
+		//	which then get accurately assesed in narrowphase. If this is too coarse then the system slows down with
+		//	the complexity of narrowphase collision checking, if this is too fine then collisions may be missed.
+
+		//	Brute force approach.
+		//  - For every object A, assume it could collide with every other object.. 
+		//    even if they are on the opposite sides of the world.
+		if (physicsNodes.size() > 0)
+		{
+			for (size_t i = 0; i < physicsNodes.size() - 1; ++i)
+			{
+				for (size_t j = i + 1; j < physicsNodes.size(); ++j)
 				{
-					CollisionPair cp;
-					cp.pObjectA = pnodeA;
-					cp.pObjectB = pnodeB;
-					broadphaseColPairs.push_back(cp);
+					pnodeA = physicsNodes[i];
+					pnodeB = physicsNodes[j];
+
+					//Check they both atleast have collision shapes
+					if (pnodeA->GetCollisionShape() != NULL
+						&& pnodeB->GetCollisionShape() != NULL)
+					{
+						CollisionPair cp;
+						cp.pObjectA = pnodeA;
+						cp.pObjectB = pnodeB;
+						broadphaseColPairs.push_back(cp);
+					}
 				}
 			}
 		}
 	}
 }
 
+void PhysicsEngine::PopulateOctree(Octree* tree, std::vector<PhysicsNode*> nodeList)
+{
+	Vector3 centre = tree->pos;
+	Vector3 dims = tree->dimensions;
+
+	float minSize = 0;
+	if (dims.x < dims.y && dims.x < dims.z) minSize = dims.x;
+	else if (dims.y < dims.z && dims.y < dims.x) minSize = dims.y;
+	else minSize = dims.z;
+
+	for (int x = 0; x < 2; ++x)
+	{
+		for (int y = 0; y < 2; ++y)
+		{
+			for (int z = 0; z < 2; ++z)
+			{
+				int num = x * 4 + y * 2 + z;
+				Vector3 pos = centre + Vector3(-x * dims.x, -y * dims.y, -z * dims.z);
+
+				std::vector<PhysicsNode*> pnodesInZone;
+				pnodesInZone.clear();
+				for (int i = 0; i < nodeList.size(); ++i)
+				{
+					if (InZone(pos, dims, nodeList[i]))
+						pnodesInZone.push_back(nodeList[i]);
+				}
+
+				if (pnodesInZone.size() > MAX_OBJECTS && minSize > MIN_OCTANT_SIZE)
+				{
+					Octree* leaf = new Octree;
+					leaf->child = NULL;
+					leaf->pos = pos + (dims * 0.5);
+					leaf->dimensions = dims * 0.5;
+					tree->child = leaf;
+					PopulateOctree(leaf, pnodesInZone);
+				}
+				else if (pnodesInZone.size() > 0)
+				{
+					for (size_t i = 0; i < pnodesInZone.size() - 1; ++i)
+					{
+						for (size_t j = i + 1; j < pnodesInZone.size(); ++j)
+						{
+							PhysicsNode *pnodeA, *pnodeB;
+
+							pnodeA = pnodesInZone[i];
+							pnodeB = pnodesInZone[j];
+
+							//Check they both atleast have collision shapes
+							if (pnodeA->GetCollisionShape() != NULL
+								&& pnodeB->GetCollisionShape() != NULL)
+							{
+								CollisionPair cp;
+								cp.pObjectA = pnodeA;
+								cp.pObjectB = pnodeB;
+								broadphaseColPairs.push_back(cp);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void PhysicsEngine::TerminateOctree(Octree* tree)
+{
+	if (tree->child)
+		TerminateOctree(tree->child);
+	delete tree;
+}
+
+// pos is the position of the corner of the octant with the lowest (most negative)
+// x, y and z coordinate. dims is the dimensions of the octant and pnode
+// is the node that is being checked.
+bool PhysicsEngine::InZone(Vector3 pos, Vector3 dims, PhysicsNode* pnode)
+{
+	float radius = pnode->GetParent()->Render()->GetBoundingRadius();
+	Vector3 pnodePos = pnode->GetPosition();
+
+	//do a quick brute force sphere check befoe AABB
+	Vector3 dir = pnode->GetPosition() - (pos + (dims * 0.5));
+	if (dir.Length() < radius + (dims.Length() / 2))
+	{
+		if (pnodePos.x + radius > pos.x)
+		{
+			if (pnodePos.x - radius < pos.x + dims.x)
+			{
+				if (pnodePos.y + radius > pos.y)
+				{
+					if (pnodePos.y - radius < pos.y + dims.y)
+					{
+						if (pnodePos.z + radius > pos.z)
+						{
+							if (pnodePos.z - radius < pos.z + dims.z)
+							{
+								return true;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
 
 void PhysicsEngine::NarrowPhaseCollisions()
 {
@@ -211,7 +329,8 @@ void PhysicsEngine::NarrowPhaseCollisions()
 			RenderNode* rnodeB = cp.pObjectB->GetParent()->Render();
 
 			Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
-
+			
+			//do a coarse sphere-sphere check using bounding radii of the rendernodes
 			if (ab.Length() <= rnodeA->GetBoundingRadius() + rnodeB->GetBoundingRadius())
 			{
 				colDetect.BeginNewPair(
@@ -236,9 +355,6 @@ void PhysicsEngine::NarrowPhaseCollisions()
 						NCLDebug::DrawPointNDT(colData._pointOnPlane, 0.1f, Vector4(0.5f, 0.5f, 1.0f, 1.0f));
 						NCLDebug::DrawThickLineNDT(colData._pointOnPlane, colData._pointOnPlane - colData._normal * colData._penetration, 0.05f, Vector4(0.0f, 0.0f, 1.0f, 1.0f));
 					}
-
-					rnodeA->SetColor(Vector4(1.0f, 0.0f, 0.0f, 0.5f));
-					rnodeB->SetColor(Vector4(1.0f, 0.0f, 0.0f, 0.5f));
 
 					//Check to see if any of the objects have a OnCollision callback that dont want the objects to physically collide
 					bool okA = cp.pObjectA->FireOnCollisionEvent(cp.pObjectA, cp.pObjectB);

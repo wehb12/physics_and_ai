@@ -114,6 +114,9 @@ void HandleKeyboardInputs()
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_G))
 		show_perf_metrics = !show_perf_metrics;
 
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_O))
+		PhysicsEngine::Instance()->ToggleOctrees();
+
 	//fire a sphere in the direction the camera is looking
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_F))
 	{
