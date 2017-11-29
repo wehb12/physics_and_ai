@@ -67,6 +67,7 @@ public:
 		, angVelocity(0.0f, 0.0f, 0.0f)
 		, torque(0.0f, 0.0f, 0.0f)
 		, invInertia(Matrix3::ZeroMatrix)
+		, boundingRadius(100.0f)
 		, collisionShape(NULL)
 		, friction(0.5f)
 		, elasticity(0.9f)
@@ -103,6 +104,7 @@ public:
 	inline const Matrix3&		GetInverseInertia()			const { return invInertia; }
 
 	inline CollisionShape*		GetCollisionShape()			const { return collisionShape; }
+	inline float				GetRadius()					const { return boundingRadius; }
 
 	const Matrix4&				GetWorldSpaceTransform()    const { return worldTransform; }
 
@@ -131,7 +133,7 @@ public:
 		collisionShape = colShape;
 		if (collisionShape) collisionShape->SetParent(this);
 	}
-	
+	inline void SetRadius(float rad)								{ boundingRadius = rad; }
 
 
 
@@ -180,6 +182,7 @@ protected:
 	//<----------COLLISION------------>
 	CollisionShape*				collisionShape;
 	PhysicsCollisionCallback	onCollisionCallback;
+	float						boundingRadius;
 
 
 //Added in Tutorial 5

@@ -24,8 +24,6 @@ void CollisionDetectionSAT::BeginNewPair(
 	areColliding = false;
 }
 
-
-
 bool CollisionDetectionSAT::AreColliding(CollisionData* out_coldata)
 {
 	if (!cshapeA || !cshapeB)
@@ -75,7 +73,8 @@ bool CollisionDetectionSAT::AreColliding(CollisionData* out_coldata)
 	// where the two objects are not colliding, then they cannot be
 	// colliding. So we have to check each possible axis until we
 	// either return false, or return the best axis (one with the
-	// least penetration) found.
+	// least penetration) found.
+
 	CollisionData cur_colData;
 
 	bestColData._penetration = -FLT_MAX;
@@ -86,10 +85,7 @@ bool CollisionDetectionSAT::AreColliding(CollisionData* out_coldata)
 		// the two objects do not intersect
 
 		if (!CheckCollisionAxis(axis, cur_colData))
-		{
-			cout << "CheckCollisionAxis" << endl;
 			return false;
-		}
 
 		if (cur_colData._penetration >= bestColData._penetration)
 			bestColData = cur_colData;
@@ -100,7 +96,6 @@ bool CollisionDetectionSAT::AreColliding(CollisionData* out_coldata)
 	areColliding = true;
 	return true;
 }
-
 
 bool CollisionDetectionSAT::CheckCollisionAxis(const Vector3& axis, CollisionData& out_coldata)
 {
@@ -128,12 +123,26 @@ bool CollisionDetectionSAT::CheckCollisionAxis(const Vector3& axis, CollisionDat
 	float C = Vector3::Dot(axis, min2);
 	float D = Vector3::Dot(axis, max2);
 
-	// Overlap Test (Order: Object 1 -> Object2)
+	// Overlap Test (Order: Object 1 -> Object 2)
 	if (A <= C && B >= C)
 	{
 		out_coldata._normal = axis;
 		out_coldata._penetration = C - B;
 		// Smallest overlap disatnce is between D->A
+		// Compute closest point on edge of the object
+		out_coldata._pointOnPlane = max1 + out_coldata._normal * out_coldata._penetration;
+
+		return true;
+	}
+
+	// Overlap Test (Order: Object 2 -> Object 1)
+	if (C <= A && D >= A)
+	{
+		out_coldata._normal = -axis;
+		// Invert axis here so we can do all our resolution phase as
+		// Object 1 -> Object 2
+		out_coldata._penetration = A - D;
+		// Smallest overlap distance is between D->A
 		// Compute closest point on edge of the object
 		out_coldata._pointOnPlane = min1 + out_coldata._normal * out_coldata._penetration;
 
@@ -143,31 +152,10 @@ bool CollisionDetectionSAT::CheckCollisionAxis(const Vector3& axis, CollisionDat
 	return false;
 }
 
-
-
-
-
-
 void CollisionDetectionSAT::GenContactPoints(Manifold* out_manifold)
 {
  /* TUTORIAL 5 CODE */
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 bool CollisionDetectionSAT::AddPossibleCollisionAxis(Vector3 axis)
 {

@@ -118,9 +118,6 @@ void PhysicsEngine::UpdatePhysics()
 	perfNarrowphase.UpdateRealElapsedTime(updateTimestep);
 	perfSolver.UpdateRealElapsedTime(updateTimestep);
 
-
-
-
 	//A whole physics engine in 6 simple steps =D
 	
 	//-- Using positions from last frame --
@@ -134,13 +131,11 @@ void PhysicsEngine::UpdatePhysics()
 	NarrowPhaseCollisions();
 	perfNarrowphase.EndTimingSection();
 
-
 //3. Initialize Constraint Params (precompute elasticity/baumgarte factor etc)
 	//Optional step to allow constraints to 
 	// precompute values based off current velocities 
 	// before they are updated loop below.
 	for (Constraint* c : constraints) c->PreSolverStep(updateTimestep);
-
 
 //4. Update Velocities
 	perfUpdate.BeginTimingSection();
@@ -167,7 +162,6 @@ void PhysicsEngine::BroadPhaseCollisions()
 	//	which then get accurately assesed in narrowphase. If this is too coarse then the system slows down with
 	//	the complexity of narrowphase collision checking, if this is too fine then collisions may be missed.
 
-
 	//	Brute force approach.
 	//  - For every object A, assume it could collide with every other object.. 
 	//    even if they are on the opposite sides of the world.
@@ -189,7 +183,6 @@ void PhysicsEngine::BroadPhaseCollisions()
 					cp.pObjectB = pnodeB;
 					broadphaseColPairs.push_back(cp);
 				}
-
 			}
 		}
 	}
@@ -221,6 +214,7 @@ void PhysicsEngine::NarrowPhaseCollisions()
 				cp.pObjectB->GetCollisionShape());
 
 			//--TUTORIAL 4 CODE--
+
 			// Detects if the objects are colliding
 			if (colDetect.AreColliding(&colData))
 			{
@@ -228,7 +222,7 @@ void PhysicsEngine::NarrowPhaseCollisions()
 				//      than it should be. We now fire oncollision events for the two objects so they
 				//      can handle AI and also optionally draw the collision normals to see roughly
 				//      where and how the objects are colliding.
-
+				
 				//Draw collision data to the window if requested
 				// - Have to do this here as colData is only temporary. 
 				if (debugDrawFlags & DEBUGDRAW_FLAGS_COLLISIONNORMALS)

@@ -81,7 +81,7 @@ public:
 				Vector3(7.0f, 7.0f, -5.0f),				//Position
 				Vector3(0.5f, 0.5f, 0.5f),				//Half Dimensions
 				true,									//Has Physics Object
-				1.0f,									//Inverse Mass = 1 / 1kg mass
+				0.1f,									//Inverse Mass = 1 / 1kg mass
 				false,									//No Collision Shape Yet
 				true,									//Dragable by the user
 				CommonUtils::GenColor(0.6f, 1.0f));		//Color
