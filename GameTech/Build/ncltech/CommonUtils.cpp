@@ -140,6 +140,8 @@ GameObject* CommonUtils::BuildSphereObject(
 	}
 
 	GameObject* obj = new GameObject(name, rnode, pnode);
+	if (physics_enabled)
+		pnode->SetParent(obj);
 
 	if (dragable)
 	{
@@ -194,6 +196,8 @@ GameObject* CommonUtils::BuildCuboidObject(
 	}
 
 	GameObject* obj = new GameObject(name, rnode, pnode);
+	if (physics_enabled)
+		pnode->SetParent(obj);
 
 	if (dragable)
 	{

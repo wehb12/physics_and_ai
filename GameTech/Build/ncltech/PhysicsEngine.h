@@ -100,7 +100,7 @@ public:
 	inline void SetDebugDrawFlags(uint flags)   { debugDrawFlags = flags; }
 	
 	inline float GetUpdateTimestep() const { return updateTimestep; }
-	inline void SetUpdateTimestep(float updateTimestep) { updateTimestep = updateTimestep; }
+	inline void SetUpdateTimestep(float updateTimestep) { this->updateTimestep = updateTimestep; }
 
 	inline const Vector3& GetGravity() const	{ return gravity; }
 	inline void SetGravity(const Vector3& g)	{ gravity = g; }

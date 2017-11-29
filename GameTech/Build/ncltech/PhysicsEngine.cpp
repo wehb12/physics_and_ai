@@ -207,37 +207,47 @@ void PhysicsEngine::NarrowPhaseCollisions()
 			CollisionShape *shapeA = cp.pObjectA->GetCollisionShape();
 			CollisionShape *shapeB = cp.pObjectB->GetCollisionShape();
 
-			colDetect.BeginNewPair(
-				cp.pObjectA,
-				cp.pObjectB,
-				cp.pObjectA->GetCollisionShape(),
-				cp.pObjectB->GetCollisionShape());
+			RenderNode* rnodeA = cp.pObjectA->GetParent()->Render();
+			RenderNode* rnodeB = cp.pObjectB->GetParent()->Render();
 
-			//--TUTORIAL 4 CODE--
+			Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
 
-			// Detects if the objects are colliding
-			if (colDetect.AreColliding(&colData))
+			if (ab.Length() <= rnodeA->GetBoundingRadius() + rnodeB->GetBoundingRadius())
 			{
-				//Note: As at the end of tutorial 4 we have very little to do, this is a bit messier
-				//      than it should be. We now fire oncollision events for the two objects so they
-				//      can handle AI and also optionally draw the collision normals to see roughly
-				//      where and how the objects are colliding.
-				
-				//Draw collision data to the window if requested
-				// - Have to do this here as colData is only temporary. 
-				if (debugDrawFlags & DEBUGDRAW_FLAGS_COLLISIONNORMALS)
-				{
-					NCLDebug::DrawPointNDT(colData._pointOnPlane, 0.1f, Vector4(0.5f, 0.5f, 1.0f, 1.0f));
-					NCLDebug::DrawThickLineNDT(colData._pointOnPlane, colData._pointOnPlane - colData._normal * colData._penetration, 0.05f, Vector4(0.0f, 0.0f, 1.0f, 1.0f));
-				}
+				colDetect.BeginNewPair(
+					cp.pObjectA,
+					cp.pObjectB,
+					cp.pObjectA->GetCollisionShape(),
+					cp.pObjectB->GetCollisionShape());
 
-				//Check to see if any of the objects have a OnCollision callback that dont want the objects to physically collide
-				bool okA = cp.pObjectA->FireOnCollisionEvent(cp.pObjectA, cp.pObjectB);
-				bool okB = cp.pObjectB->FireOnCollisionEvent(cp.pObjectB, cp.pObjectA);
-
-				if (okA && okB)
+				//--TUTORIAL 4 CODE--
+				// Detects if the objects are colliding
+				if (colDetect.AreColliding(&colData))
 				{
-					/* TUTORIAL 5 CODE */
+					//Note: As at the end of tutorial 4 we have very little to do, this is a bit messier
+					//      than it should be. We now fire oncollision events for the two objects so they
+					//      can handle AI and also optionally draw the collision normals to see roughly
+					//      where and how the objects are colliding.
+
+					//Draw collision data to the window if requested
+					// - Have to do this here as colData is only temporary. 
+					if (debugDrawFlags & DEBUGDRAW_FLAGS_COLLISIONNORMALS)
+					{
+						NCLDebug::DrawPointNDT(colData._pointOnPlane, 0.1f, Vector4(0.5f, 0.5f, 1.0f, 1.0f));
+						NCLDebug::DrawThickLineNDT(colData._pointOnPlane, colData._pointOnPlane - colData._normal * colData._penetration, 0.05f, Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+					}
+
+					rnodeA->SetColor(Vector4(1.0f, 0.0f, 0.0f, 0.5f));
+					rnodeB->SetColor(Vector4(1.0f, 0.0f, 0.0f, 0.5f));
+
+					//Check to see if any of the objects have a OnCollision callback that dont want the objects to physically collide
+					bool okA = cp.pObjectA->FireOnCollisionEvent(cp.pObjectA, cp.pObjectB);
+					bool okB = cp.pObjectB->FireOnCollisionEvent(cp.pObjectB, cp.pObjectA);
+
+					if (okA && okB)
+					{
+						/* TUTORIAL 5 CODE */
+					}
 				}
 			}
 		}
