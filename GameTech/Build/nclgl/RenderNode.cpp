@@ -14,6 +14,7 @@ RenderNode::RenderNode(Mesh*mesh, Vector4 colour)	{
 RenderNode::~RenderNode(void)	{
 	for(unsigned int i = 0; i < children.size(); ++i) {
 		delete children[i];
+		children[i] = NULL;
 	}
 }
 

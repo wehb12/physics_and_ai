@@ -25,13 +25,11 @@ public:
 
 	virtual ~Phy4_AiCallbacks()
 	{
-
 		if (m_MeshPlayer)
 		{
 			delete m_MeshPlayer;
 			m_MeshPlayer = NULL;
 		}
-
 	}
 
 	virtual void OnInitializeScene() override

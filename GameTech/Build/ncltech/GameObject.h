@@ -96,7 +96,8 @@ public:
 	inline float GetBoundingRadius()
 	{
 		if (physicsNode != NULL) return physicsNode->GetBoundingRadius();
-		if (renderNode != NULL) return renderNode->GetBoundingRadius();
+		else if (renderNode != NULL) return renderNode->GetBoundingRadius();
+		else return 0.0f;
 	}
 
 

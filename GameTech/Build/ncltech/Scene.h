@@ -178,7 +178,10 @@ protected:
 		m_UpdateCallbacks.clear();
 
 		for (auto obj : m_vpObjects)
+		{
 			delete obj;
+			obj = NULL;
+		}
 		
 		m_vpObjects.clear();
 	}

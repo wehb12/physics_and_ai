@@ -64,7 +64,7 @@ Description:
 
 //define the max number of objects per octree zone
 #define MAX_OBJECTS 5
-#define MIN_OCTANT_SIZE 5.0f
+#define MIN_OCTANT_SIZE 1.0f
 
 struct CollisionPair	//Forms the output of the broadphase collision detection
 {
@@ -76,7 +76,9 @@ struct Octree
 {
 	Vector3 pos;
 	Vector3 dimensions;
-	Octree* child;
+	std::vector<PhysicsNode*> pnodesInZone[8];
+	Octree* children[8];
+	Octree* parent;
 };
 
 class PhysicsEngine : public TSingleton<PhysicsEngine>
@@ -119,6 +121,8 @@ public:
 	inline float GetDeltaTime() const			{ return updateTimestep; }
 
 	inline void ToggleOctrees()					{ useOctree = !useOctree; }
+	//void AddToOctree(PhysicsNode* pnode)		{ AddToOctree(root, pnode); }
+	//void GenColPairs()							{ GenColPairs(root); }
 
 	void PrintPerformanceTimers(const Vector4& color)
 	{
@@ -139,6 +143,8 @@ protected:
 	void BroadPhaseCollisions();
 	//Populates the lists for each octree zone
 	void PopulateOctree(Octree* tree, std::vector<PhysicsNode*> nodeList);
+	void GenColPairs(Octree* tree);
+	void AddToOctree(Octree* tree, PhysicsNode* pnode, bool split = false);
 	//delete all heap Octree structs
 	void TerminateOctree(Octree* tree);
 	//Checks to see if a node is in a zone

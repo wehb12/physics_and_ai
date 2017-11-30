@@ -20,6 +20,7 @@ SceneManager::~SceneManager()
 		{
 			scene->OnCleanupScene();
 			delete scene;
+			scene = NULL;
 		}
 	}
 	m_vpAllScenes.clear();

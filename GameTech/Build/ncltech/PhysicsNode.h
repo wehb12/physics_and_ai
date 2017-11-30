@@ -68,6 +68,7 @@ public:
 		, torque(0.0f, 0.0f, 0.0f)
 		, invInertia(Matrix3::ZeroMatrix)
 		, collisionShape(NULL)
+		, parent(NULL)
 		, friction(0.5f)
 		, elasticity(0.9f)
 		, boundingRadius(100.0f)

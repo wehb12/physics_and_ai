@@ -2,3 +2,4 @@ TO DO LIST
 
 1. [ ] Change broadphase box dimensions to adjust with the scene, instead of being arbitrarily set.
 2. [ ] Make narrowphase avoid duplicate collision checks on two objects spanning two octants.
+3. [ ] Put Octree functionality into its own class
