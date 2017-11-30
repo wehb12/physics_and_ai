@@ -63,7 +63,7 @@ Description:
 #define DEBUGDRAW_FLAGS_COLLISIONNORMALS		0x8
 
 //define the max number of objects per octree zone
-#define MAX_OBJECTS 5
+#define MAX_OBJECTS 1
 #define MIN_OCTANT_SIZE 1.0f
 
 struct CollisionPair	//Forms the output of the broadphase collision detection
@@ -145,6 +145,7 @@ protected:
 	void PopulateOctree(Octree* tree, std::vector<PhysicsNode*> nodeList);
 	void GenColPairs(Octree* tree);
 	void AddToOctree(Octree* tree, PhysicsNode* pnode, bool split = false);
+	void DrawOctree(Octree* tree);
 	//delete all heap Octree structs
 	void TerminateOctree(Octree* tree);
 	//Checks to see if a node is in a zone

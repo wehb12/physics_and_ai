@@ -27,7 +27,7 @@ PhysicsEngine::PhysicsEngine()
 	root->parent = NULL;
 	root->pos = Vector3(0.0f, 0.0f, 0.0f);
 	//arbitrary - assign differently later (??) // - searchable token
-	root->dimensions = Vector3(100.0f, 100.0f, 100.0f);
+	root->dimensions = Vector3(30.0f, 10.0f, 30.0f);
 
 	debugDrawFlags = DEBUGDRAW_FLAGS_MANIFOLD | DEBUGDRAW_FLAGS_CONSTRAINT;
 
@@ -96,7 +96,7 @@ void PhysicsEngine::RemoveAllPhysicsObjects()
 	root->parent = NULL;
 	root->pos = Vector3(0.0f, 0.0f, 0.0f);
 	//arbitrary - assign differently later (??) // - searchable token
-	root->dimensions = Vector3(100.0f, 100.0f, 100.0f);
+	root->dimensions = Vector3(30.0f, 10.0f, 30.0f);
 }
 
 void PhysicsEngine::Update(float deltaTime)
@@ -185,6 +185,7 @@ void PhysicsEngine::BroadPhaseCollisions()
 
 		GenColPairs(root);
 		//PopulateOctree(root, physicsNodes);
+		DrawOctree(root);
 	}
 	else
 	{
@@ -219,6 +220,41 @@ void PhysicsEngine::BroadPhaseCollisions()
 				}
 			}
 		}
+	}
+}
+
+void PhysicsEngine::DrawOctree(Octree* tree)
+{
+	Vector3 corner = tree->pos - tree->dimensions;
+
+	for (int i = 0; i < 9; ++i)
+	{
+		int x = i % 3;
+		int y = i / 3;
+		Vector3 start = corner + Vector3(tree->dimensions.x * x, tree->dimensions.y * y, 0);
+		Vector3 end = start + Vector3(0, 0, tree->dimensions.z * 2);
+		NCLDebug::DrawHairLineNDT(start, end, Vector4(1.0, 0.0f, 0.0f, 1.0f));
+	}
+	for (int i = 0; i < 9; ++i)
+	{
+		int y = i % 3;
+		int z = i / 3;
+		Vector3 start = corner + Vector3(0, tree->dimensions.y * y, tree->dimensions.z * z);
+		Vector3 end = start + Vector3(tree->dimensions.x * 2, 0, 0);
+		NCLDebug::DrawHairLineNDT(start, end, Vector4(0.0, 1.0f, 0.0f, 1.0f));
+	}
+	for (int i = 0; i < 9; ++i)
+	{
+		int x = i % 3;
+		int z = i / 3;
+		Vector3 start = corner + Vector3(tree->dimensions.x * x, 0, tree->dimensions.z * z);
+		Vector3 end = start + Vector3(0, tree->dimensions.y * 2, 0);
+		NCLDebug::DrawHairLineNDT(start, end, Vector4(0.0, 0.0f, 1.0f, 1.0f));
+	}
+
+	for (int i = 0; i < 8; ++i)
+	{
+		if (tree->children[i] != NULL) DrawOctree(tree->children[i]);
 	}
 }
 
