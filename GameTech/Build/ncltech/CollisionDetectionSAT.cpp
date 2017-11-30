@@ -155,6 +155,105 @@ bool CollisionDetectionSAT::CheckCollisionAxis(const Vector3& axis, CollisionDat
 void CollisionDetectionSAT::GenContactPoints(Manifold* out_manifold)
 {
  /* TUTORIAL 5 CODE */
+	if (!out_manifold || !areColliding)
+		return;
+
+	if (bestColData._penetration >= 0.0f)
+		return;
+
+	// Get the required face information for the two shapes around the collision normal
+
+	std::list<Vector3> polygon1, polygon2;
+	Vector3 normal1, normal2;
+	std::vector<Plane> adjPlanes1, adjPlanes2;
+
+	cshapeA->GetIncidentReferencePolygon(bestColData._normal, polygon1, normal1, adjPlanes1);
+
+	cshapeB->GetIncidentReferencePolygon(bestColData._normal, polygon2, normal2, adjPlanes2);
+
+	// If either shape1 or shape2 returned a single point, then it must be on a curve and thus
+	// the only contact point to generate is already available
+
+	if (polygon1.size() == 0 || polygon2.size() == 0)
+		return;
+	else if (polygon1.size() == 1)
+	{
+		out_manifold->AddContact(
+			polygon1.front(), //Polygon1->Polygon2
+			polygon1.front() + bestColData._normal *
+			bestColData._penetration, bestColData._normal,
+			bestColData._penetration);
+	}
+	else if (polygon2.size() == 1)
+	{
+		out_manifold->AddContact(
+			polygon2.front() - bestColData._normal *
+			bestColData._penetration,
+			polygon2.front(), //Polygon2->Polygon1
+			bestColData._normal,
+			bestColData._penetration);
+	}
+	else
+	{
+		// Otherwise use clipping to cut down the incident face to fit
+		// inside the reference planes using the surrounding face planes
+
+		// First we need to know if have to flip the incident and reference faces around for clipping
+
+		bool flipped = fabs(Vector3::Dot(bestColData._normal, normal1)) <
+			fabs(Vector3::Dot(bestColData._normal, normal2));
+		
+		if (flipped)
+		{
+			std::swap(polygon1, polygon2);
+			std::swap(normal1, normal2);
+			std::swap(adjPlanes1, adjPlanes2);
+		}
+
+		// Clip the incident face to the adjacent edges of the reference face
+
+		if (adjPlanes1.size() > 0)
+			SutherlandHodgmanClipping(polygon2, adjPlanes1.size(), &adjPlanes2[0], &polygon2, false);
+
+		// Finally clip (And remove) any contatc points that are above the reference face
+
+		Plane refPlane = Plane(-normal1, -Vector3::Dot(-normal1, polygon1.front()));
+		SutherlandHodgmanClipping(polygon2, 1, &refPlane, &polygon2, true);
+
+		// Now we are left witha selection of valid contact points to be used for the manifold
+
+		for (const Vector3& point : polygon2)
+		{
+			// Compute distance to reference plane
+
+			Vector3 pointDiff = point - GetClosestPointPolygon(point, polygon1);
+			float contact_penetration = Vector3::Dot(pointDiff, bestColData._normal);
+
+			// Set contact data
+
+			Vector3 globalOnA = point;
+			Vector3 globalOnB = point - bestColData._normal * contact_penetration;
+
+			// If we flipped incident and reference planes we need to flip it back before sending it to the manifold
+			// e.g. turn it from talking about object2->object1 into object1->object2
+
+			if (flipped)
+			{
+				contact_penetration = -contact_penetration;
+				globalOnA = point + bestColData._normal * contact_penetration;
+				globalOnB = point;
+			}
+
+			// Just make a final sanity check that the contact point is actually a point of contact, not just a clipping bug
+			if (contact_penetration < 0.0f)
+			{
+				out_manifold->AddContact(globalOnA,
+					globalOnB,
+					bestColData._normal,
+					contact_penetration);
+			}
+		}
+	}
 }
 
 bool CollisionDetectionSAT::AddPossibleCollisionAxis(Vector3 axis)
