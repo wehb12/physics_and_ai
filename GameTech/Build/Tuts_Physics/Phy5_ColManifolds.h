@@ -142,9 +142,6 @@ public:
 		}
 
 
-
-
-
 		uint drawFlags = PhysicsEngine::Instance()->GetDebugDrawFlags();
 
 

@@ -377,6 +377,13 @@ void PhysicsEngine::NarrowPhaseCollisions()
 						{
 							// Add to list of manifolds that need solving
 							manifolds.push_back(manifold);
+
+							//Draw manifold data to the window if requested
+							if (debugDrawFlags & DEBUGDRAW_FLAGS_MANIFOLD)
+							{
+								manifold->DebugDraw();
+								//NCLDebug::DrawPolygon(manifold->contactPoints.size(), );
+							}
 						}
 						else
 							delete manifold;

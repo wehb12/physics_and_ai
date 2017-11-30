@@ -169,7 +169,7 @@ void CollisionDetectionSAT::GenContactPoints(Manifold* out_manifold)
 
 	cshapeA->GetIncidentReferencePolygon(bestColData._normal, polygon1, normal1, adjPlanes1);
 
-	cshapeB->GetIncidentReferencePolygon(bestColData._normal, polygon2, normal2, adjPlanes2);
+	cshapeB->GetIncidentReferencePolygon(-bestColData._normal, polygon2, normal2, adjPlanes2);
 
 	// If either shape1 or shape2 returned a single point, then it must be on a curve and thus
 	// the only contact point to generate is already available
@@ -213,9 +213,9 @@ void CollisionDetectionSAT::GenContactPoints(Manifold* out_manifold)
 		// Clip the incident face to the adjacent edges of the reference face
 
 		if (adjPlanes1.size() > 0)
-			SutherlandHodgmanClipping(polygon2, adjPlanes1.size(), &adjPlanes2[0], &polygon2, false);
+			SutherlandHodgmanClipping(polygon2, adjPlanes1.size(), &adjPlanes1[0], &polygon2, false);
 
-		// Finally clip (And remove) any contatc points that are above the reference face
+		// Finally clip (And remove) any contact points that are above the reference face
 
 		Plane refPlane = Plane(-normal1, -Vector3::Dot(-normal1, polygon1.front()));
 		SutherlandHodgmanClipping(polygon2, 1, &refPlane, &polygon2, true);
