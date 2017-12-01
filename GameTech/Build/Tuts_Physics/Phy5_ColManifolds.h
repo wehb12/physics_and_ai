@@ -48,7 +48,7 @@ public:
 				true,									//Dragable by the user
 				CommonUtils::GenColor(0.45f, 0.5f)));	//Color
 
-			this->AddGameObject(CommonUtils::BuildSphereObject("",
+			this->AddGameObject(CommonUtils::BuildSphereObject("sphere1_partner",
 				ss_pos,									//Position
 				0.5f,									//Radius
 				true,									//Has Physics Object
@@ -60,7 +60,7 @@ public:
 
 		//Create Sphere-Cuboid Manifold Test
 		{
-			this->AddGameObject(CommonUtils::BuildCuboidObject("",
+			this->AddGameObject(CommonUtils::BuildCuboidObject("sphere2_partner",
 				sc_pos,									//Position
 				Vector3(0.5f, 0.5f, 0.5f),				//Half dimensions
 				true,									//Has Physics Object
@@ -91,7 +91,7 @@ public:
 				true,									//Dragable by the user
 				CommonUtils::GenColor(0.45f, 0.5f)));	//Color
 
-			this->AddGameObject(CommonUtils::BuildCuboidObject("",
+			this->AddGameObject(CommonUtils::BuildCuboidObject("rotating_cuboid_partner",
 				cc_pos,									//Position
 				Vector3(0.5f, 0.5f, 0.5f),				//Half dimensions
 				true,									//Has Physics Object

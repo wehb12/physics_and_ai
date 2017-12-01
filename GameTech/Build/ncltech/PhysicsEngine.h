@@ -64,7 +64,7 @@ Description:
 
 //define the max number of objects per octree zone
 #define MAX_OBJECTS 1
-#define MIN_OCTANT_SIZE 1.0f
+#define MIN_OCTANT_SIZE 5.0f
 
 struct CollisionPair	//Forms the output of the broadphase collision detection
 {

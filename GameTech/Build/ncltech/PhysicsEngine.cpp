@@ -159,6 +159,7 @@ void PhysicsEngine::UpdatePhysics()
 	//Optional step to allow constraints to 
 	// precompute values based off current velocities 
 	// before they are updated loop below.
+	for (Manifold* m : manifolds) m->PreSolverStep(updateTimestep);
 	for (Constraint* c : constraints) c->PreSolverStep(updateTimestep);
 
 //4. Update Velocities
@@ -168,6 +169,7 @@ void PhysicsEngine::UpdatePhysics()
 
 //5. Constraint Solver
 	perfSolver.BeginTimingSection();
+	for (Manifold* m : manifolds) m->ApplyImpulse();
 	for (Constraint* c : constraints) c->ApplyImpulse();
 	perfSolver.EndTimingSection();
 
@@ -233,7 +235,7 @@ void PhysicsEngine::DrawOctree(Octree* tree)
 		int y = i / 3;
 		Vector3 start = corner + Vector3(tree->dimensions.x * x, tree->dimensions.y * y, 0);
 		Vector3 end = start + Vector3(0, 0, tree->dimensions.z * 2);
-		NCLDebug::DrawHairLineNDT(start, end, Vector4(1.0, 0.0f, 0.0f, 1.0f));
+		NCLDebug::DrawHairLineNDT(start, end, Vector4(0.0, 0.0f, 1.0f, 1.0f));
 	}
 	for (int i = 0; i < 9; ++i)
 	{
@@ -241,7 +243,7 @@ void PhysicsEngine::DrawOctree(Octree* tree)
 		int z = i / 3;
 		Vector3 start = corner + Vector3(0, tree->dimensions.y * y, tree->dimensions.z * z);
 		Vector3 end = start + Vector3(tree->dimensions.x * 2, 0, 0);
-		NCLDebug::DrawHairLineNDT(start, end, Vector4(0.0, 1.0f, 0.0f, 1.0f));
+		NCLDebug::DrawHairLineNDT(start, end, Vector4(1.0, 0.0f, 0.0f, 1.0f));
 	}
 	for (int i = 0; i < 9; ++i)
 	{
@@ -249,7 +251,7 @@ void PhysicsEngine::DrawOctree(Octree* tree)
 		int z = i / 3;
 		Vector3 start = corner + Vector3(tree->dimensions.x * x, 0, tree->dimensions.z * z);
 		Vector3 end = start + Vector3(0, tree->dimensions.y * 2, 0);
-		NCLDebug::DrawHairLineNDT(start, end, Vector4(0.0, 0.0f, 1.0f, 1.0f));
+		NCLDebug::DrawHairLineNDT(start, end, Vector4(0.0, 1.0f, 0.0f, 1.0f));
 	}
 
 	for (int i = 0; i < 8; ++i)
