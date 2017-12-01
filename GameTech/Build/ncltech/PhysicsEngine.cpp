@@ -372,6 +372,8 @@ void PhysicsEngine::UpdateNodePosition(PhysicsNode* pnode)
 	{
 		tree->pnodesInZone.erase(location);
 
+		// maybe do if < MAX_OBJECTS instead of 0? // ??
+		// then it would be necessary to reshuffle the tree // ??
 		if (tree->pnodesInZone.size() == 0)
 		{
 			destroy = true;

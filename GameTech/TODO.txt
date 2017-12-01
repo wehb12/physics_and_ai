@@ -6,5 +6,6 @@ TO DO LIST
 		2.a.i [x] Make sure each node is only stored once now, not in multiple lists
 3. [ ] Put Octree functionality into its own class
 4. [ ] Change octree when a node moves zone
+	4.a [ ] Fix this, the octree breaks when a node moves - possibly not terminating the tree correctly.
 5. [x] Octree doesn't seem to work properly, doesn't acknowledge cuboid nodes in tutorials 4i and 5
 	5.a [x] Check to see if old PopulateTree() function works
