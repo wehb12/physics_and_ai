@@ -192,15 +192,6 @@ void PhysicsEngine::BroadPhaseCollisions()
 		broadphaseColPairs.clear();
 
 		GenColPairs(root);
-		//TerminateOctree(root);
-		//root = new Octree;
-		//for (int i = 0; i < 8; ++i)
-		//	root->children[i] = NULL;
-		//root->parent = NULL;
-		//root->pos = Vector3(0.0f, 0.0f, 0.0f);
-		////arbitrary - assign differently later (??) // - searchable token
-		//root->dimensions = Vector3(30.0f, 10.0f, 30.0f);
-		//PopulateOctree(root, physicsNodes);
 		DrawOctree(root);
 	}
 	else
@@ -343,142 +334,94 @@ void PhysicsEngine::AddToOctree(Octree* tree, PhysicsNode* pnode)
 			leaf->dimensions = dims * 0.5;
 		}
 
-		tree->children[num]->pnodesInZone.push_back(pnode);
+		leaf->pnodesInZone.push_back(pnode);
+		pnode->SetOctree(leaf);
 
 		// if a child of the octree has too many nodes, it needs splitting
-		if (tree->children[num]->pnodesInZone.size() > MAX_OBJECTS && minSize > MIN_OCTANT_SIZE)
+		if (leaf->pnodesInZone.size() > MAX_OBJECTS && minSize > MIN_OCTANT_SIZE)
 		{
 			vector<PhysicsNode*> temps;
-			for (int i = tree->pnodesInZone.size() - 1; i >= 0; --i)
+			for (int i = leaf->pnodesInZone.size() - 1; i >= 0; --i)
 			{
-				temps.push_back(tree->pnodesInZone[i]);
-				tree->pnodesInZone.pop_back();
+				temps.push_back(leaf->pnodesInZone[i]);
+				leaf->pnodesInZone.pop_back();
 			}
 			for (int i = 0; i < temps.size(); ++i)
 			{
 				AddToOctree(leaf, temps[i]);
 			}
-			AddToOctree(leaf, pnode);
+			//AddToOctree(leaf, pnode);
 		}
 		return;
 	}
 	else
 	{
 		tree->pnodesInZone.push_back(pnode);
+		pnode->SetOctree(tree);
 	}
 }
 
-void PhysicsEngine::PopulateOctree(Octree* tree, std::vector<PhysicsNode*> nodeList)
+void PhysicsEngine::UpdateNodePosition(PhysicsNode* pnode)
 {
-	Vector3 centre = tree->pos;
-	Vector3 dims = tree->dimensions;
+	Octree* tree = pnode->GetOctree();
+	bool destroy = false;
 
-	float minSize = 0;
-	if (dims.x < dims.y && dims.x < dims.z) minSize = dims.x;
-	else if (dims.y < dims.z && dims.y < dims.x) minSize = dims.y;
-	else minSize = dims.z;
-
-	for (int x = 0; x < 2; ++x)
+	//checks to make sure the pnode is in the octree it thinks it is.
+	auto location = std::find(tree->pnodesInZone.begin(), tree->pnodesInZone.end(), pnode);
+	if (location != tree->pnodesInZone.end())
 	{
-		for (int y = 0; y < 2; ++y)
+		tree->pnodesInZone.erase(location);
+
+		if (tree->pnodesInZone.size() == 0)
 		{
-			for (int z = 0; z < 2; ++z)
-			{
-				int num = x * 4 + y * 2 + z;
-				Vector3 pos = centre + Vector3(-x * dims.x, -y * dims.y, -z * dims.z);
-
-				std::vector<PhysicsNode*> pnodesInZone;
-				pnodesInZone.clear();
-				for (int i = 0; i < nodeList.size(); ++i)
-				{
-					if (InZone(pos, dims, nodeList[i]))
-						pnodesInZone.push_back(nodeList[i]);
-				}
-
-				if (pnodesInZone.size() > MAX_OBJECTS && minSize > MIN_OCTANT_SIZE)
-				{
-					Octree* leaf = new Octree;
-					for (int i = 0; i < 8; ++i)
-						leaf->children[i] = NULL;
-					leaf->pos = pos + (dims * 0.5);
-					leaf->dimensions = dims * 0.5;
-					leaf->parent = tree;
-					tree->children[num] = leaf;
-					PopulateOctree(leaf, pnodesInZone);
-				}
-				else if (pnodesInZone.size() > 0)
-				{
-					for (size_t i = 0; i < pnodesInZone.size() - 1; ++i)
-					{
-						for (size_t j = i + 1; j < pnodesInZone.size(); ++j)
-						{
-							PhysicsNode *pnodeA, *pnodeB;
-
-							pnodeA = pnodesInZone[i];
-							pnodeB = pnodesInZone[j];
-
-							//Check they both atleast have collision shapes
-							if (pnodeA->GetCollisionShape() != NULL
-								&& pnodeB->GetCollisionShape() != NULL)
-							{
-								CollisionPair cp;
-								cp.pObjectA = pnodeA;
-								cp.pObjectB = pnodeB;
-								broadphaseColPairs.push_back(cp);
-							}
-						}
-					}
-				}
-			}
+			destroy = true;
+			for (int i = 0; i < 8; ++i)
+				if (tree->children[i]) destroy = false;
 		}
+	}
+	else
+	{
+		__debugbreak;
+		return;
+	}
+
+	if (tree->parent)
+	{
+		MoveUp(tree->parent, pnode);
+		if (destroy) TerminateOctree(tree);
+	}
+	else
+		AddToOctree(tree, pnode);
+}
+
+void PhysicsEngine::MoveUp(Octree* tree, PhysicsNode* pnode)
+{
+	if (WhichZones(tree->pos, pnode).none())
+	{
+		if (tree->parent)
+			MoveUp(tree->parent, pnode);
+		else
+		{
+			__debugbreak;
+			return;
+		}
+	}
+	else
+	{
+		AddToOctree(tree, pnode);
 	}
 }
 
 void PhysicsEngine::TerminateOctree(Octree* tree)
 {
+	for (int i = 0; i < tree->pnodesInZone.size(); ++i)
+		tree->pnodesInZone[i]->SetOctree(NULL);
 	for (int i = 0; i < 8; ++i)
 		if (tree->children[i])
 			TerminateOctree(tree->children[i]);
+	tree->parent = NULL;
 	delete tree;
 	tree = NULL;
-}
-
-// pos is the position of the corner of the octant with the lowest (most negative)
-// x, y and z coordinate. dims is the dimensions of the octant and pnode
-// is the node that is being checked.
-
-bool PhysicsEngine::InZone(Vector3 pos, Vector3 dims, PhysicsNode* pnode)
-{
-	float radius = 0;
-	if (pnode->GetParent())
-		radius = pnode->GetParent()->GetBoundingRadius();
-	Vector3 pnodePos = pnode->GetPosition();
-
-	//do a quick brute force sphere check befoe AABB
-	Vector3 dir = pnode->GetPosition() - (pos + (dims * 0.5));
-	if (dir.Length() < radius + (dims.Length() / 2))
-	{
-		if (pnodePos.x + radius > pos.x)
-		{
-			if (pnodePos.x - radius < pos.x + dims.x)
-			{
-				if (pnodePos.y + radius > pos.y)
-				{
-					if (pnodePos.y - radius < pos.y + dims.y)
-					{
-						if (pnodePos.z + radius > pos.z)
-						{
-							if (pnodePos.z - radius < pos.z + dims.z)
-							{
-								return true;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return false;
 }
 
 // the return value's 8 bits tell you which octants the pnode is in

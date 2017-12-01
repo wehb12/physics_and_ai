@@ -21,6 +21,9 @@ void PhysicsNode::IntegrateForVelocity(float dt)
 
 	linVelocity = linVelocity * PhysicsEngine::Instance()->GetDampingFactor();
 	angVelocity = angVelocity * PhysicsEngine::Instance()->GetDampingFactor();
+
+	if (linVelocity != Vector3(0, 0, 0))
+		PhysicsEngine::Instance()->UpdateNodePosition(this);
 }
 
 /* Between these two functions the physics engine will solve for velocity

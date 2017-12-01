@@ -155,6 +155,9 @@ void HandleKeyboardInputs()
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_V))
 		drawFlags ^= DEBUGDRAW_FLAGS_MANIFOLD;
 
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_O))
+		PhysicsEngine::Instance()->ToggleOctrees();
+
 	PhysicsEngine::Instance()->SetDebugDrawFlags(drawFlags);
 
 }

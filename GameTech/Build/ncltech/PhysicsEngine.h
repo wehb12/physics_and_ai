@@ -65,7 +65,7 @@ Description:
 
 //define the max number of objects per octree zone
 #define MAX_OBJECTS 1
-#define MIN_OCTANT_SIZE 1.0f
+#define MIN_OCTANT_SIZE 0.1f
 
 struct CollisionPair	//Forms the output of the broadphase collision detection
 {
@@ -122,8 +122,7 @@ public:
 	inline float GetDeltaTime() const			{ return updateTimestep; }
 
 	inline void ToggleOctrees()					{ useOctree = !useOctree; }
-	//void AddToOctree(PhysicsNode* pnode)		{ AddToOctree(root, pnode); }
-	//void GenColPairs()							{ GenColPairs(root); }
+	void UpdateNodePosition(PhysicsNode* pnode);
 
 	void PrintPerformanceTimers(const Vector4& color)
 	{
@@ -142,16 +141,14 @@ protected:
 
 	//Handles broadphase collision detection
 	void BroadPhaseCollisions();
-	//Populates the lists for each octree zone
-	void PopulateOctree(Octree* tree, std::vector<PhysicsNode*> nodeList);
+	//Generates Collsion pairs from an Octree
 	void GenColPairs(Octree* tree);
 	void AddToOctree(Octree* tree, PhysicsNode* pnode);
 	void DrawOctree(Octree* tree);
+	void MoveUp(Octree* tree, PhysicsNode* pnode);
 	//delete all heap Octree structs
 	void TerminateOctree(Octree* tree);
-	//Checks to see if a node is in a zone
-	//Populates a second list with inzone nodes
-	bool InZone(Vector3 pos, Vector3 dims, PhysicsNode* pnode);
+	//checks to see which zones a node is in
 	std::bitset<8> WhichZones(Vector3 pos, PhysicsNode* pnode);
 
 	//Handles narrowphase collision detection

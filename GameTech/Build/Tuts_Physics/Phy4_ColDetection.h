@@ -148,9 +148,6 @@ public:
 			}
 		}
 
-		if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_O))
-			PhysicsEngine::Instance()->ToggleOctrees();
-
 		uint drawFlags = PhysicsEngine::Instance()->GetDebugDrawFlags();
 
 

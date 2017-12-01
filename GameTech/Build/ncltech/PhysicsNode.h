@@ -53,7 +53,7 @@ typedef std::function<bool(PhysicsNode* this_obj, PhysicsNode* colliding_obj)> P
 //	const Matrix4& transform - New World transform of the physics node
 typedef std::function<void(const Matrix4& transform)> PhysicsUpdateCallback;
 
-
+struct Octree;
 class GameObject;
 class PhysicsNode
 {
@@ -69,6 +69,7 @@ public:
 		, invInertia(Matrix3::ZeroMatrix)
 		, collisionShape(NULL)
 		, parent(NULL)
+		, octree(NULL)
 		, friction(0.5f)
 		, elasticity(0.9f)
 		, boundingRadius(100.0f)
@@ -109,7 +110,7 @@ public:
 
 	const Matrix4&				GetWorldSpaceTransform()    const { return worldTransform; }
 
-
+	inline Octree*				GetOctree()					const { return octree; }
 
 
 	//<--------- SETTERS ------------->
@@ -127,6 +128,8 @@ public:
 	inline void SetAngularVelocity(const Vector3& v)				{ angVelocity = v; }
 	inline void SetTorque(const Vector3& v)							{ torque = v; }
 	inline void SetInverseInertia(const Matrix3& v)					{ invInertia = v; }
+
+	inline void SetOctree(Octree* o)								{ octree = o; }
 
 	inline void SetCollisionShape(CollisionShape* colShape)
 	{ 
@@ -163,6 +166,7 @@ protected:
 	GameObject*				parent;
 	Matrix4					worldTransform;
 	PhysicsUpdateCallback	onUpdateCallback;
+	Octree*					octree;
 
 
 //Added in Tutorial 2
