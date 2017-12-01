@@ -42,6 +42,7 @@ Description:
 #include <nclgl\PerfTimer.h>
 #include <vector>
 #include <mutex>
+#include <bitset>
 
 
 //Number of jacobi iterations to apply in order to
@@ -64,7 +65,7 @@ Description:
 
 //define the max number of objects per octree zone
 #define MAX_OBJECTS 1
-#define MIN_OCTANT_SIZE 5.0f
+#define MIN_OCTANT_SIZE 1.0f
 
 struct CollisionPair	//Forms the output of the broadphase collision detection
 {
@@ -76,7 +77,7 @@ struct Octree
 {
 	Vector3 pos;
 	Vector3 dimensions;
-	std::vector<PhysicsNode*> pnodesInZone[8];
+	std::vector<PhysicsNode*> pnodesInZone;
 	Octree* children[8];
 	Octree* parent;
 };
@@ -144,13 +145,14 @@ protected:
 	//Populates the lists for each octree zone
 	void PopulateOctree(Octree* tree, std::vector<PhysicsNode*> nodeList);
 	void GenColPairs(Octree* tree);
-	void AddToOctree(Octree* tree, PhysicsNode* pnode, bool split = false);
+	void AddToOctree(Octree* tree, PhysicsNode* pnode);
 	void DrawOctree(Octree* tree);
 	//delete all heap Octree structs
 	void TerminateOctree(Octree* tree);
 	//Checks to see if a node is in a zone
 	//Populates a second list with inzone nodes
 	bool InZone(Vector3 pos, Vector3 dims, PhysicsNode* pnode);
+	std::bitset<8> WhichZones(Vector3 pos, PhysicsNode* pnode);
 
 	//Handles narrowphase collision detection
 	void NarrowPhaseCollisions();

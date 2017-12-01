@@ -2,9 +2,9 @@ TO DO LIST
 
 1. [ ] Change broadphase box dimensions to adjust with the scene, instead of being arbitrarily set
 2. [ ] Make narrowphase avoid duplicate collision checks on two objects spanning two octants
-	2.a [ ] Change octree so that a node stradling a boundary is in the parent node's list.	
+	2.a [x] Change octree so that a node stradling a boundary is in the parent node's list.	
 		2.a.i [ ] Make sure each node is only stored once now, not in multiple lists
 3. [ ] Put Octree functionality into its own class
 4. [ ] Change octree when a node moves zone
 5. [ ] Octree doesn't seem to work properly, doesn't acknowledge cuboid nodes in tutorials 4i and 5
-	5.a [ ] Check to see if old PopulateTree() function works
+	5.a [x] Check to see if old PopulateTree() function works
