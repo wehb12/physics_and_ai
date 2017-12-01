@@ -55,6 +55,10 @@ void Manifold::SolveContactPoint(ContactPoint& c)
 		float jn = max(-Vector3::Dot(dv, c.colNormal) + c.b_term, 0.0f);
 		jn = jn / constraintMass;
 
+		float oldSumImpulseContact = c.sumImpulseContact;
+		c.sumImpulseContact = max(c.sumImpulseContact + jn, 0.0f);
+		jn = c.sumImpulseContact - oldSumImpulseContact;
+
 		pnodeA->SetLinearVelocity(pnodeA->GetLinearVelocity()
 			- c.colNormal *(jn * pnodeA->GetInverseMass()));
 		pnodeB->SetLinearVelocity(pnodeB->GetLinearVelocity()
@@ -90,6 +94,17 @@ void Manifold::SolveContactPoint(ContactPoint& c)
 
 			jt = jt / frictionalMass;
 
+			Vector3 oldImpulseFriction = c.sumImpulseFriction;
+			c.sumImpulseFriction = c.sumImpulseFriction + tangent * jt;
+			float len = c.sumImpulseFriction.Length();
+			
+			
+			if (len > 0.0f && len > c.sumImpulseContact)
+				c.sumImpulseFriction = c.sumImpulseFriction / len * c.sumImpulseContact;
+	
+			tangent = c.sumImpulseFriction - oldImpulseFriction;
+			jt = 1.0f;
+
 			pnodeA->SetLinearVelocity(pnodeA->GetLinearVelocity()
 				- tangent *(jt * pnodeA->GetInverseMass()));
 			pnodeB->SetLinearVelocity(pnodeB->GetLinearVelocity()
@@ -107,6 +122,8 @@ void Manifold::SolveContactPoint(ContactPoint& c)
 
 void Manifold::PreSolverStep(float dt)
 {
+	std::random_shuffle(contactPoints.begin(), contactPoints.end());
+
 	for (ContactPoint& contact : contactPoints)
 	{
 		UpdateConstraint(contact);

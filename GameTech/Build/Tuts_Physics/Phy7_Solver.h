@@ -46,7 +46,7 @@ public:
 					Vector3((x * 1.1f - y * 0.5f) * width_scalar, (0.5f + float(m_StackHeight - 1) - y) * height_scalar, -0.5f),
 					Vector3(width_scalar * 0.5f, height_scalar * 0.5f, 0.5f),
 					true,
-					1.f,
+					0.1f,
 					true,
 					true,
 					color);

@@ -63,7 +63,7 @@ public:
 					start_off + Vector3(0.0f, 0.0f, -2.5f + i * 1.1f),
 					Vector3(0.5f, 0.5f, 0.5f),
 					true,
-					1.f,
+					0.1f,
 					true,
 					true,
 					color);

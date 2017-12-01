@@ -7,3 +7,4 @@ TO DO LIST
 3. [ ] Put Octree functionality into its own class
 4. [ ] Change octree when a node moves zone
 5. [ ] Octree doesn't seem to work properly, doesn't acknowledge cuboid nodes in tutorials 4i and 5
+	5.a [ ] Check to see if old PopulateTree() function works
