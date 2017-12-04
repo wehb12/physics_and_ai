@@ -54,7 +54,7 @@ public:
 			{
 				Vector4 color = CommonUtils::GenColor(0.7f + i * 0.05f, 1.0f);
 				GameObject* obj = CommonUtils::BuildSphereObject(
-					"",
+					"sphere" + to_string(i),
 					Vector3(-6.0f + i * 1.25f, 5.5f, -5.0f),
 					0.5f,
 					true,
@@ -63,7 +63,7 @@ public:
 					true,
 					color);
 				obj->Physics()->SetFriction(0.0f);
-				obj->Physics()->SetElasticity(i * 0.2f);
+				obj->Physics()->SetElasticity((5 - i) * 0.2f);
 				this->AddGameObject(obj);
 			}
 		}

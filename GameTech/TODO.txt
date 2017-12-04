@@ -9,3 +9,8 @@ TO DO LIST
 	4.a [ ] Fix this, the octree breaks when a node moves - possibly not terminating the tree correctly.
 5. [x] Octree doesn't seem to work properly, doesn't acknowledge cuboid nodes in tutorials 4i and 5
 	5.a [x] Check to see if old PopulateTree() function works
+6. [x] Change WhichZones function, should test against outer walls as well for when moving back up the tree.
+	6.a [x] Maybe this could be a coarse initial check.
+	(ended up creating a new function that checks if a node is in the surrounding parent octree)
+7. [x] Change GenColPairs to make a pair for nodes spanning several octants and children of said octants.
+8. [ ] Make the edges of the master octree (root) a boundary (as nodes that go outside said tree causes errors)

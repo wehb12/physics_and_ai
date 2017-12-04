@@ -122,6 +122,7 @@ public:
 	inline float GetDeltaTime() const			{ return updateTimestep; }
 
 	inline void ToggleOctrees()					{ useOctree = !useOctree; }
+	inline bool Octrees()						{ return useOctree; }
 	void UpdateNodePosition(PhysicsNode* pnode);
 
 	void PrintPerformanceTimers(const Vector4& color)
@@ -142,14 +143,17 @@ protected:
 	//Handles broadphase collision detection
 	void BroadPhaseCollisions();
 	//Generates Collsion pairs from an Octree
+	void GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPnodes);
 	void GenColPairs(Octree* tree);
 	void AddToOctree(Octree* tree, PhysicsNode* pnode);
 	void DrawOctree(Octree* tree);
 	void MoveUp(Octree* tree, PhysicsNode* pnode);
+	void ResetRoot();
 	//delete all heap Octree structs
 	void TerminateOctree(Octree* tree);
 	//checks to see which zones a node is in
 	std::bitset<8> WhichZones(Vector3 pos, PhysicsNode* pnode);
+	bool InOctree(Vector3 pos, Vector3 dims, PhysicsNode* pnode);
 
 	//Handles narrowphase collision detection
 	void NarrowPhaseCollisions();

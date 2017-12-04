@@ -73,13 +73,13 @@ public:
 		sphereRender->SetMesh(CommonMeshes::Sphere());
 		sphereRender->SetTransform(Matrix4::Scale(Vector3(0.5f, 0.5f, 0.5f))); //No position! That is now all handled in PhysicsNode
 		sphereRender->SetColor(Vector4(1.0f, 0.2f, 0.5f, 1.0f));
-		sphereRender->SetBoundingRadius(1.0f);
 
 		m_Sphere = new GameObject("Sphere");
 		m_Sphere->SetRender(new RenderNode());
 		m_Sphere->Render()->AddChild(sphereRender);
 		m_Sphere->SetPhysics(new PhysicsNode());
 		m_Sphere->Physics()->SetInverseMass(1.f);
+		m_Sphere->SetBoundingRadius(1.0f);
 		//Position, vel and acceleration all set in "ResetScene()"
 		this->AddGameObject(m_Sphere);
 
