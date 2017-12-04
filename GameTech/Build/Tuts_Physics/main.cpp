@@ -105,6 +105,8 @@ void PrintStatusEntries()
 		NCLDebug::AddStatusEntry(status_color_debug, "Octrees           : %s [O]", PhysicsEngine::Instance()->Octrees() ? "Enabled" : "Disabled");
 		NCLDebug::AddStatusEntry(status_color_debug, "Sphere-Sphere     : %s [L]", PhysicsEngine::Instance()->SphereCheck() ? "Enabled" : "Disabled");
 		NCLDebug::AddStatusEntry(status_color_debug, "Collision Pairs   : %i", PhysicsEngine::Instance()->NumColPairs());
+		if (PhysicsEngine::Instance()->SphereCheck())
+			NCLDebug::AddStatusEntry(status_color_debug, "Sphere Checks     : %i", PhysicsEngine::Instance()->NumSphereChecks());
 		NCLDebug::AddStatusEntry(status_color_debug, "");
 	}
 

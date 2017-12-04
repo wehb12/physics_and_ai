@@ -127,6 +127,7 @@ public:
 
 	inline void ToggleSphereCheck()				{ sphereSphere = !sphereSphere; }
 	inline bool SphereCheck()					{ return sphereSphere; }
+	inline int NumSphereChecks()				{ return numSphereChecks; }
 
 	inline int NumColPairs()					{ return broadphaseColPairs.size(); }
 
@@ -174,6 +175,7 @@ protected:
 	Octree*						root;
 	bool						useOctree;
 	bool						sphereSphere;
+	int							numSphereChecks;
 
 	std::vector<PhysicsNode*>	physicsNodes;
 

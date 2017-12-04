@@ -150,6 +150,7 @@ void PhysicsEngine::UpdatePhysics()
 	
 	//-- Using positions from last frame --
 //1. Broadphase Collision Detection (Fast and dirty)
+	numSphereChecks = 0;
 	perfBroadphase.BeginTimingSection();
 	BroadPhaseCollisions();
 	perfBroadphase.EndTimingSection();
@@ -233,6 +234,7 @@ void PhysicsEngine::BroadPhaseCollisions()
 						{
 							Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
 							spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+							++numSphereChecks;
 						}
 
 						//do a coarse sphere-sphere check using bounding radii of the rendernodes
@@ -325,6 +327,7 @@ void PhysicsEngine::GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPn
 					{
 						Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
 						spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+						++numSphereChecks;
 					}
 
 					//do a coarse sphere-sphere check using bounding radii of the rendernodes
@@ -354,6 +357,7 @@ void PhysicsEngine::GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPn
 						{
 							Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
 							spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+							++numSphereChecks;
 						}
 
 						//do a coarse sphere-sphere check using bounding radii of the rendernodes
@@ -387,6 +391,7 @@ void PhysicsEngine::GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPn
 				{
 					Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
 					spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+					++numSphereChecks;
 				}
 
 				//do a coarse sphere-sphere check using bounding radii of the rendernodes
