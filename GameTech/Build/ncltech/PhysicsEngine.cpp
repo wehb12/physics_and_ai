@@ -23,6 +23,8 @@ PhysicsEngine::PhysicsEngine()
 	useOctree = false;
 	ResetRoot();
 
+	sphereSphere = false;
+
 	debugDrawFlags = DEBUGDRAW_FLAGS_MANIFOLD | DEBUGDRAW_FLAGS_CONSTRAINT;
 
 	SetDefaults();
@@ -50,6 +52,20 @@ void PhysicsEngine::RemovePhysicsObject(PhysicsNode* obj)
 	if (found_loc != physicsNodes.end())
 	{
 		physicsNodes.erase(found_loc);
+		if (obj->GetOctree())
+		{
+			auto location = std::find(obj->GetOctree()->pnodesInZone.begin(), obj->GetOctree()->pnodesInZone.end(), obj);
+			if (location != obj->GetOctree()->pnodesInZone.end())
+			{
+				obj->GetOctree()->pnodesInZone.erase(location);
+			}
+			else
+			{
+				__debugbreak;
+				return;
+			}
+			obj->SetOctree(NULL);
+		}
 	}
 }
 
@@ -92,7 +108,9 @@ void PhysicsEngine::Update(float deltaTime)
 	//   a way of calling "UpdatePhysics()" at regular intervals
 	//   or multiple times a frame if the physics timestep is higher
 	//   than the renderers.
-	const int max_updates_per_frame = 5;
+
+	// const int max_updates_per_frame = 5;
+	const int max_updates_per_frame = 1;
 
 	if (!isPaused)
 	{
@@ -209,10 +227,15 @@ void PhysicsEngine::BroadPhaseCollisions()
 						cp.pObjectA = pnodeA;
 						cp.pObjectB = pnodeB;
 						
-						Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+						bool spherePass = true;
+						if (sphereSphere)
+						{
+							Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+							spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+						}
 
 						//do a coarse sphere-sphere check using bounding radii of the rendernodes
-						if (ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius())
+						if (spherePass)
 							broadphaseColPairs.push_back(cp);
 					}
 				}
@@ -227,7 +250,7 @@ void PhysicsEngine::ResetRoot()
 	for (int i = 0; i < 8; ++i)
 		root->children[i] = NULL;
 	root->parent = NULL;
-	root->pos = Vector3(0.0f, 0.0f, 2.0f);
+	root->pos = Vector3(2.0f, 0.0f, 2.0f);
 	//arbitrary - assign differently later (??) // - searchable token
 	root->dimensions = Vector3(30.0f, 30.0f, 30.0f);
 }
@@ -296,10 +319,15 @@ void PhysicsEngine::GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPn
 					cp.pObjectA = pnodeA;
 					cp.pObjectB = pnodeB;
 
-					Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+					bool spherePass = true;
+					if (sphereSphere)
+					{
+						Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+						spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+					}
 
 					//do a coarse sphere-sphere check using bounding radii of the rendernodes
-					if (ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius())
+					if (spherePass)
 						broadphaseColPairs.push_back(cp);
 				}
 			}
@@ -320,10 +348,15 @@ void PhysicsEngine::GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPn
 						cp.pObjectA = pnodeA;
 						cp.pObjectB = pnodeB;
 						
-						Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+						bool spherePass = true;
+						if (sphereSphere)
+						{
+							Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+							spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+						}
 
 						//do a coarse sphere-sphere check using bounding radii of the rendernodes
-						if (ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius())
+						if (spherePass)
 							broadphaseColPairs.push_back(cp);
 					}
 				}
@@ -348,10 +381,15 @@ void PhysicsEngine::GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPn
 				cp.pObjectA = pnodeA;
 				cp.pObjectB = pnodeB;
 				
-				Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+				bool spherePass = true;
+				if (sphereSphere)
+				{
+					Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+					spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+				}
 
 				//do a coarse sphere-sphere check using bounding radii of the rendernodes
-				if (ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius())
+				if (spherePass)
 					broadphaseColPairs.push_back(cp);
 			}
 		}

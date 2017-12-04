@@ -125,6 +125,11 @@ public:
 	inline bool Octrees()						{ return useOctree; }
 	void UpdateNodePosition(PhysicsNode* pnode);
 
+	inline void ToggleSphereCheck()				{ sphereSphere = !sphereSphere; }
+	inline bool SphereCheck()					{ return sphereSphere; }
+
+	inline int NumColPairs()					{ return broadphaseColPairs.size(); }
+
 	void PrintPerformanceTimers(const Vector4& color)
 	{
 		perfUpdate.PrintOutputToStatusEntry(color,		"    Integration :");
@@ -169,6 +174,7 @@ protected:
 	std::vector<CollisionPair>  broadphaseColPairs;
 	Octree*						root;
 	bool						useOctree;
+	bool						sphereSphere;
 
 	std::vector<PhysicsNode*>	physicsNodes;
 

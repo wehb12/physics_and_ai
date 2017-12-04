@@ -103,6 +103,8 @@ void PrintStatusEntries()
 		NCLDebug::AddStatusEntry(status_color_debug, "Collision Volumes : %s [C] - Tut 4+", (drawFlags & DEBUGDRAW_FLAGS_COLLISIONVOLUMES) ? "Enabled " : "Disabled");
 		NCLDebug::AddStatusEntry(status_color_debug, "Manifolds         : %s [V] - Tut 5+", (drawFlags & DEBUGDRAW_FLAGS_MANIFOLD) ? "Enabled " : "Disabled");
 		NCLDebug::AddStatusEntry(status_color_debug, "Octrees           : %s [O]", PhysicsEngine::Instance()->Octrees() ? "Enabled" : "Disabled");
+		NCLDebug::AddStatusEntry(status_color_debug, "Sphere-Sphere     : %s [L]", PhysicsEngine::Instance()->SphereCheck() ? "Enabled" : "Disabled");
+		NCLDebug::AddStatusEntry(status_color_debug, "Collision Pairs   : %i", PhysicsEngine::Instance()->NumColPairs());
 		NCLDebug::AddStatusEntry(status_color_debug, "");
 	}
 
@@ -158,6 +160,9 @@ void HandleKeyboardInputs()
 
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_O))
 		PhysicsEngine::Instance()->ToggleOctrees();
+
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_L))
+		PhysicsEngine::Instance()->ToggleSphereCheck();
 
 	PhysicsEngine::Instance()->SetDebugDrawFlags(drawFlags);
 

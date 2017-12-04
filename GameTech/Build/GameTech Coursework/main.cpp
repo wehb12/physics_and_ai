@@ -66,6 +66,7 @@ void PrintStatusEntries()
 	NCLDebug::AddStatusEntry(status_colour, "     Physics Engine: %s (Press P to toggle)", PhysicsEngine::Instance()->IsPaused() ? "Paused  " : "Enabled ");
 	NCLDebug::AddStatusEntry(status_colour, "     Monitor V-Sync: %s (Press V to toggle)", GraphicsPipeline::Instance()->GetVsyncEnabled() ? "Enabled " : "Disabled");
 	NCLDebug::AddStatusEntry(status_colour, "     Octrees       : %s [O]", PhysicsEngine::Instance()->Octrees() ? "Enabled" : "Disabled");
+	NCLDebug::AddStatusEntry(status_colour, "     Sphere-Sphere : %s [L]", PhysicsEngine::Instance()->SphereCheck() ? "Enabled" : "Disabled");
 	NCLDebug::AddStatusEntry(status_colour, "");
 
 	//Print Current Scene Name
@@ -117,6 +118,9 @@ void HandleKeyboardInputs()
 
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_O))
 		PhysicsEngine::Instance()->ToggleOctrees();
+
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_L))
+		PhysicsEngine::Instance()->ToggleSphereCheck();
 
 	//fire a sphere in the direction the camera is looking
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_F))
