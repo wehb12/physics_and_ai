@@ -16,3 +16,4 @@ TO DO LIST
 8. [ ] Make the edges of the master octree (root) a boundary (as nodes that go outside said tree causes errors)
 	8.a [x] As an intermediate measure - make the InOctree function return true if the tree is the root
 9. [ ] Make the RemovePhysicsNode function update the tree if it removes the final node in a branch
+10. [x] Octrees still do not update properly - fix this.

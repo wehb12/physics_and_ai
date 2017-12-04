@@ -508,7 +508,20 @@ void PhysicsEngine::MoveUp(Octree* tree, PhysicsNode* pnode)
 	if (!InOctree(tree, pnode))
 	{
 		if (tree->parent)
-			MoveUp(tree->parent, pnode);
+		{
+			Octree* parent = tree->parent;
+
+			bool destroy = false;
+			if (tree->pnodesInZone.size() == 0)
+			{
+				destroy = true;
+				for (int i = 0; i < 8; ++i)
+					if (tree->children[i]) destroy = false;
+			}
+			if (destroy) TerminateOctree(tree);
+
+			MoveUp(parent, pnode);
+		}
 		else
 		{
 			__debugbreak;
