@@ -149,7 +149,6 @@ protected:
 	void BroadPhaseCollisions();
 	//Generates Collsion pairs from an Octree
 	void GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPnodes);
-	void GenColPairs(Octree* tree);
 	void AddToOctree(Octree* tree, PhysicsNode* pnode);
 	void DrawOctree(Octree* tree);
 	void MoveUp(Octree* tree, PhysicsNode* pnode);

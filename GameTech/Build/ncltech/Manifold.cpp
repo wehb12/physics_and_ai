@@ -103,7 +103,8 @@ void Manifold::SolveContactPoint(ContactPoint& c)
 				c.sumImpulseFriction = c.sumImpulseFriction / len * c.sumImpulseContact;
 	
 			tangent = c.sumImpulseFriction - oldImpulseFriction;
-			jt = 1.0f;
+			jt = 1.0f;
+
 
 			pnodeA->SetLinearVelocity(pnodeA->GetLinearVelocity()
 				- tangent *(jt * pnodeA->GetInverseMass()));
@@ -154,7 +155,8 @@ void Manifold::UpdateConstraint(ContactPoint& c)
 	// interested, the _slop part (and this issue in general) is usually
 	// handled in physics engines by pretending the collision volume is
 	// larger than it is during the narrowphase, so manifolds are
-	// generated for colliding, and almost colliding pairs.
+	// generated for colliding, and almost colliding pairs.
+
 	const float baumgarte_scalar = 0.1f;
 	const float baumgarte_slop = 0.001f;
 	const float penetration_slop = min(c.colPenetration + baumgarte_slop, 0.0f);
@@ -229,4 +231,4 @@ void Manifold::DebugDraw() const
 			globalOnA1 = globalOnA2;
 		}
 	}
-}
+}

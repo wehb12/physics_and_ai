@@ -195,7 +195,8 @@ void PhysicsEngine::BroadPhaseCollisions()
 	{
 		broadphaseColPairs.clear();
 
-		GenColPairs(root);
+		std::vector<PhysicsNode*> parentList;
+		GenColPairs(root, parentList);
 		DrawOctree(root);
 	}
 	else
@@ -347,7 +348,7 @@ void PhysicsEngine::GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPn
 						CollisionPair cp;
 						cp.pObjectA = pnodeA;
 						cp.pObjectB = pnodeB;
-						
+
 						bool spherePass = true;
 						if (sphereSphere)
 						{
@@ -380,7 +381,7 @@ void PhysicsEngine::GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPn
 				CollisionPair cp;
 				cp.pObjectA = pnodeA;
 				cp.pObjectB = pnodeB;
-				
+
 				bool spherePass = true;
 				if (sphereSphere)
 				{
@@ -391,38 +392,6 @@ void PhysicsEngine::GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPn
 				//do a coarse sphere-sphere check using bounding radii of the rendernodes
 				if (spherePass)
 					broadphaseColPairs.push_back(cp);
-			}
-		}
-	}
-}
-
-void PhysicsEngine::GenColPairs(Octree* tree)
-{
-	for (int i = 0; i < 8; ++i)
-	{
-		if (tree->children[i])
-			GenColPairs(tree->children[i], tree->pnodesInZone);
-	}
-	if (tree->pnodesInZone.size() > 1)
-	{
-		for (size_t i = 0; i < tree->pnodesInZone.size() - 1; ++i)
-		{
-			for (size_t j = i + 1; j < tree->pnodesInZone.size(); ++j)
-			{
-				PhysicsNode *pnodeA, *pnodeB;
-
-				pnodeA = tree->pnodesInZone[i];
-				pnodeB = tree->pnodesInZone[j];
-
-				//Check they both atleast have collision shapes
-				if (pnodeA->GetCollisionShape() != NULL
-					&& pnodeB->GetCollisionShape() != NULL)
-				{
-					CollisionPair cp;
-					cp.pObjectA = pnodeA;
-					cp.pObjectB = pnodeB;
-					broadphaseColPairs.push_back(cp);
-				}
 			}
 		}
 	}
