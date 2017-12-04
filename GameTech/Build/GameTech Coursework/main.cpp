@@ -65,6 +65,7 @@ void PrintStatusEntries()
 	NCLDebug::AddStatusEntry(status_colour_header, "NCLTech Settings");
 	NCLDebug::AddStatusEntry(status_colour, "     Physics Engine: %s (Press P to toggle)", PhysicsEngine::Instance()->IsPaused() ? "Paused  " : "Enabled ");
 	NCLDebug::AddStatusEntry(status_colour, "     Monitor V-Sync: %s (Press V to toggle)", GraphicsPipeline::Instance()->GetVsyncEnabled() ? "Enabled " : "Disabled");
+	NCLDebug::AddStatusEntry(status_colour, "     Octrees       : %s [O]", PhysicsEngine::Instance()->Octrees() ? "Enabled" : "Disabled");
 	NCLDebug::AddStatusEntry(status_colour, "");
 
 	//Print Current Scene Name

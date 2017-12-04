@@ -14,3 +14,4 @@ TO DO LIST
 	(ended up creating a new function that checks if a node is in the surrounding parent octree)
 7. [x] Change GenColPairs to make a pair for nodes spanning several octants and children of said octants.
 8. [ ] Make the edges of the master octree (root) a boundary (as nodes that go outside said tree causes errors)
+	8.a [x] As an intermediate measure - make the InOctree function return true if the tree is the root

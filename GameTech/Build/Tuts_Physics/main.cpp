@@ -102,7 +102,7 @@ void PrintStatusEntries()
 		NCLDebug::AddStatusEntry(status_color_debug, "Collision Normals : %s [X] - Tut 4", (drawFlags & DEBUGDRAW_FLAGS_COLLISIONNORMALS) ? "Enabled " : "Disabled");
 		NCLDebug::AddStatusEntry(status_color_debug, "Collision Volumes : %s [C] - Tut 4+", (drawFlags & DEBUGDRAW_FLAGS_COLLISIONVOLUMES) ? "Enabled " : "Disabled");
 		NCLDebug::AddStatusEntry(status_color_debug, "Manifolds         : %s [V] - Tut 5+", (drawFlags & DEBUGDRAW_FLAGS_MANIFOLD) ? "Enabled " : "Disabled");
-		NCLDebug::AddStatusEntry(status_color_debug, "Octrees			: %s [O]", PhysicsEngine::Instance()->Octrees() ? "Enabled" : "Disabled");
+		NCLDebug::AddStatusEntry(status_color_debug, "Octrees           : %s [O]", PhysicsEngine::Instance()->Octrees() ? "Enabled" : "Disabled");
 		NCLDebug::AddStatusEntry(status_color_debug, "");
 	}
 

@@ -208,7 +208,12 @@ void PhysicsEngine::BroadPhaseCollisions()
 						CollisionPair cp;
 						cp.pObjectA = pnodeA;
 						cp.pObjectB = pnodeB;
-						broadphaseColPairs.push_back(cp);
+						
+						Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+
+						//do a coarse sphere-sphere check using bounding radii of the rendernodes
+						if (ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius())
+							broadphaseColPairs.push_back(cp);
 					}
 				}
 			}
@@ -222,7 +227,7 @@ void PhysicsEngine::ResetRoot()
 	for (int i = 0; i < 8; ++i)
 		root->children[i] = NULL;
 	root->parent = NULL;
-	root->pos = Vector3(0.0f, 0.0f, 0.0f);
+	root->pos = Vector3(0.0f, 0.0f, 2.0f);
 	//arbitrary - assign differently later (??) // - searchable token
 	root->dimensions = Vector3(30.0f, 30.0f, 30.0f);
 }
@@ -290,7 +295,12 @@ void PhysicsEngine::GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPn
 					CollisionPair cp;
 					cp.pObjectA = pnodeA;
 					cp.pObjectB = pnodeB;
-					broadphaseColPairs.push_back(cp);
+
+					Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+
+					//do a coarse sphere-sphere check using bounding radii of the rendernodes
+					if (ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius())
+						broadphaseColPairs.push_back(cp);
 				}
 			}
 			if (parentPnodes.size() > 0)
@@ -309,7 +319,12 @@ void PhysicsEngine::GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPn
 						CollisionPair cp;
 						cp.pObjectA = pnodeA;
 						cp.pObjectB = pnodeB;
-						broadphaseColPairs.push_back(cp);
+						
+						Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+
+						//do a coarse sphere-sphere check using bounding radii of the rendernodes
+						if (ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius())
+							broadphaseColPairs.push_back(cp);
 					}
 				}
 			}
@@ -332,7 +347,12 @@ void PhysicsEngine::GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPn
 				CollisionPair cp;
 				cp.pObjectA = pnodeA;
 				cp.pObjectB = pnodeB;
-				broadphaseColPairs.push_back(cp);
+				
+				Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+
+				//do a coarse sphere-sphere check using bounding radii of the rendernodes
+				if (ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius())
+					broadphaseColPairs.push_back(cp);
 			}
 		}
 	}
@@ -473,7 +493,7 @@ void PhysicsEngine::UpdateNodePosition(PhysicsNode* pnode)
 
 void PhysicsEngine::MoveUp(Octree* tree, PhysicsNode* pnode)
 {
-	if (!InOctree(tree->pos, tree->dimensions, pnode))
+	if (!InOctree(tree, pnode))
 	{
 		if (tree->parent)
 			MoveUp(tree->parent, pnode);
@@ -513,8 +533,14 @@ void PhysicsEngine::TerminateOctree(Octree* tree)
 
 // must check node is COMPLETELY within a tree when moving up the tree
 // assume node is in a tree when moving down and do not run this function
-bool PhysicsEngine::InOctree(Vector3 pos, Vector3 dims, PhysicsNode* pnode)
+bool PhysicsEngine::InOctree(Octree* tree, PhysicsNode* pnode)
 {
+	// assumes the root node has infinite dimensions // change to the bound of the tree are constraints (??)
+	if (tree == root)
+		return true;
+
+	Vector3 pos = tree->pos;
+	Vector3 dims = tree->dimensions;
 	Vector3 pPos = pnode->GetPosition();
 	float radius = pnode->GetBoundingRadius();
 
@@ -613,76 +639,68 @@ void PhysicsEngine::NarrowPhaseCollisions()
 			PhysicsNode* pnodeA = cp.pObjectA;
 			PhysicsNode* pnodeB = cp.pObjectB;
 
-			Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
-			
-			//do a coarse sphere-sphere check using bounding radii of the rendernodes
-			if (ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius())
+			colDetect.BeginNewPair(
+				cp.pObjectA,
+				cp.pObjectB,
+				cp.pObjectA->GetCollisionShape(),
+				cp.pObjectB->GetCollisionShape());
+
+			//--TUTORIAL 4 CODE--
+			// Detects if the objects are colliding
+			if (colDetect.AreColliding(&colData))
 			{
-				colDetect.BeginNewPair(
-					cp.pObjectA,
-					cp.pObjectB,
-					cp.pObjectA->GetCollisionShape(),
-					cp.pObjectB->GetCollisionShape());
+				//Note: As at the end of tutorial 4 we have very little to do, this is a bit messier
+				//      than it should be. We now fire oncollision events for the two objects so they
+				//      can handle AI and also optionally draw the collision normals to see roughly
+				//      where and how the objects are colliding.
 
-				//--TUTORIAL 4 CODE--
-				// Detects if the objects are colliding
-				if (colDetect.AreColliding(&colData))
+				//Draw collision data to the window if requested
+				// - Have to do this here as colData is only temporary. 
+				if (debugDrawFlags & DEBUGDRAW_FLAGS_COLLISIONNORMALS)
 				{
-					//Note: As at the end of tutorial 4 we have very little to do, this is a bit messier
-					//      than it should be. We now fire oncollision events for the two objects so they
-					//      can handle AI and also optionally draw the collision normals to see roughly
-					//      where and how the objects are colliding.
+					NCLDebug::DrawPointNDT(colData._pointOnPlane, 0.1f, Vector4(0.5f, 0.5f, 1.0f, 1.0f));
+					NCLDebug::DrawThickLineNDT(colData._pointOnPlane, colData._pointOnPlane - colData._normal * colData._penetration, 0.05f, Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+				}
 
-					//Draw collision data to the window if requested
-					// - Have to do this here as colData is only temporary. 
-					if (debugDrawFlags & DEBUGDRAW_FLAGS_COLLISIONNORMALS)
+				//Check to see if any of the objects have a OnCollision callback that dont want the objects to physically collide
+				bool okA = cp.pObjectA->FireOnCollisionEvent(cp.pObjectA, cp.pObjectB);
+				bool okB = cp.pObjectB->FireOnCollisionEvent(cp.pObjectB, cp.pObjectA);
+
+				if (okA && okB)
+				{
+					/* TUTORIAL 5 CODE */
+					// Build full collision manifold that will also handle the
+					// collision response between the two objects in the solver stage
+					Manifold* manifold = new Manifold();
+
+					manifold->Initiate(cp.pObjectA, cp.pObjectB);
+
+					// Construct contact points that form the perimeter of the collision manifold
+
+					colDetect.GenContactPoints(manifold);
+
+					if (manifold->contactPoints.size() > 0)
 					{
-						NCLDebug::DrawPointNDT(colData._pointOnPlane, 0.1f, Vector4(0.5f, 0.5f, 1.0f, 1.0f));
-						NCLDebug::DrawThickLineNDT(colData._pointOnPlane, colData._pointOnPlane - colData._normal * colData._penetration, 0.05f, Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+						// Add to list of manifolds that need solving
+						manifolds.push_back(manifold);
+
+						//Draw manifold data to the window if requested
+						if (debugDrawFlags & DEBUGDRAW_FLAGS_MANIFOLD)
+						{
+							manifold->DebugDraw();
+							//NCLDebug::DrawPolygon(manifold->contactPoints.size(), );
+						}
 					}
-
-					//Check to see if any of the objects have a OnCollision callback that dont want the objects to physically collide
-					bool okA = cp.pObjectA->FireOnCollisionEvent(cp.pObjectA, cp.pObjectB);
-					bool okB = cp.pObjectB->FireOnCollisionEvent(cp.pObjectB, cp.pObjectA);
-
-					if (okA && okB)
+					else
 					{
-						/* TUTORIAL 5 CODE */
-						// Build full collision manifold that will also handle the
-						// collision response between the two objects in the solver stage
-						Manifold* manifold = new Manifold();
-
-						manifold->Initiate(cp.pObjectA, cp.pObjectB);
-
-						// Construct contact points that form the perimeter of the collision manifold
-
-						colDetect.GenContactPoints(manifold);
-
-						if (manifold->contactPoints.size() > 0)
-						{
-							// Add to list of manifolds that need solving
-							manifolds.push_back(manifold);
-
-							//Draw manifold data to the window if requested
-							if (debugDrawFlags & DEBUGDRAW_FLAGS_MANIFOLD)
-							{
-								manifold->DebugDraw();
-								//NCLDebug::DrawPolygon(manifold->contactPoints.size(), );
-							}
-						}
-						else
-						{
-							delete manifold;
-							manifold = NULL;
-						}
+						delete manifold;
+						manifold = NULL;
 					}
 				}
 			}
 		}
-
 	}
 }
-
 
 void PhysicsEngine::DebugRender()
 {

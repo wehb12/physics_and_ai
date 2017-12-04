@@ -53,7 +53,7 @@ void TestScene::OnInitializeScene()
 		Vector3(5.f, 0.5f, 0.0f),	// Position
 		Vector3(0.5f, 0.5f, 1.0f),  // Half-Dimensions
 		true,						// Physics Enabled?
-		0.f,						// Physical Mass (must have physics enabled)
+		0.1f,						// Physical Mass (must have physics enabled)
 		true,						// Physically Collidable (has collision shape)
 		false,						// Dragable by user?
 		Vector4(0.1f, 0.1f, 0.1f, 1.0f)); // Render color
@@ -76,7 +76,7 @@ void TestScene::OnInitializeScene()
 					pos,					// Position
 					halfdims,				// Half-Dimensions
 					true,					// Physics Enabled?
-					1.f,					// Physical Mass (must have physics enabled)
+					0.1f,					// Physical Mass (must have physics enabled)
 					true,					// Physically Collidable (has collision shape)
 					true,					// Dragable by user?
 					color);					// Render color
