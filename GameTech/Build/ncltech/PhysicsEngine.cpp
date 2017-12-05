@@ -468,6 +468,9 @@ void PhysicsEngine::AddToOctree(Octree* tree, PhysicsNode* pnode)
 
 void PhysicsEngine::UpdateNodePosition(PhysicsNode* pnode)
 {
+	if (!useOctree)
+		return;
+
 	Octree* tree = pnode->GetOctree();
 	bool destroy = false;
 	Octree* parent = tree->parent;

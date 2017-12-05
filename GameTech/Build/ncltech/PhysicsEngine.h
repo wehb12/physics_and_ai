@@ -64,8 +64,8 @@ Description:
 #define DEBUGDRAW_FLAGS_COLLISIONNORMALS		0x8
 
 //define the max number of objects per octree zone
-#define MAX_OBJECTS 5
-#define MIN_OCTANT_SIZE 2.0f
+#define MAX_OBJECTS 3
+#define MIN_OCTANT_SIZE 3.0f
 
 struct CollisionPair	//Forms the output of the broadphase collision detection
 {
