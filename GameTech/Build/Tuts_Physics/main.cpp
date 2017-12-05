@@ -166,6 +166,42 @@ void HandleKeyboardInputs()
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_L))
 		PhysicsEngine::Instance()->ToggleSphereCheck();
 
+	//fire a sphere in the direction the camera is looking
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_J))
+	{
+		GameObject* sphere = CommonUtils::BuildSphereObject(
+			"fired_sphere",					// Optional: Name
+			GraphicsPipeline::Instance()->GetCamera()->GetPosition(),		// Position
+			1.0f,				// Half-Dimensions
+			true,				// Physics Enabled?
+			0.1f,				// Physical Mass (must have physics enabled)
+			true,				// Physically Collidable (has collision shape)
+			true,				// Dragable by user?
+			Vector4(1.0f, 1.0f, 0.0f, 1.0f));// Render color
+		Matrix4 view = GraphicsPipeline::Instance()->GetCamera()->BuildViewMatrix();
+		Vector3 dir = Vector3(20 * view[2], 20 * view[6], 20 * view[10]);
+		sphere->Physics()->SetLinearVelocity(-dir);
+		SceneManager::Instance()->GetCurrentScene()->AddGameObject(sphere);
+	}
+
+	//fire a sphere in the direction the camera is looking
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_K))
+	{
+		GameObject* cuboid = CommonUtils::BuildCuboidObject(
+			"fired_cube",					// Optional: Name
+			GraphicsPipeline::Instance()->GetCamera()->GetPosition(),		// Position
+			Vector3(0.5f, 0.5f, 0.5f),				// Half-Dimensions
+			true,				// Physics Enabled?
+			0.1f,				// Physical Mass (must have physics enabled)
+			true,				// Physically Collidable (has collision shape)
+			true,				// Dragable by user?
+			Vector4(0.0f, 1.0f, 1.0f, 1.0f));// Render color
+		Matrix4 view = GraphicsPipeline::Instance()->GetCamera()->BuildViewMatrix();
+		Vector3 dir = Vector3(20 * view[2], 20 * view[6], 20 * view[10]);
+		cuboid->Physics()->SetLinearVelocity(-dir);
+		SceneManager::Instance()->GetCurrentScene()->AddGameObject(cuboid);
+	}
+
 	PhysicsEngine::Instance()->SetDebugDrawFlags(drawFlags);
 
 }

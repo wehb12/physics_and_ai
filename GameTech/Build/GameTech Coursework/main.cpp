@@ -123,7 +123,7 @@ void HandleKeyboardInputs()
 		PhysicsEngine::Instance()->ToggleSphereCheck();
 
 	//fire a sphere in the direction the camera is looking
-	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_F))
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_J))
 	{
 		GameObject* sphere = CommonUtils::BuildSphereObject(
 			"fired_sphere",					// Optional: Name
