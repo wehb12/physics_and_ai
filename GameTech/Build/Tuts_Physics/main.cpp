@@ -172,7 +172,7 @@ void HandleKeyboardInputs()
 		GameObject* sphere = CommonUtils::BuildSphereObject(
 			"fired_sphere",					// Optional: Name
 			GraphicsPipeline::Instance()->GetCamera()->GetPosition(),		// Position
-			1.0f,				// Half-Dimensions
+			0.5f,				// Half-Dimensions
 			true,				// Physics Enabled?
 			0.1f,				// Physical Mass (must have physics enabled)
 			true,				// Physically Collidable (has collision shape)
