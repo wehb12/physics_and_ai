@@ -129,6 +129,9 @@ public:
 	inline bool SphereCheck()					{ return sphereSphere; }
 	inline int NumSphereChecks()				{ return numSphereChecks; }
 
+	inline void ToggleGPUAcceleration()			{ gpuAccel = !gpuAccel; }
+	inline bool GetGPUAccelerationState()		{ return gpuAccel; }
+
 	inline int NumColPairs()					{ return broadphaseColPairs.size(); }
 
 	void PrintPerformanceTimers(const Vector4& color)
@@ -163,6 +166,9 @@ protected:
 	//Handles narrowphase collision detection
 	void NarrowPhaseCollisions();
 
+	//Sends info to GPU to perform narrowphase collision checks on sphere-sphere collisions
+	void GPUCollisionCheck();
+
 protected:
 	bool		isPaused;
 	float		updateTimestep, updateRealTimeAccum;
@@ -176,6 +182,8 @@ protected:
 	bool						useOctree;
 	bool						sphereSphere;
 	int							numSphereChecks;
+
+	bool		gpuAccel;
 
 	std::vector<PhysicsNode*>	physicsNodes;
 

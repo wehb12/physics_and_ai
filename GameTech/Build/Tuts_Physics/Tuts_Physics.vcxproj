@@ -52,6 +52,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.0.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -83,7 +84,7 @@
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ncltech.lib;nclgl.lib;SOIL.lib;enet.lib;ws2_32.lib;Winmm.lib;glew32.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cudart.lib;ncltech.lib;nclgl.lib;SOIL.lib;enet.lib;ws2_32.lib;Winmm.lib;glew32.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -124,6 +125,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CUDA_BallPool.h" />
     <ClInclude Include="ObjectPlayer.h" />
     <ClInclude Include="Phy2_Integration.h" />
     <ClInclude Include="Phy3_Constraints.h" />
@@ -134,7 +136,13 @@
     <ClInclude Include="Phy6_ColResponseElasticity.h" />
     <ClInclude Include="Phy7_Solver.h" />
   </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="CUDA_SphereSphereCheck.cu">
+      <AdditionalDeps Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"../nclgl/Vector3.h"</AdditionalDeps>
+    </CudaCompile>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.0.targets" />
   </ImportGroup>
 </Project>

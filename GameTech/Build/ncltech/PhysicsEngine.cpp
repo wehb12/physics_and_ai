@@ -6,6 +6,10 @@
 #include <omp.h>
 #include <algorithm>
 
+// CUDA includes
+#include<cuda_runtime.h>
+#include<vector_types.h>
+
 void PhysicsEngine::SetDefaults()
 {
 	//Variables set here /will/ be reset with each scene
@@ -24,6 +28,8 @@ PhysicsEngine::PhysicsEngine()
 	ResetRoot();
 
 	sphereSphere = false;
+
+	gpuAccel = false;
 
 	debugDrawFlags = DEBUGDRAW_FLAGS_MANIFOLD | DEBUGDRAW_FLAGS_CONSTRAINT;
 
@@ -152,11 +158,14 @@ void PhysicsEngine::UpdatePhysics()
 //1. Broadphase Collision Detection (Fast and dirty)
 	numSphereChecks = 0;
 	perfBroadphase.BeginTimingSection();
-	BroadPhaseCollisions();
+	if (!gpuAccel)
+		BroadPhaseCollisions();
 	perfBroadphase.EndTimingSection();
 
 //2. Narrowphase Collision Detection (Accurate but slow)
 	perfNarrowphase.BeginTimingSection();
+	if (gpuAccel)
+		GPUCollisionCheck();
 	NarrowPhaseCollisions();
 	perfNarrowphase.EndTimingSection();
 
@@ -711,10 +720,7 @@ void PhysicsEngine::NarrowPhaseCollisions()
 
 						//Draw manifold data to the window if requested
 						if (debugDrawFlags & DEBUGDRAW_FLAGS_MANIFOLD)
-						{
 							manifold->DebugDraw();
-							//NCLDebug::DrawPolygon(manifold->contactPoints.size(), );
-						}
 					}
 					else
 					{
@@ -725,6 +731,89 @@ void PhysicsEngine::NarrowPhaseCollisions()
 			}
 		}
 	}
+}
+
+extern "C" void CUDA_run(Vector3* cu_pos, float* cu_radius,
+						Vector3* cu_globalOnA, Vector3* cu_globalOnB,
+						Vector3* cu_normal, float* cu_penetration, int entities);
+
+void PhysicsEngine::GPUCollisionCheck()
+{
+	int arrSize = physicsNodes.size() - 5;   //5 is the number of walls and floors and ceilings
+	Vector3* positions;
+	float* radii;
+
+	cudaMallocManaged(&positions, arrSize * sizeof(Vector3));
+	cudaMallocManaged(&radii, arrSize * sizeof(float));
+
+	int index = 0;
+	for (int i = 0; i < physicsNodes.size(); ++i)
+	{
+		PhysicsNode* pnodeA = physicsNodes[i];
+		if (pnodeA->GetParent()->GetName().compare("Ground"))
+		{
+			for (int j = 0; j < physicsNodes.size(); ++j)
+			{
+				if (j == i) continue;
+
+				PhysicsNode* pnodeB = physicsNodes[j];
+				//Check they both atleast have collision shapes
+				if (pnodeA->GetCollisionShape() != NULL
+					&& pnodeB->GetCollisionShape() != NULL)
+				{
+					CollisionPair cp;
+					cp.pObjectA = pnodeA;
+					cp.pObjectB = pnodeB;
+
+					broadphaseColPairs.push_back(cp);
+				}
+			}
+			continue;
+		}
+		if (pnodeA->GetParent()->GetName().compare("Wall"))
+		{
+			for (int j = 0; j < physicsNodes.size(); ++j)
+			{
+				if (j == i) continue;
+
+				PhysicsNode* pnodeB = physicsNodes[j];
+				//Check they both atleast have collision shapes
+				if (pnodeA->GetCollisionShape() != NULL
+					&& pnodeB->GetCollisionShape() != NULL)
+				{
+					CollisionPair cp;
+					cp.pObjectA = pnodeA;
+					cp.pObjectB = pnodeB;
+
+					broadphaseColPairs.push_back(cp);
+				}
+			}
+			continue;
+		}
+
+		if (index >= arrSize)
+		{
+			__debugbreak;
+			return;
+		}
+
+		positions[index] = pnodeA->GetPosition();
+		radii[index] = pnodeA->GetBoundingRadius();
+
+		++index;
+	}
+
+	Vector3* globalOnA;
+	Vector3* globalOnB;
+	Vector3* normal;
+	float* penetration;
+
+	cudaMallocManaged(&globalOnA, arrSize * sizeof(Vector3));
+	cudaMallocManaged(&globalOnB, arrSize * sizeof(Vector3));
+	cudaMallocManaged(&normal, arrSize * sizeof(Vector3));
+	cudaMallocManaged(&penetration, arrSize * sizeof(float));
+	
+	CUDA_run(positions, radii, globalOnA, globalOnB, normal, penetration, arrSize);
 }
 
 void PhysicsEngine::DebugRender()
