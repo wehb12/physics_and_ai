@@ -1,19 +1,26 @@
 TO DO LIST
 
+PHYSICS
 1. [ ] Change broadphase box dimensions to adjust with the scene, instead of being arbitrarily set
 2. [x] Make narrowphase avoid duplicate collision checks on two objects spanning two octants
-	2.a [x] Change octree so that a node stradling a boundary is in the parent node's list.	
+	2.a [x] Change octree so that a node stradling a boundary is in the parent node's list
 		2.a.i [x] Make sure each node is only stored once now, not in multiple lists
 3. [ ] Put Octree functionality into its own class
+	3.a [ ] Still do this and make Octree a friend of PhysicsEngine
 4. [x] Change octree when a node moves zone
-	4.a [x] Fix this, the octree breaks when a node moves - possibly not terminating the tree correctly.
+	4.a [x] Fix this, the octree breaks when a node moves - possibly not terminating the tree correctly
 5. [x] Octree doesn't seem to work properly, doesn't acknowledge cuboid nodes in tutorials 4i and 5
 	5.a [x] Check to see if old PopulateTree() function works
-6. [x] Change WhichZones function, should test against outer walls as well for when moving back up the tree.
-	6.a [x] Maybe this could be a coarse initial check.
+6. [x] Change WhichZones function, should test against outer walls as well for when moving back up the tree
+	6.a [x] Maybe this could be a coarse initial check
 	(ended up creating a new function that checks if a node is in the surrounding parent octree)
-7. [x] Change GenColPairs to make a pair for nodes spanning several octants and children of said octants.
+7. [x] Change GenColPairs to make a pair for nodes spanning several octants and children of said octants
 8. [ ] Make the edges of the master octree (root) a boundary (as nodes that go outside said tree causes errors)
 	8.a [x] As an intermediate measure - make the InOctree function return true if the tree is the root
 9. [ ] Make the RemovePhysicsNode function update the tree if it removes the final node in a branch
-10. [x] Octrees still do not update properly - fix this.
+10. [x] Octrees still do not update properly - fix this
+11. [x] Only change a PhysicsNode's octree when the velocity is below a certain small value
+	11.a [x] This could mean nodes can drift very slowly between trees - maybe integrate over small timestep and chnage when it has moved a small distance proportional to octree size
+
+GPU ACCELERATION
+12. [ ] Make the kernel function populate everything necessary to make a manifold of one point (for a sphere-sphere collision)

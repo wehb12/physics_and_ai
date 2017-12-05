@@ -70,6 +70,7 @@ public:
 		, collisionShape(NULL)
 		, parent(NULL)
 		, octree(NULL)
+		, distMoved(0.0f, 0.0f, 0.0f)
 		, friction(0.5f)
 		, elasticity(0.9f)
 		, boundingRadius(100.0f)
@@ -149,16 +150,7 @@ public:
 	}
 
 	inline void SetOnUpdateCallback(PhysicsUpdateCallback callback) { onUpdateCallback = callback; }
-	inline void FireOnUpdateCallback()
-	{
-		//Build world transform
-		worldTransform = orientation.ToMatrix4();
-		worldTransform.SetPositionVector(position);
-			
-		//Fire the OnUpdateCallback, notifying GameObject's and other potential
-		// listeners that this PhysicsNode has a new world transform.
-		if (onUpdateCallback) onUpdateCallback(worldTransform);
-	}
+	void FireOnUpdateCallback();
 	
 
 protected:
@@ -166,7 +158,9 @@ protected:
 	GameObject*				parent;
 	Matrix4					worldTransform;
 	PhysicsUpdateCallback	onUpdateCallback;
+
 	Octree*					octree;
+	Vector3					distMoved;
 
 
 //Added in Tutorial 2
