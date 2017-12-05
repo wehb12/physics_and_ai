@@ -160,6 +160,7 @@ protected:
 	PhysicsUpdateCallback	onUpdateCallback;
 
 	Octree*					octree;
+	bool					octreeEnabled;
 	Vector3					distMoved;
 
 

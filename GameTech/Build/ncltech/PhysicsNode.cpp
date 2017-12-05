@@ -54,12 +54,13 @@ void PhysicsNode::FireOnUpdateCallback()
 	// listeners that this PhysicsNode has a new world transform.
 	if (onUpdateCallback) onUpdateCallback(worldTransform);
 
+	float deltaLength = 0.01f;
 	if (octree)
+		deltaLength = 0.01 * octree->dimensions.Length() / boundingRadius;
+
+	if (distMoved.Length() > deltaLength)
 	{
-		if (distMoved.Length() > (0.01 * octree->dimensions.Length() / boundingRadius))
-		{
-			PhysicsEngine::Instance()->UpdateNodePosition(this);
-			distMoved.ToZero();
-		}
+		PhysicsEngine::Instance()->UpdateNodePosition(this);
+		distMoved.ToZero();
 	}
 }

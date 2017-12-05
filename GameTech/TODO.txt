@@ -21,6 +21,7 @@ PHYSICS
 10. [x] Octrees still do not update properly - fix this
 11. [x] Only change a PhysicsNode's octree when the velocity is below a certain small value
 	11.a [x] This could mean nodes can drift very slowly between trees - maybe integrate over small timestep and chnage when it has moved a small distance proportional to octree size
+12. [ ] Fix odd results when a node spawns outside the root and the moves into it
 
 GPU ACCELERATION
-12. [ ] Make the kernel function populate everything necessary to make a manifold of one point (for a sphere-sphere collision)
+1. [ ] Make the kernel function populate everything necessary to make a manifold of one point (for a sphere-sphere collision)

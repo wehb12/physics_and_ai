@@ -470,29 +470,35 @@ void PhysicsEngine::UpdateNodePosition(PhysicsNode* pnode)
 {
 	Octree* tree = pnode->GetOctree();
 	bool destroy = false;
-	Octree* parent = tree->parent;
+	Octree* parent = NULL;
 
-	//checks to make sure the pnode is in the octree it thinks it is.
-	auto location = std::find(tree->pnodesInZone.begin(), tree->pnodesInZone.end(), pnode);
-	if (location != tree->pnodesInZone.end())
+	if (tree)
 	{
-		tree->pnodesInZone.erase(location);
-		pnode->SetOctree(NULL);
-
-		// maybe do if < MAX_OBJECTS instead of 0? // ??
-		// then it would be necessary to reshuffle the tree // ??
-		if (tree->pnodesInZone.size() == 0)
+		parent = tree->parent;
+		//checks to make sure the pnode is in the octree it thinks it is.
+		auto location = std::find(tree->pnodesInZone.begin(), tree->pnodesInZone.end(), pnode);
+		if (location != tree->pnodesInZone.end())
 		{
-			destroy = true;
-			for (int i = 0; i < 8; ++i)
-				if (tree->children[i]) destroy = false;
+			tree->pnodesInZone.erase(location);
+			pnode->SetOctree(NULL);
+
+			// maybe do if < MAX_OBJECTS instead of 0? // ??
+			// then it would be necessary to reshuffle the tree // ??
+			if (tree->pnodesInZone.size() == 0)
+			{
+				destroy = true;
+				for (int i = 0; i < 8; ++i)
+					if (tree->children[i]) destroy = false;
+			}
+		}
+		else
+		{
+			__debugbreak;
+			return;
 		}
 	}
 	else
-	{
-		__debugbreak;
-		return;
-	}
+		tree = root;
 
 	if (parent)
 	{
@@ -522,9 +528,9 @@ void PhysicsEngine::MoveUp(Octree* tree, PhysicsNode* pnode)
 
 			MoveUp(parent, pnode);
 		}
-		else
+		else	// node isn't in the bounds of even the root tree
 		{
-			__debugbreak;
+			//__debugbreak;
 			return;
 		}
 	}
@@ -561,8 +567,8 @@ void PhysicsEngine::TerminateOctree(Octree* tree)
 bool PhysicsEngine::InOctree(Octree* tree, PhysicsNode* pnode)
 {
 	// assumes the root node has infinite dimensions // change to the bound of the tree are constraints (??)
-	if (tree == root)
-		return true;
+	//if (tree == root)
+	//	return true;
 
 	Vector3 pos = tree->pos;
 	Vector3 dims = tree->dimensions;
