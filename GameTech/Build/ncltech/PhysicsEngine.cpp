@@ -40,7 +40,8 @@ void PhysicsEngine::AddPhysicsObject(PhysicsNode* obj)
 {
 	physicsNodes.push_back(obj);
 
-	AddToOctree(root, obj);
+	if (InOctree(root, obj))
+		AddToOctree(root, obj);
 }
 
 void PhysicsEngine::RemovePhysicsObject(PhysicsNode* obj)
@@ -468,14 +469,22 @@ void PhysicsEngine::AddToOctree(Octree* tree, PhysicsNode* pnode)
 
 void PhysicsEngine::UpdateNodePosition(PhysicsNode* pnode)
 {
+	if (!InOctree(root, pnode))
+	{
+		return;
+	}
+
 	Octree* tree = pnode->GetOctree();
 	bool destroy = false;
 	Octree* parent = NULL;
 
+	// if the node doesn't currently have a tree, don't run this code
 	if (tree)
 	{
 		parent = tree->parent;
 		//checks to make sure the pnode is in the octree it thinks it is.
+
+		// ?? put this in it's own method
 		auto location = std::find(tree->pnodesInZone.begin(), tree->pnodesInZone.end(), pnode);
 		if (location != tree->pnodesInZone.end())
 		{
@@ -505,7 +514,7 @@ void PhysicsEngine::UpdateNodePosition(PhysicsNode* pnode)
 		if (destroy) TerminateOctree(tree);
 		MoveUp(parent, pnode);
 	}
-	else
+	else 
 		AddToOctree(tree, pnode);
 }
 
@@ -566,14 +575,16 @@ void PhysicsEngine::TerminateOctree(Octree* tree)
 // assume node is in a tree when moving down and do not run this function
 bool PhysicsEngine::InOctree(Octree* tree, PhysicsNode* pnode)
 {
-	// assumes the root node has infinite dimensions // change to the bound of the tree are constraints (??)
-	//if (tree == root)
-	//	return true;
-
 	Vector3 pos = tree->pos;
 	Vector3 dims = tree->dimensions;
 	Vector3 pPos = pnode->GetPosition();
 	float radius = pnode->GetBoundingRadius();
+
+	// normally make sure the node is entirely in the tree
+	// if the tree is the root, we want to check to see
+	// if ANY of the node is in the tree
+	if (tree == root)
+		radius = - radius;
 
 	float xBounds[2] = { pos.x - dims.x, pos.x + dims.x };
 	float yBounds[2] = { pos.y - dims.y, pos.y + dims.y };
