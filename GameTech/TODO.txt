@@ -26,8 +26,8 @@ PHYSICS
 11. [x] Only change a PhysicsNode's octree when the velocity is below a certain small value
 	11.a [x] This could mean nodes can drift very slowly between trees - maybe integrate over small timestep and chnage when it has moved a small distance proportional to octree size
 12. [x] Fix odd results when a node spawns outside the root and the moves into it - this was z fighting
-	12.a [ ] When a node moves out of the tree, it doesn't remove itself
-		12.a.1 [ ] Still doesn't do this, but that's becuase it 'returns' if not in root node. Must delete itself from tree list and destroy octree if necessary
+	12.a [x] When a node moves out of the tree, it doesn't remove itself
+		12.a.1 [x] Still doesn't do this, but that's becuase it 'returns' if not in root node. Must delete itself from tree list and destroy octree if necessary
 
 GPU ACCELERATION
 1. [ ] Make the kernel function populate everything necessary to make a manifold of one point (for a sphere-sphere collision)

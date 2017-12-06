@@ -154,6 +154,7 @@ protected:
 	void DrawOctree(Octree* tree);
 	void MoveUp(Octree* tree, PhysicsNode* pnode);
 	void ResetRoot();
+	bool FindAndDelete(Octree* tree, PhysicsNode* pnode);
 	//delete all heap Octree structs
 	void TerminateOctree(Octree* tree);
 	//checks to see which zones a node is in

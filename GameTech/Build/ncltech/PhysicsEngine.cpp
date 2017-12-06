@@ -469,12 +469,18 @@ void PhysicsEngine::AddToOctree(Octree* tree, PhysicsNode* pnode)
 
 void PhysicsEngine::UpdateNodePosition(PhysicsNode* pnode)
 {
+	Octree* tree = pnode->GetOctree();
+
 	if (!InOctree(root, pnode))
 	{
+		if (tree)
+		{
+			if (FindAndDelete(tree, pnode))
+				TerminateOctree(tree);
+		}
 		return;
 	}
 
-	Octree* tree = pnode->GetOctree();
 	bool destroy = false;
 	Octree* parent = NULL;
 
@@ -484,27 +490,7 @@ void PhysicsEngine::UpdateNodePosition(PhysicsNode* pnode)
 		parent = tree->parent;
 		//checks to make sure the pnode is in the octree it thinks it is.
 
-		// ?? put this in it's own method
-		auto location = std::find(tree->pnodesInZone.begin(), tree->pnodesInZone.end(), pnode);
-		if (location != tree->pnodesInZone.end())
-		{
-			tree->pnodesInZone.erase(location);
-			pnode->SetOctree(NULL);
-
-			// maybe do if < MAX_OBJECTS instead of 0? // ??
-			// then it would be necessary to reshuffle the tree // ??
-			if (tree->pnodesInZone.size() == 0)
-			{
-				destroy = true;
-				for (int i = 0; i < 8; ++i)
-					if (tree->children[i]) destroy = false;
-			}
-		}
-		else
-		{
-			__debugbreak;
-			return;
-		}
+		destroy = FindAndDelete(tree, pnode);
 	}
 	else
 		tree = root;
@@ -516,6 +502,29 @@ void PhysicsEngine::UpdateNodePosition(PhysicsNode* pnode)
 	}
 	else 
 		AddToOctree(tree, pnode);
+}
+
+bool PhysicsEngine::FindAndDelete(Octree* tree, PhysicsNode* pnode)
+{
+	auto location = std::find(tree->pnodesInZone.begin(), tree->pnodesInZone.end(), pnode);
+	if (location != tree->pnodesInZone.end())
+	{
+		tree->pnodesInZone.erase(location);
+		pnode->SetOctree(NULL);
+
+		if (tree->pnodesInZone.size() == 0)
+		{
+			return true;
+			for (int i = 0; i < 8; ++i)
+				if (tree->children[i]) return false;
+		}
+	}
+	else
+	{
+		__debugbreak;
+		return false;
+	}
+	return false;
 }
 
 void PhysicsEngine::MoveUp(Octree* tree, PhysicsNode* pnode)
