@@ -212,8 +212,6 @@ void HandleKeyboardInputs()
 
 }
 
-
-
 int main()
 {
 	//Initialize our Window, Physics, Scenes etc

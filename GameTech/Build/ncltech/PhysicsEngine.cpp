@@ -733,18 +733,16 @@ void PhysicsEngine::NarrowPhaseCollisions()
 	}
 }
 
-extern "C" void CUDA_run(Vector3* cu_pos, float* cu_radius,
+extern "C" int CUDA_run();
+/*Vector3* cu_pos, float* cu_radius,
 						Vector3* cu_globalOnA, Vector3* cu_globalOnB,
-						Vector3* cu_normal, float* cu_penetration, int entities);
+						Vector3* cu_normal, float* cu_penetration, int entities);*/
 
 void PhysicsEngine::GPUCollisionCheck()
 {
 	int arrSize = physicsNodes.size() - 5;   //5 is the number of walls and floors and ceilings
-	Vector3* positions;
-	float* radii;
-
-	cudaMallocManaged(&positions, arrSize * sizeof(Vector3));
-	cudaMallocManaged(&radii, arrSize * sizeof(float));
+	Vector3* positions = new Vector3[arrSize];
+	float* radii = new float[arrSize];
 
 	int index = 0;
 	for (int i = 0; i < physicsNodes.size(); ++i)
@@ -803,17 +801,19 @@ void PhysicsEngine::GPUCollisionCheck()
 		++index;
 	}
 
-	Vector3* globalOnA;
-	Vector3* globalOnB;
-	Vector3* normal;
-	float* penetration;
-
-	cudaMallocManaged(&globalOnA, arrSize * sizeof(Vector3));
-	cudaMallocManaged(&globalOnB, arrSize * sizeof(Vector3));
-	cudaMallocManaged(&normal, arrSize * sizeof(Vector3));
-	cudaMallocManaged(&penetration, arrSize * sizeof(float));
+	Vector3* globalOnA = new Vector3[arrSize];
+	Vector3* globalOnB = new Vector3[arrSize];
+	Vector3* normal = new Vector3[arrSize];
+	float* penetration = new float[arrSize];
 	
-	CUDA_run(positions, radii, globalOnA, globalOnB, normal, penetration, arrSize);
+	CUDA_run();//positions, radii, globalOnA, globalOnB, normal, penetration, arrSize);
+
+	delete[] positions;
+	delete[] radii;
+	delete[] globalOnA;
+	delete[] globalOnB;
+	delete[] normal;
+	delete[] penetration;
 }
 
 void PhysicsEngine::DebugRender()
