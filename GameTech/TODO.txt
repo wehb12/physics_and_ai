@@ -28,6 +28,10 @@ PHYSICS
 12. [x] Fix odd results when a node spawns outside the root and the moves into it - this was z fighting
 	12.a [x] When a node moves out of the tree, it doesn't remove itself
 		12.a.1 [x] Still doesn't do this, but that's becuase it 'returns' if not in root node. Must delete itself from tree list and destroy octree if necessary
+13. [ ] Make targets that you can fire a sphere at
+	13.a [ ] Make them move with a spring constraint when hit
 
 GPU ACCELERATION
 1. [ ] Make the kernel function populate everything necessary to make a manifold of one point (for a sphere-sphere collision)
+2. [ ] Put memory allocation stuff in a constructor and freeing stuff in a destructor
+3. [ ] Maybe construct manifold on the GPU - means you can pass back fewer variables
