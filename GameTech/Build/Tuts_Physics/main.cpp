@@ -12,6 +12,11 @@
 #include "Phy6_ColResponseElasticity.h"
 #include "Phy6_ColResponseFriction.h"
 #include "Phy7_Solver.h"
+#include "CUDA_BallPool.h"
+
+// CUDA includes
+#include<cuda_runtime.h>
+#include<vector_types.h>
 
 PerfTimer timer_total, timer_physics;
 
@@ -43,6 +48,7 @@ void Initialize()
 	SceneManager::Instance()->EnqueueScene(new Phy6_ColResponseElasticity("Physics Tut #6 - Collision Response [Elasticity]"));
 	SceneManager::Instance()->EnqueueScene(new Phy6_ColResponseFriction("Physics Tut #6 - Collision Response [Friction]"));
 	SceneManager::Instance()->EnqueueScene(new Phy7_Solver("Physics Tut #7 - Global Solver"));
+	SceneManager::Instance()->EnqueueScene(new CUDA_BallPool("CUDA_BallPool - GPU Acceleration"));
 }
 
 
@@ -174,7 +180,7 @@ void HandleKeyboardInputs()
 			GraphicsPipeline::Instance()->GetCamera()->GetPosition(),		// Position
 			0.5f,				// Half-Dimensions
 			true,				// Physics Enabled?
-			0.1f,				// Physical Mass (must have physics enabled)
+			0.05f,				// Physical Mass (must have physics enabled)
 			true,				// Physically Collidable (has collision shape)
 			true,				// Dragable by user?
 			Vector4(1.0f, 1.0f, 0.0f, 1.0f));// Render color
@@ -192,7 +198,7 @@ void HandleKeyboardInputs()
 			GraphicsPipeline::Instance()->GetCamera()->GetPosition(),		// Position
 			Vector3(0.5f, 0.5f, 0.5f),				// Half-Dimensions
 			true,				// Physics Enabled?
-			0.1f,				// Physical Mass (must have physics enabled)
+			0.05f,				// Physical Mass (must have physics enabled)
 			true,				// Physically Collidable (has collision shape)
 			true,				// Dragable by user?
 			Vector4(0.0f, 1.0f, 1.0f, 1.0f));// Render color
@@ -205,8 +211,6 @@ void HandleKeyboardInputs()
 	PhysicsEngine::Instance()->SetDebugDrawFlags(drawFlags);
 
 }
-
-
 
 int main()
 {

@@ -23,6 +23,7 @@ PHYSICS
 	8.a [x] As an intermediate measure - make the InOctree function return true if the tree is the root
 9. [ ] Make the RemovePhysicsNode function update the tree if it removes the final node in a branch
 10. [x] Octrees still do not update properly - fix this
+<<<<<<< HEAD
 11. [x] Only change a PhysicsNode's octree when the velocity is below a certain small value
 	11.a [x] This could mean nodes can drift very slowly between trees - maybe integrate over small timestep and chnage when it has moved a small distance proportional to octree size
 12. [x] Fix odd results when a node spawns outside the root and the moves into it - this was z fighting
@@ -35,3 +36,7 @@ GPU ACCELERATION
 1. [ ] Make the kernel function populate everything necessary to make a manifold of one point (for a sphere-sphere collision)
 2. [ ] Put memory allocation stuff in a constructor and freeing stuff in a destructor
 3. [ ] Maybe construct manifold on the GPU - means you can pass back fewer variables
+=======
+11. [ ] Only change a PhysicsNode's octree when the velocity is below a certain small value
+	11.a [ ] This could mean nodes can drift very slowly between trees - maybe integrate over small timestep and chnage when it has moved a small distance proportional to octree size
+>>>>>>> CUDA

@@ -6,6 +6,17 @@
 #include <omp.h>
 #include <algorithm>
 
+// CUDA includes
+#include<cuda_runtime.h>
+#include<vector_types.h>
+
+extern "C" int CUDA_run(Vector3* cu_pos, float* cu_radius,
+	Vector3* cu_globalOnA, Vector3* cu_globalOnB,
+	Vector3* cu_normal, float* cu_penetration, int* cuda_nodeAIndex,
+	int* cuda_nodeBIndex, int entities);
+extern "C" bool CUDA_init(int arrSize);
+extern "C" bool CUDA_free();
+
 void PhysicsEngine::SetDefaults()
 {
 	//Variables set here /will/ be reset with each scene
@@ -25,6 +36,8 @@ PhysicsEngine::PhysicsEngine()
 
 	sphereSphere = false;
 
+	gpuAccel = false;
+
 	debugDrawFlags = DEBUGDRAW_FLAGS_MANIFOLD | DEBUGDRAW_FLAGS_CONSTRAINT;
 
 	SetDefaults();
@@ -32,6 +45,8 @@ PhysicsEngine::PhysicsEngine()
 
 PhysicsEngine::~PhysicsEngine()
 {
+	if (gpuAccel)
+		CUDA_free();
 	RemoveAllPhysicsObjects();
 	TerminateOctree(root);
 }
@@ -153,11 +168,14 @@ void PhysicsEngine::UpdatePhysics()
 //1. Broadphase Collision Detection (Fast and dirty)
 	numSphereChecks = 0;
 	perfBroadphase.BeginTimingSection();
-	BroadPhaseCollisions();
+	if (!gpuAccel)
+		BroadPhaseCollisions();
 	perfBroadphase.EndTimingSection();
 
 //2. Narrowphase Collision Detection (Accurate but slow)
 	perfNarrowphase.BeginTimingSection();
+	if (gpuAccel)
+		GPUCollisionCheck();
 	NarrowPhaseCollisions();
 	perfNarrowphase.EndTimingSection();
 
@@ -193,18 +211,16 @@ void PhysicsEngine::UpdatePhysics()
 
 void PhysicsEngine::BroadPhaseCollisions()
 {
+	broadphaseColPairs.clear();
+
 	if (useOctree)
 	{
-		broadphaseColPairs.clear();
-
 		std::vector<PhysicsNode*> parentList;
 		GenColPairs(root, parentList);
 		DrawOctree(root);
 	}
 	else
 	{
-		broadphaseColPairs.clear();
-
 		PhysicsNode *pnodeA, *pnodeB;
 		//	The broadphase needs to build a list of all potentially colliding objects in the world,
 		//	which then get accurately assesed in narrowphase. If this is too coarse then the system slows down with
@@ -737,10 +753,7 @@ void PhysicsEngine::NarrowPhaseCollisions()
 
 						//Draw manifold data to the window if requested
 						if (debugDrawFlags & DEBUGDRAW_FLAGS_MANIFOLD)
-						{
 							manifold->DebugDraw();
-							//NCLDebug::DrawPolygon(manifold->contactPoints.size(), );
-						}
 					}
 					else
 					{
@@ -751,6 +764,152 @@ void PhysicsEngine::NarrowPhaseCollisions()
 			}
 		}
 	}
+}
+
+void PhysicsEngine::ToggleGPUAcceleration()
+{
+	gpuAccel = !gpuAccel;
+
+	if (gpuAccel)
+	{
+		if (!CUDA_init(physicsNodes.size() - 5))
+			cout << "Error initialising CUDA memory" << endl;
+
+		for (int i = 0; i < physicsNodes.size(); ++i)
+		{
+
+		}
+	}
+	else
+	{
+		if(!CUDA_free())
+			cout << "Error freeing CUDA memory" << endl;
+	}
+}
+
+void PhysicsEngine::GPUCollisionCheck()
+{
+	broadphaseColPairs.clear();
+
+	int arrSize = physicsNodes.size() - 5;   //5 is the number of walls and floors and ceilings
+	Vector3* positions = new Vector3[arrSize];
+	float* radii = new float[arrSize];
+
+	int index = 0;
+	for (int i = 0; i < physicsNodes.size(); ++i)
+	{
+		PhysicsNode* pnodeA = physicsNodes[i];
+		if (pnodeA->GetParent()->GetName().compare("Ground") == 0)
+		{
+			for (int j = 0; j < physicsNodes.size(); ++j)
+			{
+				if (j == i) continue;
+
+				PhysicsNode* pnodeB = physicsNodes[j];
+				//Check they both atleast have collision shapes
+				if (pnodeA->GetCollisionShape() != NULL
+					&& pnodeB->GetCollisionShape() != NULL)
+				{
+					CollisionPair cp;
+					cp.pObjectA = pnodeA;
+					cp.pObjectB = pnodeB;
+
+					bool spherePass = true;
+					if (sphereSphere)
+					{
+						Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+						spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+						++numSphereChecks;
+					}
+
+					//do a coarse sphere-sphere check using bounding radii of the rendernodes
+					if (spherePass)
+						broadphaseColPairs.push_back(cp);
+				}
+			}
+			continue;
+		}
+		if (pnodeA->GetParent()->GetName().compare("Wall") == 0)
+		{
+			for (int j = 0; j < physicsNodes.size(); ++j)
+			{
+				if (j == i) continue;
+
+				PhysicsNode* pnodeB = physicsNodes[j];
+				//Check they both atleast have collision shapes
+				if (pnodeA->GetCollisionShape() != NULL
+					&& pnodeB->GetCollisionShape() != NULL)
+				{
+					CollisionPair cp;
+					cp.pObjectA = pnodeA;
+					cp.pObjectB = pnodeB;
+
+					bool spherePass = true;
+					if (sphereSphere)
+					{
+						Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+						spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+						++numSphereChecks;
+					}
+
+					//do a coarse sphere-sphere check using bounding radii of the rendernodes
+					if (spherePass)
+						broadphaseColPairs.push_back(cp);
+				}
+			}
+			continue;
+		}
+
+		if (index >= arrSize)
+		{
+			__debugbreak;
+			return;
+		}
+
+		positions[index] = pnodeA->GetPosition();
+		radii[index] = pnodeA->GetBoundingRadius();
+
+		++index;
+	}
+
+	int maxNumColPairs = arrSize * arrSize * 0.5;
+	Vector3* globalOnA = new Vector3[maxNumColPairs];
+	Vector3* globalOnB = new Vector3[maxNumColPairs];
+	Vector3* normal = new Vector3[maxNumColPairs];
+	float* penetration = new float[maxNumColPairs];
+	int* indexA = new int[maxNumColPairs];
+	int* indexB = new int[maxNumColPairs];
+	
+	CUDA_run(positions, radii, globalOnA, globalOnB, normal, penetration, indexA, indexB, arrSize);
+
+	for (int i = 0; i < maxNumColPairs; ++i)
+	{
+		if (globalOnA[i] != Vector3(0.0f, 0.0f, 0.0f))
+		{
+			Manifold* manifold = new Manifold;
+
+			manifold->Initiate(physicsNodes[indexA[i] + 5], physicsNodes[indexB[i] + 5]);
+
+			manifold->AddContact(globalOnA[i], globalOnB[i], normal[i], penetration[i]);
+			if (manifold->contactPoints.size() > 0)
+			{
+				// Add to list of manifolds that need solving
+				manifolds.push_back(manifold);
+			}
+			else
+			{
+				delete manifold;
+				manifold = NULL;
+			}
+		}
+	}
+
+	delete[] positions;
+	delete[] radii;
+	delete[] globalOnA;
+	delete[] globalOnB;
+	delete[] normal;
+	delete[] penetration;
 }
 
 void PhysicsEngine::DebugRender()
