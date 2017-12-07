@@ -12,6 +12,7 @@ _-_-_-_-_-_-_-""  ""
 
 */
 
+// This code is used to allow class methods to be used on the GPU device (??)
 //code from https://stackoverflow.com/questions/6978643/cuda-and-classes
 #ifdef __CUDACC__
 #define CUDA_CALLABLE_MEMBER __host__ __device__
@@ -41,7 +42,7 @@ public:
 	float y;
 	float z;
 
-	const Vector3& Normalise() {
+	CUDA_CALLABLE_MEMBER const Vector3& Normalise() {
 		float length = Length();
 
 		if(length != 0.0f)	{
@@ -54,7 +55,7 @@ public:
 		return *this;
 	}
 
-	void		ToZero() {
+	CUDA_CALLABLE_MEMBER void		ToZero() {
 		x = y = z = 0.0f;
 	}
 
@@ -109,11 +110,11 @@ public:
 		z -= a.z;
 	}
 
-	inline Vector3  operator*(const float a) const{
+	CUDA_CALLABLE_MEMBER inline Vector3  operator*(const float a) const{
 		return Vector3(x * a,y * a, z * a);
 	}
 
-	inline Vector3  operator*(const Vector3  &a) const{
+	CUDA_CALLABLE_MEMBER inline Vector3  operator*(const Vector3  &a) const{
 		return Vector3(x * a.x,y * a.y, z * a.z);
 	}
 

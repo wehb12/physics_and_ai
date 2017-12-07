@@ -31,18 +31,37 @@ void CUDA_SphereSphereCheck(Vector3* cuda_pos, float* cuda_radius,
 	Vector3* cuda_globalOnA, Vector3* cuda_globalOnB,
 	Vector3* cuda_normal, float* cuda_penetration, int* cuda_arrSize)
 {
-	for (int i = 0; i < *cuda_arrSize - 1; ++i)
+	//printf("Radius [0] is %f\n", cuda_radius[0]);
+	int start = blockIdx.x * blockDim.x + threadIdx.x;
+	int jump = blockDim.x * gridDim.x;
+	int collPairIndex = start;
+	for (int i = start; i < *cuda_arrSize - 1; i += jump)
 	{
 		for (int j = i + 1; j < *cuda_arrSize; ++j)
 		{
 			Vector3 itoj = cuda_pos[i] - cuda_pos[j];
 			float length = itoj.Length();
+			//int collPairNum = index + j - 1;
 
-			if (length < (cuda_radius[i] + cuda_radius[j]))
+			if (length < (cuda_radius[i] + cuda_radius[j]))		// collision detected
 			{
-
+				// i and j form a collison pair, from which we must construct a collision manifold
+				cuda_globalOnA[collPairIndex] = (-itoj.Normalise() * cuda_radius[i]);
+				cuda_globalOnB[collPairIndex] = (itoj.Normalise() * cuda_radius[j]);
+				cuda_normal[collPairIndex] = itoj.Normalise();
+				cuda_penetration[collPairIndex] = cuda_radius[i] + cuda_radius[j] - length;
 			}
+			else	// no collision detected
+			{
+				cuda_globalOnA[collPairIndex].ToZero();
+				cuda_globalOnB[collPairIndex].ToZero();
+				cuda_normal[collPairIndex].ToZero();
+				cuda_penetration[collPairIndex] = 0;
+			}
+			++collPairIndex;
 		}
+		collPairIndex += jump - 1;
+		//index += *cuda_arrSize - (i + 1);
 	}
 }
 
@@ -81,25 +100,27 @@ bool CUDA_init(int arrSize)
 		fprintf(stderr, "cudaMalloc failed!");
 		success = true;
 	}
-	cudaStatus = cudaMalloc((void**)&cuda_globalOnA, arrSize * sizeof(Vector3));
+
+	int maxCollPairs = arrSize * arrSize * 0.5;
+	cudaStatus = cudaMalloc((void**)&cuda_globalOnA, maxCollPairs * sizeof(Vector3));
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "cudaMalloc failed!");
 		success = true;
 	}
-	cudaStatus = cudaMalloc((void**)&cuda_globalOnB, arrSize * sizeof(Vector3));
+	cudaStatus = cudaMalloc((void**)&cuda_globalOnB, maxCollPairs * sizeof(Vector3));
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "cudaMalloc failed!");
 		success = true;
 	}
-	cudaStatus = cudaMalloc((void**)&cuda_normal, arrSize * sizeof(Vector3));
+	cudaStatus = cudaMalloc((void**)&cuda_normal, maxCollPairs * sizeof(Vector3));
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "cudaMalloc failed!");
 		success = true;
 	}
-	cudaStatus = cudaMalloc((void**)&cuda_penetration, arrSize * sizeof(float));
+	cudaStatus = cudaMalloc((void**)&cuda_penetration, maxCollPairs * sizeof(float));
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "cudaMalloc failed!");
@@ -141,7 +162,6 @@ void CUDA_run(Vector3* positions, float* radii,
 	Vector3* globalOnA, Vector3* globalOnB,
 	Vector3* normal, float* penetration, int arrSize)
 {
-
 	cudaError_t cudaStatus;
 	bool error = false;
 
@@ -158,9 +178,18 @@ void CUDA_run(Vector3* positions, float* radii,
 		fprintf(stderr, "cudaMalloc failed!");
 		error = true;
 	}
+	cudaStatus = cudaMemcpy(cuda_arrSize, &arrSize, sizeof(int), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess)
+	{
+		fprintf(stderr, "cudaMalloc failed!");
+		error = true;
+	}
 
+	int blockSize = 256;
+	// calculate gridSize from https://devblogs.nvidia.com/parallelforall/even-easier-introduction-cuda/
+	int gridSize = (arrSize + blockSize - 1) / blockSize;
 	if (!error)
-		CUDA_SphereSphereCheck<<<1, 1>>>(cuda_pos, cuda_radius, cuda_globalOnA, cuda_globalOnB, cuda_normal, cuda_penetration, cuda_arrSize);
+		CUDA_SphereSphereCheck<<<gridSize, blockSize>>>(cuda_pos, cuda_radius, cuda_globalOnA, cuda_globalOnB, cuda_normal, cuda_penetration, cuda_arrSize);
 
 	// Check for any errors launching the kernel
 	cudaStatus = cudaGetLastError();
@@ -173,17 +202,18 @@ void CUDA_run(Vector3* positions, float* radii,
 	if (cudaStatus != cudaSuccess)
 		fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
 
+	int maxCollPairs = arrSize * arrSize * 0.5;
 	// copy outputs back to host memory
-	cudaStatus = cudaMemcpy(globalOnA, cuda_globalOnA, arrSize * sizeof(Vector3), cudaMemcpyDeviceToHost);
+	cudaStatus = cudaMemcpy(globalOnA, cuda_globalOnA, maxCollPairs * sizeof(Vector3), cudaMemcpyDeviceToHost);
 	if (cudaStatus != cudaSuccess)
 		fprintf(stderr, "cudaMalloc failed!");
-	cudaStatus = cudaMemcpy(globalOnB, cuda_globalOnB, arrSize * sizeof(Vector3), cudaMemcpyDeviceToHost);
+	cudaStatus = cudaMemcpy(globalOnB, cuda_globalOnB, maxCollPairs * sizeof(Vector3), cudaMemcpyDeviceToHost);
 	if (cudaStatus != cudaSuccess)
 		fprintf(stderr, "cudaMalloc failed!");
-	cudaStatus = cudaMemcpy(normal, cuda_normal, arrSize * sizeof(Vector3), cudaMemcpyDeviceToHost);
+	cudaStatus = cudaMemcpy(normal, cuda_normal, maxCollPairs * sizeof(Vector3), cudaMemcpyDeviceToHost);
 	if (cudaStatus != cudaSuccess)
 		fprintf(stderr, "cudaMalloc failed!");
-	cudaStatus = cudaMemcpy(penetration, cuda_penetration, arrSize * sizeof(float), cudaMemcpyDeviceToHost);
+	cudaStatus = cudaMemcpy(penetration, cuda_penetration, maxCollPairs * sizeof(float), cudaMemcpyDeviceToHost);
 	if (cudaStatus != cudaSuccess)
 		fprintf(stderr, "cudaMalloc failed!");
 

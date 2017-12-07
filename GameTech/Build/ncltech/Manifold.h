@@ -57,7 +57,7 @@ public:
 	void Initiate(PhysicsNode* nodeA, PhysicsNode* nodeB);
 
 	//Called whenever a new collision contact between A & B are found
-	void AddContact(const Vector3& globalOnA, const Vector3& globalOnB, const Vector3& _normal, const float& _penetration);	
+	void AddContact(const Vector3& globalOnA, const Vector3& globalOnB, const Vector3& _normal, const float& _penetration);
 
 	//Sequentially solves each contact constraint
 	void ApplyImpulse();
