@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../nclgl/Vector3.h"
 
 extern "C" void CUDA_run(Vector3* positions, float* radii,

@@ -11,7 +11,6 @@ collision manifold (of one point for a sphere-sphere collision)
 
 *//////////////////////////////////////////////////////////////////////////////
 
-#pragma once
 
 // CUDA includes
 #include <cuda_runtime.h>
