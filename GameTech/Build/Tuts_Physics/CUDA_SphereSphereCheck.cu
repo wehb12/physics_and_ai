@@ -17,6 +17,8 @@ collision manifold (of one point for a sphere-sphere collision)
 #include <vector_types.h>
 #include <iostream>
 
+#include "../nclgl/Vector3.h"
+
 #include "CUDA_SphereSphereCheck.cuh"
 
 void CUDA_run(Vector3* positions, float* radii,

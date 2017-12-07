@@ -10,12 +10,12 @@
 #include<cuda_runtime.h>
 #include<vector_types.h>
 
-extern "C" int CUDA_run(Vector3* cu_pos, float* cu_radius,
-	Vector3* cu_globalOnA, Vector3* cu_globalOnB,
-	Vector3* cu_normal, float* cu_penetration, int* cuda_nodeAIndex,
-	int* cuda_nodeBIndex, int entities);
-extern "C" bool CUDA_init(int arrSize);
-extern "C" bool CUDA_free();
+//extern "C" int CUDA_run(Vector3* cu_pos, float* cu_radius,
+//	Vector3* cu_globalOnA, Vector3* cu_globalOnB,
+//	Vector3* cu_normal, float* cu_penetration, int* cuda_nodeAIndex,
+//	int* cuda_nodeBIndex, int entities);
+//extern "C" bool CUDA_init(int arrSize);
+//extern "C" bool CUDA_free();
 
 void PhysicsEngine::SetDefaults()
 {
@@ -45,8 +45,8 @@ PhysicsEngine::PhysicsEngine()
 
 PhysicsEngine::~PhysicsEngine()
 {
-	if (gpuAccel)
-		CUDA_free();
+	//if (gpuAccel)
+	//	CUDA_free();
 	RemoveAllPhysicsObjects();
 	TerminateOctree(root);
 }
@@ -770,21 +770,21 @@ void PhysicsEngine::ToggleGPUAcceleration()
 {
 	gpuAccel = !gpuAccel;
 
-	if (gpuAccel)
-	{
-		if (!CUDA_init(physicsNodes.size() - 5))
-			cout << "Error initialising CUDA memory" << endl;
+	//if (gpuAccel)
+	//{
+	//	if (!CUDA_init(physicsNodes.size() - 5))
+	//		cout << "Error initialising CUDA memory" << endl;
 
-		for (int i = 0; i < physicsNodes.size(); ++i)
-		{
+	//	for (int i = 0; i < physicsNodes.size(); ++i)
+	//	{
 
-		}
-	}
-	else
-	{
-		if(!CUDA_free())
-			cout << "Error freeing CUDA memory" << endl;
-	}
+	//	}
+	//}
+	//else
+	//{
+	//	if(!CUDA_free())
+	//		cout << "Error freeing CUDA memory" << endl;
+	//}
 }
 
 void PhysicsEngine::GPUCollisionCheck()
@@ -880,7 +880,7 @@ void PhysicsEngine::GPUCollisionCheck()
 	int* indexA = new int[maxNumColPairs];
 	int* indexB = new int[maxNumColPairs];
 	
-	CUDA_run(positions, radii, globalOnA, globalOnB, normal, penetration, indexA, indexB, arrSize);
+	//CUDA_run(positions, radii, globalOnA, globalOnB, normal, penetration, indexA, indexB, arrSize);
 
 	for (int i = 0; i < maxNumColPairs; ++i)
 	{
