@@ -10,9 +10,10 @@
 #include <ncltech\PhysicsEngine.h>
 #include <stdlib.h>
 
-#define POOL_X 16
+#define POOL_X 5
 #define POOL_Y 2
-#define POOL_Z 16
+#define POOL_Z 5
+#define BALL_NUMBER 10
 
 class CUDA_BallPool : public Scene
 {
@@ -73,7 +74,7 @@ public:
 			Vector4(0.2f, 0.5f, 1.0f, 0.1f)));
 
 		//create some balls
-		for (int i = 0; i < 1000; ++i)
+		for (int i = 0; i < BALL_NUMBER; ++i)
 		{
 			Vector4 color = Vector4((float)(rand() % 101) / (float)(100), (float)(rand() % 101) / (float)(100), (float)(rand() % 101) / (float)(100), 1.0f);
 			float x = (float)(rand() % 101) / (float)(100) * ((POOL_X - 4) * 2) - (POOL_X - 4);

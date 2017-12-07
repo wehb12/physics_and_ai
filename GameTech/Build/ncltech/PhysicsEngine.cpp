@@ -12,7 +12,8 @@
 
 extern "C" int CUDA_run(Vector3* cu_pos, float* cu_radius,
 	Vector3* cu_globalOnA, Vector3* cu_globalOnB,
-	Vector3* cu_normal, float* cu_penetration, int entities);
+	Vector3* cu_normal, float* cu_penetration, int* cuda_nodeAIndex,
+	int* cuda_nodeBIndex, int entities);
 extern "C" bool CUDA_init(int arrSize);
 extern "C" bool CUDA_free();
 
@@ -772,66 +773,66 @@ void PhysicsEngine::GPUCollisionCheck()
 	for (int i = 0; i < physicsNodes.size(); ++i)
 	{
 		PhysicsNode* pnodeA = physicsNodes[i];
-	//	if (pnodeA->GetParent()->GetName().compare("Ground") == 0)
-	//	{
-	//		for (int j = 0; j < physicsNodes.size(); ++j)
-	//		{
-	//			if (j == i) continue;
+		if (pnodeA->GetParent()->GetName().compare("Ground") == 0)
+		{
+			for (int j = 0; j < physicsNodes.size(); ++j)
+			{
+				if (j == i) continue;
 
-	//			PhysicsNode* pnodeB = physicsNodes[j];
-	//			//Check they both atleast have collision shapes
-	//			if (pnodeA->GetCollisionShape() != NULL
-	//				&& pnodeB->GetCollisionShape() != NULL)
-	//			{
-	//				CollisionPair cp;
-	//				cp.pObjectA = pnodeA;
-	//				cp.pObjectB = pnodeB;
+				PhysicsNode* pnodeB = physicsNodes[j];
+				//Check they both atleast have collision shapes
+				if (pnodeA->GetCollisionShape() != NULL
+					&& pnodeB->GetCollisionShape() != NULL)
+				{
+					CollisionPair cp;
+					cp.pObjectA = pnodeA;
+					cp.pObjectB = pnodeB;
 
-	//				bool spherePass = true;
-	//				if (sphereSphere)
-	//				{
-	//					Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
-	//					spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
-	//					++numSphereChecks;
-	//				}
+					bool spherePass = true;
+					if (sphereSphere)
+					{
+						Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+						spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+						++numSphereChecks;
+					}
 
-	//				//do a coarse sphere-sphere check using bounding radii of the rendernodes
-	//				if (spherePass)
-	//					broadphaseColPairs.push_back(cp);
-	//			}
-	//		}
-	//		continue;
-	//	}
-	//	if (pnodeA->GetParent()->GetName().compare("Wall") == 0)
-	//	{
-	//		for (int j = 0; j < physicsNodes.size(); ++j)
-	//		{
-	//			if (j == i) continue;
+					//do a coarse sphere-sphere check using bounding radii of the rendernodes
+					if (spherePass)
+						broadphaseColPairs.push_back(cp);
+				}
+			}
+			continue;
+		}
+		if (pnodeA->GetParent()->GetName().compare("Wall") == 0)
+		{
+			for (int j = 0; j < physicsNodes.size(); ++j)
+			{
+				if (j == i) continue;
 
-	//			PhysicsNode* pnodeB = physicsNodes[j];
-	//			//Check they both atleast have collision shapes
-	//			if (pnodeA->GetCollisionShape() != NULL
-	//				&& pnodeB->GetCollisionShape() != NULL)
-	//			{
-	//				CollisionPair cp;
-	//				cp.pObjectA = pnodeA;
-	//				cp.pObjectB = pnodeB;
+				PhysicsNode* pnodeB = physicsNodes[j];
+				//Check they both atleast have collision shapes
+				if (pnodeA->GetCollisionShape() != NULL
+					&& pnodeB->GetCollisionShape() != NULL)
+				{
+					CollisionPair cp;
+					cp.pObjectA = pnodeA;
+					cp.pObjectB = pnodeB;
 
-	//				bool spherePass = true;
-	//				if (sphereSphere)
-	//				{
-	//					Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
-	//					spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
-	//					++numSphereChecks;
-	//				}
+					bool spherePass = true;
+					if (sphereSphere)
+					{
+						Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+						spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+						++numSphereChecks;
+					}
 
-	//				//do a coarse sphere-sphere check using bounding radii of the rendernodes
-	//				if (spherePass)
-	//					broadphaseColPairs.push_back(cp);
-	//			}
-	//		}
-	//		continue;
-	//	}
+					//do a coarse sphere-sphere check using bounding radii of the rendernodes
+					if (spherePass)
+						broadphaseColPairs.push_back(cp);
+				}
+			}
+			continue;
+		}
 
 		if (index >= arrSize)
 		{
@@ -850,27 +851,32 @@ void PhysicsEngine::GPUCollisionCheck()
 	Vector3* globalOnB = new Vector3[maxNumColPairs];
 	Vector3* normal = new Vector3[maxNumColPairs];
 	float* penetration = new float[maxNumColPairs];
+	int* indexA = new int[maxNumColPairs];
+	int* indexB = new int[maxNumColPairs];
 	
-	CUDA_run(positions, radii, globalOnA, globalOnB, normal, penetration, arrSize);
+	CUDA_run(positions, radii, globalOnA, globalOnB, normal, penetration, indexA, indexB, arrSize);
 
-	//for (int i = 0; i < maxNumColPairs; ++i)
-	//{
-	//	if (globalOnA[i] != Vector3(0.0f, 0.0f, 0.0f))
-	//	{
-	//		Manifold* manifold = new Manifold;
-	//		manifold->AddContact(globalOnA[i], globalOnB[i], normal[i], penetration[i]);
-	//		if (manifold->contactPoints.size() > 0)
-	//		{
-	//			// Add to list of manifolds that need solving
-	//			manifolds.push_back(manifold);
-	//		}
-	//		else
-	//		{
-	//			delete manifold;
-	//			manifold = NULL;
-	//		}
-	//	}
-	//}
+	for (int i = 0; i < maxNumColPairs; ++i)
+	{
+		if (globalOnA[i] != Vector3(0.0f, 0.0f, 0.0f))
+		{
+			Manifold* manifold = new Manifold;
+
+			manifold->Initiate(physicsNodes[indexA[i] + 5], physicsNodes[indexB[i] + 5]);
+
+			manifold->AddContact(globalOnA[i], globalOnB[i], normal[i], penetration[i]);
+			if (manifold->contactPoints.size() > 0)
+			{
+				// Add to list of manifolds that need solving
+				manifolds.push_back(manifold);
+			}
+			else
+			{
+				delete manifold;
+				manifold = NULL;
+			}
+		}
+	}
 
 	delete[] positions;
 	delete[] radii;
