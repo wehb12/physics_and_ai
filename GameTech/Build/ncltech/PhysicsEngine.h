@@ -129,7 +129,7 @@ public:
 	inline bool SphereCheck()					{ return sphereSphere; }
 	inline int NumSphereChecks()				{ return numSphereChecks; }
 
-	inline void ToggleGPUAcceleration()			{ gpuAccel = !gpuAccel; }
+	void ToggleGPUAcceleration();
 	inline bool GetGPUAccelerationState()		{ return gpuAccel; }
 
 	inline int NumColPairs()					{ return broadphaseColPairs.size(); }

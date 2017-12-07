@@ -23,6 +23,8 @@ collision manifold (of one point for a sphere-sphere collision)
 void CUDA_run(Vector3* positions, float* radii,
 	Vector3* globalOnA, Vector3* globalOnB,
 	Vector3* normal, float* penetration, int arrSize);
+bool CUDA_init(int arrSize);
+bool CUDA_free();
 
 __global__
 void CUDA_SphereSphereCheck(Vector3* cuda_pos, float* cuda_radius,
@@ -44,20 +46,18 @@ void CUDA_SphereSphereCheck(Vector3* cuda_pos, float* cuda_radius,
 	}
 }
 
-void CUDA_run(Vector3* positions, float* radii,
-	Vector3* globalOnA, Vector3* globalOnB,
-	Vector3* normal, float* penetration, int arrSize)
-{
-	Vector3* cuda_pos = 0;
-	float* cuda_radius = 0;
-	Vector3* cuda_globalOnA = 0;
-	Vector3* cuda_globalOnB = 0;
-	Vector3* cuda_normal = 0;
-	float* cuda_penetration = 0;
-	int* cuda_arrSize = 0;
-	cudaError_t cudaStatus;
-	bool error = false;
+Vector3* cuda_pos = 0;
+float* cuda_radius = 0;
+Vector3* cuda_globalOnA = 0;
+Vector3* cuda_globalOnB = 0;
+Vector3* cuda_normal = 0;
+float* cuda_penetration = 0;
+int* cuda_arrSize = 0;
 
+bool CUDA_init(int arrSize)
+{
+	cudaError_t cudaStatus;
+	bool success = true;
 	// Error checking code from the default CUDA VS project
 	//
 	// Choose which GPU to run on, change this on a multi-GPU system.
@@ -65,7 +65,7 @@ void CUDA_run(Vector3* positions, float* radii,
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
-		error = true;
+		success = true;
 	}
 
 	// Allocate GPU buffers for all data
@@ -73,44 +73,77 @@ void CUDA_run(Vector3* positions, float* radii,
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "cudaMalloc failed!");
-		error = true;
+		success = true;
 	}
 	cudaStatus = cudaMalloc((void**)&cuda_radius, arrSize * sizeof(float));
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "cudaMalloc failed!");
-		error = true;
+		success = true;
 	}
 	cudaStatus = cudaMalloc((void**)&cuda_globalOnA, arrSize * sizeof(Vector3));
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "cudaMalloc failed!");
-		error = true;
+		success = true;
 	}
 	cudaStatus = cudaMalloc((void**)&cuda_globalOnB, arrSize * sizeof(Vector3));
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "cudaMalloc failed!");
-		error = true;
+		success = true;
 	}
 	cudaStatus = cudaMalloc((void**)&cuda_normal, arrSize * sizeof(Vector3));
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "cudaMalloc failed!");
-		error = true;
+		success = true;
 	}
 	cudaStatus = cudaMalloc((void**)&cuda_penetration, arrSize * sizeof(float));
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "cudaMalloc failed!");
-		error = true;
+		success = true;
 	}
 	cudaStatus = cudaMalloc((void**)&cuda_arrSize, sizeof(int));
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "cudaMalloc failed!");
-		error = true;
+		success = true;
 	}
+
+	return success;
+}
+
+bool CUDA_free()
+{
+	cudaError_t cudaStatus;
+
+	cudaFree(cuda_pos);
+	cudaFree(cuda_radius);
+	cudaFree(cuda_globalOnA);
+	cudaFree(cuda_globalOnB);
+	cudaFree(cuda_normal);
+	cudaFree(cuda_penetration);
+	cudaFree(cuda_arrSize);
+
+	cudaStatus = cudaDeviceReset();
+	if (cudaStatus != cudaSuccess)
+	{
+		fprintf(stderr, "cudaDeviceReset failed!");
+		return false;
+	}
+
+	return true;
+}
+
+void CUDA_run(Vector3* positions, float* radii,
+	Vector3* globalOnA, Vector3* globalOnB,
+	Vector3* normal, float* penetration, int arrSize)
+{
+
+	cudaError_t cudaStatus;
+	bool error = false;
 
 	// copy data from host to GPU
 	cudaStatus = cudaMemcpy(cuda_pos, positions, arrSize * sizeof(Vector3), cudaMemcpyHostToDevice);
@@ -153,18 +186,6 @@ void CUDA_run(Vector3* positions, float* radii,
 	cudaStatus = cudaMemcpy(penetration, cuda_penetration, arrSize * sizeof(float), cudaMemcpyDeviceToHost);
 	if (cudaStatus != cudaSuccess)
 		fprintf(stderr, "cudaMalloc failed!");
-
-	cudaFree(cuda_pos);
-	cudaFree(cuda_radius);
-	cudaFree(cuda_globalOnA);
-	cudaFree(cuda_globalOnB);
-	cudaFree(cuda_normal);
-	cudaFree(cuda_penetration);
-	cudaFree(cuda_arrSize);
-
-	cudaStatus = cudaDeviceReset();
-	if (cudaStatus != cudaSuccess)
-		fprintf(stderr, "cudaDeviceReset failed!");
 
 	return;
 }

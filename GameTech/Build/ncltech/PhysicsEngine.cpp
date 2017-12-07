@@ -735,6 +735,26 @@ extern "C" int CUDA_run(Vector3* cu_pos, float* cu_radius,
 						Vector3* cu_globalOnA, Vector3* cu_globalOnB,
 						Vector3* cu_normal, float* cu_penetration, int entities);
 
+extern "C" bool CUDA_init(int arrSize);
+extern "C" bool CUDA_free();
+
+
+void PhysicsEngine::ToggleGPUAcceleration()
+{
+	gpuAccel = !gpuAccel;
+
+	if (gpuAccel)
+	{
+		if (!CUDA_init(physicsNodes.size() - 5))
+			cout << "Error initialising CUDA memory" << endl;
+	}
+	else
+	{
+		if(!CUDA_free())
+			cout << "Error freeing CUDA memory" << endl;
+	}
+}
+
 void PhysicsEngine::GPUCollisionCheck()
 {
 	broadphaseColPairs.clear();
