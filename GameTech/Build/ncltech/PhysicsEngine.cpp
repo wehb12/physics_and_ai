@@ -201,18 +201,16 @@ void PhysicsEngine::UpdatePhysics()
 
 void PhysicsEngine::BroadPhaseCollisions()
 {
+	broadphaseColPairs.clear();
+
 	if (useOctree)
 	{
-		broadphaseColPairs.clear();
-
 		std::vector<PhysicsNode*> parentList;
 		GenColPairs(root, parentList);
 		DrawOctree(root);
 	}
 	else
 	{
-		broadphaseColPairs.clear();
-
 		PhysicsNode *pnodeA, *pnodeB;
 		//	The broadphase needs to build a list of all potentially colliding objects in the world,
 		//	which then get accurately assesed in narrowphase. If this is too coarse then the system slows down with
@@ -733,13 +731,14 @@ void PhysicsEngine::NarrowPhaseCollisions()
 	}
 }
 
-extern "C" int CUDA_run();
-/*Vector3* cu_pos, float* cu_radius,
+extern "C" int CUDA_run(Vector3* cu_pos, float* cu_radius,
 						Vector3* cu_globalOnA, Vector3* cu_globalOnB,
-						Vector3* cu_normal, float* cu_penetration, int entities);*/
+						Vector3* cu_normal, float* cu_penetration, int entities);
 
 void PhysicsEngine::GPUCollisionCheck()
 {
+	broadphaseColPairs.clear();
+
 	int arrSize = physicsNodes.size() - 5;   //5 is the number of walls and floors and ceilings
 	Vector3* positions = new Vector3[arrSize];
 	float* radii = new float[arrSize];
@@ -748,7 +747,7 @@ void PhysicsEngine::GPUCollisionCheck()
 	for (int i = 0; i < physicsNodes.size(); ++i)
 	{
 		PhysicsNode* pnodeA = physicsNodes[i];
-		if (pnodeA->GetParent()->GetName().compare("Ground"))
+		if (pnodeA->GetParent()->GetName().compare("Ground") == 0)
 		{
 			for (int j = 0; j < physicsNodes.size(); ++j)
 			{
@@ -763,12 +762,22 @@ void PhysicsEngine::GPUCollisionCheck()
 					cp.pObjectA = pnodeA;
 					cp.pObjectB = pnodeB;
 
-					broadphaseColPairs.push_back(cp);
+					bool spherePass = true;
+					if (sphereSphere)
+					{
+						Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+						spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+						++numSphereChecks;
+					}
+
+					//do a coarse sphere-sphere check using bounding radii of the rendernodes
+					if (spherePass)
+						broadphaseColPairs.push_back(cp);
 				}
 			}
 			continue;
 		}
-		if (pnodeA->GetParent()->GetName().compare("Wall"))
+		if (pnodeA->GetParent()->GetName().compare("Wall") == 0)
 		{
 			for (int j = 0; j < physicsNodes.size(); ++j)
 			{
@@ -783,7 +792,17 @@ void PhysicsEngine::GPUCollisionCheck()
 					cp.pObjectA = pnodeA;
 					cp.pObjectB = pnodeB;
 
-					broadphaseColPairs.push_back(cp);
+					bool spherePass = true;
+					if (sphereSphere)
+					{
+						Vector3 ab = cp.pObjectA->GetPosition() - cp.pObjectB->GetPosition();
+						spherePass = ab.Length() <= pnodeA->GetBoundingRadius() + pnodeB->GetBoundingRadius() ? true : false;
+						++numSphereChecks;
+					}
+
+					//do a coarse sphere-sphere check using bounding radii of the rendernodes
+					if (spherePass)
+						broadphaseColPairs.push_back(cp);
 				}
 			}
 			continue;
@@ -806,7 +825,7 @@ void PhysicsEngine::GPUCollisionCheck()
 	Vector3* normal = new Vector3[arrSize];
 	float* penetration = new float[arrSize];
 	
-	CUDA_run();//positions, radii, globalOnA, globalOnB, normal, penetration, arrSize);
+	//CUDA_run(positions, radii, globalOnA, globalOnB, normal, penetration, arrSize);
 
 	delete[] positions;
 	delete[] radii;

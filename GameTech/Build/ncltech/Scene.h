@@ -71,12 +71,16 @@ public:
 	//	 - Override to remove custom objects/physics here as needed
 	//	   Note: Default action here automatically delete all game objects and
 	//           remove all update callback's.
-	virtual void OnCleanupScene()		{ DeleteAllGameObjects(); };	
+	virtual void OnCleanupScene()
+	{
+		DeleteAllGameObjects();
+		if (PhysicsEngine::Instance()->GetGPUAccelerationState()) PhysicsEngine::Instance()->ToggleGPUAcceleration();
+	}
 
 	// Update Scene Logic
 	//   - Called once per frame and should contain time-sensitive update logic
 	//	   Note: This is time relative to seconds not milliseconds! (e.g. msec / 1000)
-	virtual void OnUpdateScene(float dt) { if (PhysicsEngine::Instance()->GetGPUAccelerationState()) PhysicsEngine::Instance()->ToggleGPUAcceleration(); }
+	virtual void OnUpdateScene(float dt) { }
 
 
 	// Should be the action fired by the main game loop when updating a scene

@@ -11,22 +11,31 @@ _-_-_-_-_-_-_-|   /\_/\   NYANYANYAN
 _-_-_-_-_-_-_-""  ""   
 
 */
+
+//code from https://stackoverflow.com/questions/6978643/cuda-and-classes
+#ifdef __CUDACC__
+#define CUDA_CALLABLE_MEMBER __host__ __device__
+#else
+#define CUDA_CALLABLE_MEMBER
+#endif
+//end of code from https://stackoverflow.com/questions/6978643/cuda-and-classes
+
 #include <cmath>
 #include <iostream>
 
 class Vector3	{
 public:
-	Vector3(void) {
+	CUDA_CALLABLE_MEMBER Vector3(void) {
 		ToZero();
 	}
 
-	Vector3(const float x, const float y, const float z) {
+	CUDA_CALLABLE_MEMBER Vector3(const float x, const float y, const float z) {
 		this->x = x;
 		this->y = y;
 		this->z = z;
 	}
 
-	~Vector3(void){}
+	CUDA_CALLABLE_MEMBER ~Vector3(void){}
 
 	float x;
 	float y;
@@ -49,7 +58,7 @@ public:
 		x = y = z = 0.0f;
 	}
 
-	float			Length() const {
+	CUDA_CALLABLE_MEMBER float			Length() const {
 		return sqrt((x*x)+(y*y)+(z*z));	
 	}
 
@@ -76,15 +85,15 @@ public:
 		return o;
 	}
 
-	inline Vector3  operator+(const Vector3  &a) const{
+	CUDA_CALLABLE_MEMBER inline Vector3  operator+(const Vector3  &a) const{
 		return Vector3(x + a.x,y + a.y, z + a.z);
 	}
 
-	inline Vector3  operator-(const Vector3  &a) const{
+	CUDA_CALLABLE_MEMBER inline Vector3  operator-(const Vector3  &a) const{
 		return Vector3(x - a.x,y - a.y, z - a.z);
 	}
 
-	inline Vector3  operator-() const{
+	CUDA_CALLABLE_MEMBER Vector3  operator-() const{
 		return Vector3(-x,-y,-z);
 	}
 
