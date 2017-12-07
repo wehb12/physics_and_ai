@@ -10,6 +10,12 @@
 #include<cuda_runtime.h>
 #include<vector_types.h>
 
+extern "C" int CUDA_run(Vector3* cu_pos, float* cu_radius,
+	Vector3* cu_globalOnA, Vector3* cu_globalOnB,
+	Vector3* cu_normal, float* cu_penetration, int entities);
+extern "C" bool CUDA_init(int arrSize);
+extern "C" bool CUDA_free();
+
 void PhysicsEngine::SetDefaults()
 {
 	//Variables set here /will/ be reset with each scene
@@ -38,6 +44,8 @@ PhysicsEngine::PhysicsEngine()
 
 PhysicsEngine::~PhysicsEngine()
 {
+	if (gpuAccel)
+		CUDA_free();
 	RemoveAllPhysicsObjects();
 	TerminateOctree(root);
 }
@@ -730,14 +738,6 @@ void PhysicsEngine::NarrowPhaseCollisions()
 		}
 	}
 }
-
-extern "C" int CUDA_run(Vector3* cu_pos, float* cu_radius,
-						Vector3* cu_globalOnA, Vector3* cu_globalOnB,
-						Vector3* cu_normal, float* cu_penetration, int entities);
-
-extern "C" bool CUDA_init(int arrSize);
-extern "C" bool CUDA_free();
-
 
 void PhysicsEngine::ToggleGPUAcceleration()
 {
