@@ -7,6 +7,7 @@
 #include "TestScene.h"
 #include "EmptyScene.h"
 #include "CUDA_BallPool.h"
+#include "TargetPractise.h"
 
 // CUDA includes
 #include<cuda_runtime.h>
@@ -59,8 +60,8 @@ void Initialize()
 
 	//Enqueue All Scenes
 	SceneManager::Instance()->EnqueueScene(new CUDA_BallPool("CUDA_BallPool - GPU Acceleration"));
-	SceneManager::Instance()->EnqueueScene(new TestScene("GameTech #1 - Framework Sandbox!"));
-	SceneManager::Instance()->EnqueueScene(new EmptyScene("GameTech #3 - More peace and quiet"));
+	SceneManager::Instance()->EnqueueScene(new TestScene("Framework Sandbox!"));
+	SceneManager::Instance()->EnqueueScene(new TargetPractise("Target Practise"));
 }
 
 // Print Debug Info

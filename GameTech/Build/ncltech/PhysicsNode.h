@@ -40,7 +40,7 @@ class PhysicsNode;
 //Callback function called whenever a collision is detected between two objects
 //Params:
 //	PhysicsNode* this_obj			- The current object class that contains the callback
-//	PhysicsNode* colliding_obj	- The object that is colliding with the given object
+//	PhysicsNode* colliding_obj		- The object that is colliding with the given object
 //Return:
 //  True	- The physics engine should process the collision as normal
 //	False	- The physics engine should drop the collision pair and not do any further collision resolution/manifold generation

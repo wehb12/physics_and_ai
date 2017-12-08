@@ -10,89 +10,66 @@
 #include <ncltech\PhysicsEngine.h>
 #include <stdlib.h>
 
-#define POOL_X 8
-#define POOL_Y 2
-#define POOL_Z 8
-#define BALL_NUMBER 600
+#define X_DIMS 5
+#define Y_DIMS 5
+#define Z_DIMS 0
+#define NUM_TARGETS_X 3
+#define NUM_TARGETS_Y 3
 
-class CUDA_BallPool : public Scene
+#define TARGET_SIZE 1.0f
+#ifndef GRAVITY
+#define GRAVITY 9.81f
+#endif
+
+class TargetPractise : public Scene
 {
 public:
-	CUDA_BallPool(const std::string& friendly_name)
-		: Scene(friendly_name)
+	TargetPractise(const std::string& friendly_name)
+		: Scene(friendly_name),
+		score(0)
 	{ }
 
 	virtual void OnInitializeScene() override
 	{
-		//Create Ground
-		this->AddGameObject(CommonUtils::BuildCuboidObject(
-			"Ground",
-			Vector3(0.0f, -1.0f, 0.0f),
-			Vector3(POOL_X, 1.0f, POOL_Z),
-			true,
-			0.0f,
-			true,
-			false,
-			Vector4(0.2f, 0.5f, 1.0f, 1.0f)));
-
-		//Create see through walls
-		this->AddGameObject(CommonUtils::BuildCuboidObject(
-			"Wall",
-			Vector3(0.0f, POOL_Y, POOL_Z + 1),
-			Vector3(POOL_X, POOL_Y, 1.0f),
-			true,
-			0.0f,
-			true,
-			false,
-			Vector4(0.2f, 0.5f, 1.0f, 0.1f)));
-		this->AddGameObject(CommonUtils::BuildCuboidObject(
-			"Wall",
-			Vector3(0.0f, POOL_Y, -POOL_Z - 1),
-			Vector3(POOL_X, POOL_Y, 1.0f),
-			true,
-			0.0f,
-			true,
-			false,
-			Vector4(0.2f, 0.5f, 1.0f, 0.1f)));
-		this->AddGameObject(CommonUtils::BuildCuboidObject(
-			"Wall",
-			Vector3(POOL_X + 1, POOL_Y, 0.0f),
-			Vector3(1.0f, POOL_Y, POOL_Z),
-			true,
-			0.0f,
-			true,
-			false,
-			Vector4(0.2f, 0.5f, 1.0f, 0.1f)));
-		this->AddGameObject(CommonUtils::BuildCuboidObject(
-			"Wall",
-			Vector3(-POOL_X - 1, POOL_Y, 0.0f),
-			Vector3(1.0f, POOL_Y, POOL_Z),
-			true,
-			0.0f,
-			true,
-			false,
-			Vector4(0.2f, 0.5f, 1.0f, 0.1f)));
-
-		//create some balls
-		for (int i = 0; i < BALL_NUMBER; ++i)
+		float invMass = 0.1f;
+		//create some targets
+		for (int i = 0; i < NUM_TARGETS_X; ++i)
 		{
-			Vector4 color = Vector4((float)(rand() % 101) / (float)(100), (float)(rand() % 101) / (float)(100), (float)(rand() % 101) / (float)(100), 1.0f);
-			float x = (float)(rand() % 101) / (float)(100) * ((POOL_X - 2) * 2) - (POOL_X - 2);
-			float y = (float)(rand() % 101) / (float)(100) * (POOL_Y + 5) + 2;
-			float z = (float)(rand() % 101) / (float)(100) * ((POOL_Z - 2) * 2) - (POOL_Z - 2);
-			GameObject* ball = CommonUtils::BuildSphereObject(
-				"ball" + to_string(i),
-				Vector3(x, y, z),
-				0.5f,
-				true,
-				0.1f,
-				true,
-				true,
-				color);
-			ball->Physics()->SetElasticity(0.0f); //No elasticity (Little cheaty)
-			ball->Physics()->SetFriction(1.0f);
+			for (int j = 0; j < NUM_TARGETS_X; ++j)
+			{
+				Vector4 colour = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+				float x = i * X_DIMS;
+				float y = j * Y_DIMS;
+				float z = ((float)(rand() % 101) / 100.0f) * 4;
+				GameObject* target = CommonUtils::BuildCuboidObject(
+					"Target " + to_string((i * NUM_TARGETS_Y) + j),
+					Vector3(x, y, z),
+					Vector3(TARGET_SIZE, TARGET_SIZE, TARGET_SIZE),
+					true,
+					invMass,
+					true,
+					false,
+					colour);
+				target->Physics()->SetElasticity(0.5f); //No elasticity (Little cheaty)
+				target->Physics()->SetFriction(1.0f);
+				target->Physics()->SetForce(Vector3(0.0f, 2 * GRAVITY / invMass, 0.0f));
 
-			this->AddGameObject(ball);
+				auto ChangeColour = [&](PhysicsNode* A, PhysicsNode* B)
+				{
+					if (A->GetParent()->GetName().compare(0, 6, "Target") == 0)
+						A->GetParent()->Render()->SetColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+					else if (B->GetParent()->GetName().compare(0, 6, "Target") == 0)
+						B->GetParent()->Render()->SetColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+
+					return true;
+				};
+
+				PhysicsCollisionCallback IfHit = ChangeColour;
+
+				target->Physics()->SetOnCollisionCallback(ChangeColour);
+
+				this->AddGameObject(target);
+			}
 		}
 	}
 
@@ -105,8 +82,13 @@ public:
 		if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_U))
 			PhysicsEngine::Instance()->ToggleGPUAcceleration();
 
-		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "--- Controls ---");
-		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    GPU Acceleration : %s ([U] to toggle)",
-			PhysicsEngine::Instance()->GetGPUAccelerationState() ? "Enabled" : "Disabled");
+		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    Score: %d", score);
+		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    Press [J] to fire a SPHERE");
+		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    Press [K] to fire a CUBE");
 	}
+
+	inline void IncrementScore() { score += 100; }
+	inline void DecrementScore() { score -= 50; }
+private:
+	int score;
 };
