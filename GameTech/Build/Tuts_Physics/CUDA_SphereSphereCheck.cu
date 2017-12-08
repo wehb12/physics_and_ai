@@ -33,41 +33,37 @@ void CUDA_SphereSphereCheck(Vector3* cuda_pos, float* cuda_radius,
 	Vector3* cuda_globalOnA, Vector3* cuda_globalOnB,
 	Vector3* cuda_normal, float* cuda_penetration, int* cuda_nodeAIndex, int* cuda_nodeBIndex, int* cuda_arrSize)
 {
-	//printf("Radius [0] is %f\n", cuda_radius[0]);
 	int start = blockIdx.x * blockDim.x + threadIdx.x;
-	int jump = blockDim.x * gridDim.x;
-	int collPairIndex = start;
-	for (int i = start; i < *cuda_arrSize - 1; i += jump)
+	int collPairIndex = 0;
+	for (int i = 1; i <= start; ++i)
 	{
-		for (int j = i + 1; j < *cuda_arrSize; ++j)
-		{
-			Vector3 itoj = cuda_pos[i] - cuda_pos[j];
-			float length = itoj.Length();
-			//int collPairNum = index + j - 1;
+		collPairIndex += (*cuda_arrSize - i);
+	}
+	for (int j = start + 1; j < *cuda_arrSize; ++j)
+	{
+		Vector3 itoj = cuda_pos[start] - cuda_pos[j];
+		float length = itoj.Length();
 
-			if (length < (cuda_radius[i] + cuda_radius[j]))		// collision detected
-			{
-				// i and j form a collison pair, from which we must construct a collision manifold
-				cuda_globalOnA[collPairIndex] = (-itoj.Normalise() * cuda_radius[i]);
-				cuda_globalOnB[collPairIndex] = (itoj.Normalise() * cuda_radius[j]);
-				cuda_normal[collPairIndex] = itoj.Normalise();
-				cuda_penetration[collPairIndex] = cuda_radius[i] + cuda_radius[j] - length;
-				cuda_nodeAIndex[collPairIndex] = i;
-				cuda_nodeBIndex[collPairIndex] = j;
-			}
-			else	// no collision detected
-			{
-				cuda_globalOnA[collPairIndex].ToZero();
-				cuda_globalOnB[collPairIndex].ToZero();
-				cuda_normal[collPairIndex].ToZero();
-				cuda_penetration[collPairIndex] = 0;
-				cuda_nodeAIndex[collPairIndex] = -1;
-				cuda_nodeBIndex[collPairIndex] = -1;
-			}
-			++collPairIndex;
+		if (length < (cuda_radius[start] + cuda_radius[j]))		// collision detected
+		{
+			// i and j form a collison pair, from which we must construct a collision manifold
+			cuda_globalOnA[collPairIndex] = cuda_pos[start] - (itoj.Normalise() * cuda_radius[start]);
+			cuda_globalOnB[collPairIndex] = cuda_pos[j] + (itoj.Normalise() * cuda_radius[j]);
+			cuda_normal[collPairIndex] = -itoj.Normalise();
+			cuda_penetration[collPairIndex] = length - (cuda_radius[start] + cuda_radius[j]);
+			cuda_nodeAIndex[collPairIndex] = start;
+			cuda_nodeBIndex[collPairIndex] = j;
 		}
-		collPairIndex += jump - 1;
-		//index += *cuda_arrSize - (i + 1);
+		else	// no collision detected
+		{
+			cuda_globalOnA[collPairIndex].ToZero();
+			cuda_globalOnB[collPairIndex].ToZero();
+			cuda_normal[collPairIndex].ToZero();
+			cuda_penetration[collPairIndex] = 0;
+			cuda_nodeAIndex[collPairIndex] = -1;
+			cuda_nodeBIndex[collPairIndex] = -1;
+		}
+		++collPairIndex;
 	}
 }
 
@@ -212,7 +208,7 @@ void CUDA_run(Vector3* positions, float* radii,
 	// calculate gridSize from https://devblogs.nvidia.com/parallelforall/even-easier-introduction-cuda/
 	int gridSize = (arrSize + blockSize - 1) / blockSize;
 	if (!error)
-		CUDA_SphereSphereCheck<<<gridSize, blockSize>>>(cuda_pos, cuda_radius, cuda_globalOnA, cuda_globalOnB, cuda_normal, cuda_penetration, cuda_nodeAIndex, cuda_nodeAIndex, cuda_arrSize);
+		CUDA_SphereSphereCheck<<<gridSize, 600>>>(cuda_pos, cuda_radius, cuda_globalOnA, cuda_globalOnB, cuda_normal, cuda_penetration, cuda_nodeAIndex, cuda_nodeBIndex, cuda_arrSize);
 
 	// Check for any errors launching the kernel
 	cudaStatus = cudaGetLastError();

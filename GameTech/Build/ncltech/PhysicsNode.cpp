@@ -13,6 +13,7 @@ void PhysicsNode::IntegrateForVelocity(float dt)
 	linVelocity += force * invMass * dt;
 	angVelocity += invInertia * torque * dt;
 	*/
+
 	//RK2 method
 	Vector3 linVelocity_p1 = linVelocity + force * invMass * dt;
 	linVelocity = (linVelocity + linVelocity_p1) * 0.5;

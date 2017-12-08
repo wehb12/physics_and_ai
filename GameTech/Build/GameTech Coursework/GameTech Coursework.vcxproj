@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(SolutionDir)$(Configuration);$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <IncludePath>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64;$(SolutionDir);$(SolutionDir)ExternalLibs\GLEW\include;$(SolutionDir)ExternalLibs\SOIL\include;$(SolutionDir)ExternalLibs\ENET\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir);$(SolutionDir)\ExternalLibs\GLEW\libx64;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)ExternalLibs\ENET\lib;$(SolutionDir)\ExternalLibs\SOIL\lib\x64\Debug;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64;$(SolutionDir);$(SolutionDir)ExternalLibs\GLEW\include;$(SolutionDir)ExternalLibs\SOIL\include;$(SolutionDir)ExternalLibs\ENET\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
@@ -103,8 +103,11 @@
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>nclgl.lib;ncltech.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cudart.lib;cudadevrt.lib;ncltech.lib;nclgl.lib;SOIL.lib;glew32sd.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -142,6 +145,7 @@
     <ClCompile Include="TestScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CUDA_BallPool.h" />
     <ClInclude Include="EmptyScene.h" />
     <ClInclude Include="TestScene.h" />
   </ItemGroup>

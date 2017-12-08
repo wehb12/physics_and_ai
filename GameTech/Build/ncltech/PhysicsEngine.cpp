@@ -38,7 +38,7 @@ PhysicsEngine::PhysicsEngine()
 
 	gpuAccel = false;
 
-	debugDrawFlags = DEBUGDRAW_FLAGS_MANIFOLD | DEBUGDRAW_FLAGS_CONSTRAINT;
+	debugDrawFlags = 0;
 
 	SetDefaults();
 }
@@ -57,6 +57,9 @@ void PhysicsEngine::AddPhysicsObject(PhysicsNode* obj)
 
 	if (InOctree(root, obj))
 		AddToOctree(root, obj);
+
+	if (gpuAccel)
+		CUDA_init(physicsNodes.size());
 }
 
 void PhysicsEngine::RemovePhysicsObject(PhysicsNode* obj)
@@ -884,7 +887,7 @@ void PhysicsEngine::GPUCollisionCheck()
 
 	for (int i = 0; i < maxNumColPairs; ++i)
 	{
-		if (globalOnA[i] != Vector3(0.0f, 0.0f, 0.0f))
+		if (indexA[i] != -1)
 		{
 			Manifold* manifold = new Manifold;
 
@@ -910,6 +913,8 @@ void PhysicsEngine::GPUCollisionCheck()
 	delete[] globalOnB;
 	delete[] normal;
 	delete[] penetration;
+	delete[] indexA;
+	delete[] indexB;
 }
 
 void PhysicsEngine::DebugRender()

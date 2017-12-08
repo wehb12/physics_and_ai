@@ -24,7 +24,7 @@ TestScene::~TestScene()
 void TestScene::OnInitializeScene()
 {
 	//Disable the physics engine (We will be starting this later!)
-	PhysicsEngine::Instance()->SetPaused(true);
+	PhysicsEngine::Instance()->SetPaused(false);
 
 	//Set the camera position
 	GraphicsPipeline::Instance()->GetCamera()->SetPosition(Vector3(15.0f, 10.0f, -15.0f));

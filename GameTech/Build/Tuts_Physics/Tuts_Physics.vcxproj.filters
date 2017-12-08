@@ -47,5 +47,8 @@
     <ClInclude Include="Phy6_ColResponseElasticity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CUDA_BallPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

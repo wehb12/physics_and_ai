@@ -6,6 +6,7 @@
 
 #include "TestScene.h"
 #include "EmptyScene.h"
+#include "CUDA_BallPool.h"
 
 // CUDA includes
 #include<cuda_runtime.h>
@@ -57,8 +58,8 @@ void Initialize()
 	PhysicsEngine::Instance();
 
 	//Enqueue All Scenes
+	SceneManager::Instance()->EnqueueScene(new CUDA_BallPool("CUDA_BallPool - GPU Acceleration"));
 	SceneManager::Instance()->EnqueueScene(new TestScene("GameTech #1 - Framework Sandbox!"));
-	SceneManager::Instance()->EnqueueScene(new EmptyScene("GameTech #2 - Peace and quiet"));
 	SceneManager::Instance()->EnqueueScene(new EmptyScene("GameTech #3 - More peace and quiet"));
 }
 
@@ -178,7 +179,7 @@ void HandleKeyboardInputs()
 			true,				// Dragable by user?
 			Vector4(1.0f, 1.0f, 0.0f, 1.0f));// Render color
 		Matrix4 view = GraphicsPipeline::Instance()->GetCamera()->BuildViewMatrix();
-		Vector3 dir = Vector3(20 * view[2], 20 * view[6], 20 * view[10]);
+		Vector3 dir = Vector3(30 * view[2], 30 * view[6], 30 * view[10]);
 		sphere->Physics()->SetLinearVelocity(-dir);
 		SceneManager::Instance()->GetCurrentScene()->AddGameObject(sphere);
 	}
@@ -196,7 +197,7 @@ void HandleKeyboardInputs()
 			true,				// Dragable by user?
 			Vector4(0.0f, 1.0f, 1.0f, 1.0f));// Render color
 		Matrix4 view = GraphicsPipeline::Instance()->GetCamera()->BuildViewMatrix();
-		Vector3 dir = Vector3(20 * view[2], 20 * view[6], 20 * view[10]);
+		Vector3 dir = Vector3(30 * view[2], 30 * view[6], 30 * view[10]);
 		cuboid->Physics()->SetLinearVelocity(-dir);
 		SceneManager::Instance()->GetCurrentScene()->AddGameObject(cuboid);
 	}
@@ -215,24 +216,22 @@ int main()
 	Window::GetWindow().GetTimer()->GetTimedMS();
 
 	//Create main game-loop
-	while (Window::GetWindow().UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE)) {
+	while (Window::GetWindow().UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE))
+	{
 		//Start Timing
-		
 		float dt = Window::GetWindow().GetTimer()->GetTimedMS() * 0.001f;	//How many milliseconds since last update?
 																		//Update Performance Timers (Show results every second)
-		timer_total.UpdateRealElapsedTime(dt);
-		timer_physics.UpdateRealElapsedTime(dt);
-		timer_update.UpdateRealElapsedTime(dt);
-		timer_render.UpdateRealElapsedTime(dt);
-
 		//Print Status Entries
 		PrintStatusEntries();
 
 		//Handle Keyboard Inputs
 		HandleKeyboardInputs();
 
-		
 		timer_total.BeginTimingSection();
+		timer_total.UpdateRealElapsedTime(dt);
+		timer_physics.UpdateRealElapsedTime(dt);
+		timer_update.UpdateRealElapsedTime(dt);
+		timer_render.UpdateRealElapsedTime(dt);
 
 		//Update Scene
 		timer_update.BeginTimingSection();
