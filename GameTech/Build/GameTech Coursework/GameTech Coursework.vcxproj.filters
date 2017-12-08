@@ -32,5 +32,8 @@
     <ClInclude Include="CUDA_BallPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TargetPractise.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

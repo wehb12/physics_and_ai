@@ -32,6 +32,7 @@ PHYSICS
 	13.a [ ] Make them move with a spring constraint when hit
 
 GPU ACCELERATION
-1. [ ] Make the kernel function populate everything necessary to make a manifold of one point (for a sphere-sphere collision)
-2. [ ] Put memory allocation stuff in a constructor and freeing stuff in a destructor
+1. [x] Make the kernel function populate everything necessary to make a manifold of one point (for a sphere-sphere collision)
+2. [x] Put memory allocation stuff in a constructor and freeing stuff in a destructor
 3. [ ] Maybe construct manifold on the GPU - means you can pass back fewer variables
+	3.a [ ] Put collision response on the GPU

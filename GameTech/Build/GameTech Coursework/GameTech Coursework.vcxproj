@@ -147,6 +147,7 @@
   <ItemGroup>
     <ClInclude Include="CUDA_BallPool.h" />
     <ClInclude Include="EmptyScene.h" />
+    <ClInclude Include="TargetPractise.h" />
     <ClInclude Include="TestScene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

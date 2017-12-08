@@ -71,19 +71,10 @@ void PhysicsEngine::RemovePhysicsObject(PhysicsNode* obj)
 	if (found_loc != physicsNodes.end())
 	{
 		physicsNodes.erase(found_loc);
-		if (obj->GetOctree())
+		Octree* tree = obj->GetOctree();
+		if (tree)
 		{
-			auto location = std::find(obj->GetOctree()->pnodesInZone.begin(), obj->GetOctree()->pnodesInZone.end(), obj);
-			if (location != obj->GetOctree()->pnodesInZone.end())
-			{
-				obj->GetOctree()->pnodesInZone.erase(location);
-			}
-			else
-			{
-				__debugbreak;
-				return;
-			}
-			obj->SetOctree(NULL);
+			FindAndDelete(tree, obj);
 		}
 	}
 }
