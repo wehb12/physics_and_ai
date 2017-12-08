@@ -133,6 +133,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CUDA_SphereSphereCheck.cuh" />
     <ClInclude Include="ObjectPlayer.h" />
     <ClInclude Include="Phy2_Integration.h" />
     <ClInclude Include="Phy3_Constraints.h" />
@@ -142,6 +143,9 @@
     <ClInclude Include="Phy6_ColResponseFriction.h" />
     <ClInclude Include="Phy6_ColResponseElasticity.h" />
     <ClInclude Include="Phy7_Solver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="CUDA_SphereSphereCheck.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
