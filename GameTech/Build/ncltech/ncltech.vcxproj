@@ -156,6 +156,7 @@
     <ClCompile Include="SphereCollisionShape.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Tuts_Physics\CUDA_SphereSphereCheck.cuh" />
     <ClInclude Include="BoundingBox.h" />
     <ClInclude Include="CollisionDetectionSAT.h" />
     <ClInclude Include="CollisionShape.h" />
@@ -176,6 +177,9 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="ScreenPicker.h" />
     <ClInclude Include="SphereCollisionShape.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\Tuts_Physics\CUDA_SphereSphereCheck.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

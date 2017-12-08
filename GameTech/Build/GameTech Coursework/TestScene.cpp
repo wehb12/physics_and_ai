@@ -53,7 +53,7 @@ void TestScene::OnInitializeScene()
 		Vector3(5.f, 0.5f, 0.0f),	// Position
 		Vector3(0.5f, 0.5f, 1.0f),  // Half-Dimensions
 		true,						// Physics Enabled?
-		0.1f,						// Physical Mass (must have physics enabled)
+		0.0f,						// Physical Mass (must have physics enabled)
 		true,						// Physically Collidable (has collision shape)
 		false,						// Dragable by user?
 		Vector4(0.1f, 0.1f, 0.1f, 1.0f)); // Render color
@@ -102,10 +102,11 @@ void TestScene::OnInitializeScene()
 						pos,				// Position
 						ballsize,			// Half-Dimensions
 						true,				// Physics Enabled?
-						10.f,				// Physical Mass (must have physics enabled)
+						0.001f,				// Physical Mass (must have physics enabled)
 						true,				// Physically Collidable (has collision shape)
 						false,				// Dragable by user?
 						col);// Render color
+					sphere->Physics()->SetElasticity(0.0f);
 					this->AddGameObject(sphere);
 				}
 			}
@@ -119,28 +120,29 @@ void TestScene::OnInitializeScene()
 	//Create Test Ball Cubey things
 	create_ball_cube(Vector3(-8.0f, 0.5f, 12.0f), Vector3(0.5f, 0.5f, 0.5f), 0.1f);
 	create_ball_cube(Vector3(8.0f, 0.5f, 12.0f), Vector3(0.3f, 0.3f, 0.3f), 0.1f);
-	create_ball_cube(Vector3(-8.0f, 0.5f, -12.0f), Vector3(0.2f, 0.2f, 0.2f), 0.1f);
+	create_ball_cube(Vector3(-8.0f, 0.5f, -12.0f), Vector3(0.3f, 0.3f, 0.3f), 0.1f);
 	create_ball_cube(Vector3(8.0f, 0.5f, -12.0f), Vector3(0.5f, 0.5f, 0.5f), 0.1f);
 
 	GameObject* sphere = BuildSphereObject(
 		"my_sphere",					// Optional: Name
-		Vector3(0.0f, 8.0f, 7.0f),				// Position
-		1.0f,			// Half-Dimensions
+		Vector3(0.0f, 8.0f, 6.0f),				// Position
+		1.0f,				// Half-Dimensions
 		true,				// Physics Enabled?
-		10.f,				// Physical Mass (must have physics enabled)
+		0.2f,				// Physical Mass (must have physics enabled)
 		true,				// Physically Collidable (has collision shape)
 		true,				// Dragable by user?
 		Vector4(1.0f, 0.0f, 0.0f, 1.0f));// Render color
-	sphere->Physics()->SetForce(Vector3(0.0f, -1, 0.0f));
 	PhysicsNode* point = new PhysicsNode();
-	RenderNode* pointRen = new RenderNode();
-	pointRen->SetBoundingRadius(1.0f);
-	GameObject* pointObj = new GameObject("point", pointRen, point);
+	//RenderNode* pointRen = new RenderNode();
+	//pointRen->SetBoundingRadius(1.0f);
+	//GameObject* pointObj = new GameObject("point", pointRen, point);
 	point->SetPosition(Vector3(0.0f, 8.0f, 0.0f));
-	point->SetParent(pointObj);
-	DistanceConstraint* constr = new DistanceConstraint(sphere->Physics(), point, Vector3(0.0f, 8.0f, 7.0f), Vector3(0.0f, 8.0f, 0.0f));
+	//point->SetParent(pointObj);
+	point->SetBoundingRadius(0.0f);
+	DistanceConstraint* constr = new DistanceConstraint(sphere->Physics(), point, Vector3(0.0f, 8.0f, 5.0f), Vector3(0.0f, 8.0f, 0.0f));
 	PhysicsEngine::Instance()->AddConstraint(constr);
-	this->AddGameObject(pointObj);
+	//this->AddGameObject(pointObj);
+	PhysicsEngine::Instance()->AddPhysicsObject(point);
 	this->AddGameObject(sphere);
 }
 
