@@ -52,7 +52,7 @@ public:
 					true,
 					false,
 					colour);
-				target->Physics()->SetElasticity(0.5f); //No elasticity (Little cheaty)
+				target->Physics()->SetElasticity(0.5f);
 				target->Physics()->SetFriction(1.0f);
 				target->Physics()->SetForce(Vector3(0.0f, 2 * GRAVITY / invMass, 0.0f));
 
@@ -79,10 +79,10 @@ public:
 
 							int i = 0;
 
-							score += 100;
+							IncrementScore();
 						}
 						else
-							score -= 50;
+							DecrementScore();
 					}
 
 					return true;
@@ -106,7 +106,9 @@ public:
 		if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_U))
 			PhysicsEngine::Instance()->ToggleGPUAcceleration();
 
-		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    Score: %d", score);
+		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "Score: %d", score);
+		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "");
+		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "--- Controls ---");
 		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    Press [J] to fire a SPHERE");
 		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    Press [K] to fire a CUBE");
 

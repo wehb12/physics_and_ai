@@ -8,6 +8,7 @@
 #include "EmptyScene.h"
 #include "CUDA_BallPool.h"
 #include "TargetPractise.h"
+#include "SoftBodyScene.h"
 
 // CUDA includes
 #include<cuda_runtime.h>
@@ -59,9 +60,10 @@ void Initialize()
 	PhysicsEngine::Instance();
 
 	//Enqueue All Scenes
+	SceneManager::Instance()->EnqueueScene(new TestScene("Framework Sandbox! - Show off Broadphase!"));
 	SceneManager::Instance()->EnqueueScene(new TargetPractise("Target Practise"));
 	SceneManager::Instance()->EnqueueScene(new CUDA_BallPool("CUDA_BallPool - GPU Acceleration"));
-	SceneManager::Instance()->EnqueueScene(new TestScene("Framework Sandbox!"));
+	SceneManager::Instance()->EnqueueScene(new SoftBodyScene("Soft Body"));
 }
 
 // Print Debug Info

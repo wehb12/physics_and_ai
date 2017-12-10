@@ -35,5 +35,8 @@
     <ClInclude Include="TargetPractise.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SoftBodyScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
