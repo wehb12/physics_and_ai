@@ -50,13 +50,13 @@ public:
 					true,
 					invMass,
 					true,
-					false,
+					true,
 					colour);
 				target->Physics()->SetElasticity(0.5f);
 				target->Physics()->SetFriction(1.0f);
 				target->Physics()->SetForce(Vector3(0.0f, 2 * GRAVITY / invMass, 0.0f));
 
-				SpringConstraint* spring = new SpringConstraint(target->Physics(), Vector3(x, y, z), Vector3(x, y, z), 500.0f, 100.0f);
+				SpringConstraint* spring = new SpringConstraint(target->Physics(), Vector3(x, y, z), Vector3(x, y, z), 5.0f, 0.1f);
 				PhysicsEngine::Instance()->AddConstraint(spring);
 
 				auto ChangeColour = [&](PhysicsNode* A, PhysicsNode* B)

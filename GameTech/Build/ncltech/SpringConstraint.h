@@ -32,7 +32,7 @@ public:
 	{
 		pnodeA = pnode;
 		orientationA = pnodeA->GetOrientation();
-		//pnodeB = NULL;
+		pnodeB = NULL;
 		pointPos = point;
 
 		springConst = k;
@@ -47,6 +47,27 @@ public:
 		//relPosB = point;
 	}
 
+	// currently has no support for a spring constraint that needs to rotate (??)
+	SpringConstraint(PhysicsNode* pnodeA, PhysicsNode* pnodeB,
+		const Vector3& globalOnA, const Vector3& globalOnB, float k, float c)
+	{
+		this->pnodeA = pnodeA;
+		this->pnodeB = pnodeB;
+		orientationA = pnodeA->GetOrientation();
+		pointPos = Vector3(0.0f, 0.0f, 0.0f);
+
+		springConst = k;
+		dampingFactor = c;
+
+		Vector3 ab = globalOnB - globalOnA;
+		targetLength = ab.Length();
+
+		Vector3 r1 = (globalOnA - pnodeA->GetPosition());
+		Vector3 r2 = (globalOnB - pnodeB->GetPosition());
+		relPosA = Matrix3::Transpose(pnodeA->GetOrientation().ToMatrix3()) * r1;
+		relPosB = Matrix3::Transpose(pnodeB->GetOrientation().ToMatrix3()) * r2;
+	}
+
 	//Solves the constraint and applies a velocity impulse to the two
 	// objects in order to satisfy the constraint.
 	virtual void ApplyImpulse() override;
@@ -56,9 +77,9 @@ public:
 	{
 		Vector3 globalOnA = pnodeA->GetOrientation().ToMatrix3() * relPosA + pnodeA->GetPosition();
 		Vector3 globalOnB;
-		//if (pnodeB)
-		//	globalOnB = pnodeB->GetOrientation().ToMatrix3() * relPosB + pnodeB->GetPosition();
-		//else
+		if (pnodeB)
+			globalOnB = pnodeB->GetOrientation().ToMatrix3() * relPosB + pnodeB->GetPosition();
+		else
 			globalOnB = pointPos;
 
 		// make this a spring shaped traingle line (??)
@@ -68,14 +89,14 @@ public:
 	}
 
 protected:
-	PhysicsNode *pnodeA;//, *pnodeB;
+	PhysicsNode *pnodeA, *pnodeB;
 	Vector3 pointPos;
 	Quaternion orientationA;
 
 	float   targetLength;
 
 	Vector3 relPosA;
-	//Vector3 relPosB;
+	Vector3 relPosB;
 
 	float springConst;
 	float dampingFactor;

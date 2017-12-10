@@ -62,7 +62,7 @@ void Initialize()
 	//Enqueue All Scenes
 	SceneManager::Instance()->EnqueueScene(new TestScene("Framework Sandbox! - Show off Broadphase!"));
 	SceneManager::Instance()->EnqueueScene(new TargetPractise("Target Practise"));
-	SceneManager::Instance()->EnqueueScene(new CUDA_BallPool("CUDA_BallPool - GPU Acceleration"));
+	SceneManager::Instance()->EnqueueScene(new CUDA_BallPool("BallPool - GPU Acceleration"));
 	SceneManager::Instance()->EnqueueScene(new SoftBodyScene("Soft Body"));
 }
 
@@ -177,7 +177,7 @@ void HandleKeyboardInputs()
 			GraphicsPipeline::Instance()->GetCamera()->GetPosition(),		// Position
 			0.5f,				// Half-Dimensions
 			true,				// Physics Enabled?
-			0.05f,				// Physical Mass (must have physics enabled)
+			0.01f,				// Physical Mass (must have physics enabled)
 			true,				// Physically Collidable (has collision shape)
 			true,				// Dragable by user?
 			Vector4(1.0f, 1.0f, 0.0f, 1.0f));// Render color
@@ -195,7 +195,7 @@ void HandleKeyboardInputs()
 			GraphicsPipeline::Instance()->GetCamera()->GetPosition(),		// Position
 			Vector3(0.5f, 0.5f, 0.5f),				// Half-Dimensions
 			true,				// Physics Enabled?
-			0.05f,				// Physical Mass (must have physics enabled)
+			0.01f,				// Physical Mass (must have physics enabled)
 			true,				// Physically Collidable (has collision shape)
 			true,				// Dragable by user?
 			Vector4(0.0f, 1.0f, 1.0f, 1.0f));// Render color
@@ -245,6 +245,7 @@ int main()
 		timer_physics.BeginTimingSection();
 		PhysicsEngine::Instance()->Update(dt);
 		timer_physics.EndTimingSection();
+		PhysicsEngine::Instance()->DebugRender();
 
 		//Render Scene
 		timer_render.BeginTimingSection();
