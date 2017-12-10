@@ -154,6 +154,7 @@
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="ScreenPicker.cpp" />
     <ClCompile Include="SphereCollisionShape.cpp" />
+    <ClCompile Include="SpringConstraint.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Tuts_Physics\CUDA_SphereSphereCheck.cuh" />
@@ -177,6 +178,7 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="ScreenPicker.h" />
     <ClInclude Include="SphereCollisionShape.h" />
+    <ClInclude Include="SpringConstraint.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\Tuts_Physics\CUDA_SphereSphereCheck.cu" />

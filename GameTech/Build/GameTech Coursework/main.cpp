@@ -59,9 +59,9 @@ void Initialize()
 	PhysicsEngine::Instance();
 
 	//Enqueue All Scenes
+	SceneManager::Instance()->EnqueueScene(new TargetPractise("Target Practise"));
 	SceneManager::Instance()->EnqueueScene(new CUDA_BallPool("CUDA_BallPool - GPU Acceleration"));
 	SceneManager::Instance()->EnqueueScene(new TestScene("Framework Sandbox!"));
-	SceneManager::Instance()->EnqueueScene(new TargetPractise("Target Practise"));
 }
 
 // Print Debug Info

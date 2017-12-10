@@ -9,6 +9,7 @@
 #include <ncltech\CommonUtils.h>
 #include <ncltech\PhysicsEngine.h>
 #include <stdlib.h>
+#include "../ncltech/SpringConstraint.h"
 
 #define X_DIMS 5
 #define Y_DIMS 5
@@ -41,10 +42,11 @@ public:
 				float x = i * X_DIMS;
 				float y = j * Y_DIMS;
 				float z = ((float)(rand() % 101) / 100.0f) * 4;
+				int index = (i * NUM_TARGETS_Y) + j;
 				GameObject* target = CommonUtils::BuildCuboidObject(
-					"Target " + to_string((i * NUM_TARGETS_Y) + j),
+					"Target " + to_string(index),
 					Vector3(x, y, z),
-					Vector3(TARGET_SIZE, TARGET_SIZE, TARGET_SIZE),
+					Vector3(TARGET_SIZE, TARGET_SIZE, 0.2f),
 					true,
 					invMass,
 					true,
@@ -54,19 +56,41 @@ public:
 				target->Physics()->SetFriction(1.0f);
 				target->Physics()->SetForce(Vector3(0.0f, 2 * GRAVITY / invMass, 0.0f));
 
+				SpringConstraint* spring = new SpringConstraint(target->Physics(), Vector3(x, y, z), Vector3(x, y, z), 500.0f, 100.0f);
+				PhysicsEngine::Instance()->AddConstraint(spring);
+
 				auto ChangeColour = [&](PhysicsNode* A, PhysicsNode* B)
 				{
-					if (A->GetParent()->GetName().compare(0, 6, "Target") == 0)
-						A->GetParent()->Render()->SetColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-					else if (B->GetParent()->GetName().compare(0, 6, "Target") == 0)
-						B->GetParent()->Render()->SetColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+					RenderNode* target = *A->GetParent()->Render()->GetChildIteratorStart();
+
+					for (i = 0; i < NUM_TARGETS_X * NUM_TARGETS_Y; ++i)
+					{
+						if (target == renders[i])
+							break;
+					}
+
+					if (timer[i] < 4.5f)
+					{
+						timer[i] = 5.0f;
+
+						if (target->GetColor().x < 0.1f)	// good target
+						{
+							target->SetColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+
+							int i = 0;
+
+							score += 100;
+						}
+						else
+							score -= 50;
+					}
 
 					return true;
 				};
 
-				PhysicsCollisionCallback IfHit = ChangeColour;
-
 				target->Physics()->SetOnCollisionCallback(ChangeColour);
+				renders[index] = *target->Render()->GetChildIteratorStart();
+				timer[index] = 0.0f;
 
 				this->AddGameObject(target);
 			}
@@ -85,10 +109,24 @@ public:
 		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    Score: %d", score);
 		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    Press [J] to fire a SPHERE");
 		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    Press [K] to fire a CUBE");
+
+		for (int i = 0; i < NUM_TARGETS_X * NUM_TARGETS_Y; ++i)
+		{
+			if (timer[i] < 0.0f)
+			{
+				timer[i] = 0.0f;
+				renders[i]->SetColor(Vector4(0.0f, 1.0f, 0.0f, 1.0f));
+			}
+			else if (timer[i] > 0.0f)
+				timer[i] -= dt;
+		}
 	}
 
 	inline void IncrementScore() { score += 100; }
 	inline void DecrementScore() { score -= 50; }
 private:
 	int score;
+
+	RenderNode* renders[NUM_TARGETS_X * NUM_TARGETS_Y];
+	float timer[NUM_TARGETS_X * NUM_TARGETS_Y];
 };

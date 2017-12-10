@@ -72,6 +72,9 @@
     <ClCompile Include="DistanceConstraint.cpp">
       <Filter>Source Files\Physics</Filter>
     </ClCompile>
+    <ClCompile Include="SpringConstraint.cpp">
+      <Filter>Source Files\Physics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonMeshes.h">
@@ -136,6 +139,9 @@
     </ClInclude>
     <ClInclude Include="..\Tuts_Physics\CUDA_SphereSphereCheck.cuh">
       <Filter>Source Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="SpringConstraint.h">
+      <Filter>Header Files\Physics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,77 +1,61 @@
-[16:20:11] Loading Shader:
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexBasic.glsl
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechFragSuperSample.glsl
-[16:20:11]     -> Linking Shader: Success!
-[16:20:11] 
-[16:20:11] Loading Shader:
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexShadow.glsl
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/Common/EmptyFragment.glsl
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechGeomShadow.glsl
-[16:20:11]     -> Linking Shader: Success!
-[16:20:11] 
-[16:20:11] Loading Shader:
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexFull.glsl
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechFragForwardRender.glsl
-[16:20:11]     -> Linking Shader: Success!
-[16:20:11] 
-[16:20:11] Loading Shader:
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/PointVertex.glsl
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/PointFragment.glsl
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/PointGeometry.glsl
-[16:20:11]     -> Linking Shader: Success!
-[16:20:11] 
-[16:20:11] Loading Shader:
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/Vertex.glsl
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/Fragment.glsl
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/LineGeometry.glsl
-[16:20:11]     -> Linking Shader: Success!
-[16:20:11] 
-[16:20:11] Loading Shader:
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/VertexColOnly.glsl
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/Fragment.glsl
-[16:20:11]     -> Linking Shader: Success!
-[16:20:11] 
-[16:20:11] Loading Shader:
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/TextVertex.glsl
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/TextFragment.glsl
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/TextGeometry.glsl
-[16:20:11]     -> Linking Shader: Success!
-[16:20:11] 
-[16:20:11] Loading Shader:
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexPicker.glsl
-[16:20:11]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechFragScreenPicker_nsightfix.glsl
-[16:20:11]     -> Linking Shader: Success!
-[16:20:11] 
-[16:20:11] Loading Mesh: ../../Data/Meshes/cube.obj
-[16:20:11] 
-[16:20:11] Loading Mesh: ../../Data/Meshes/sphere.obj
-[16:20:11] 
-[16:20:11] [SceneManager] - Enqueued scene: "CUDA_BallPool - GPU Acceleration"
-[16:20:11] 
-[16:20:11] [SceneManager] - Scene switched to: "CUDA_BallPool - GPU Acceleration"
-[16:20:11] [SceneManager] - Enqueued scene: "Framework Sandbox!"
-[16:20:11] [SceneManager] - Enqueued scene: "Target Practise"
-[16:20:11] Physics too slow to run in real time!
-[16:20:11] Physics too slow to run in real time!
-[16:20:11] Physics too slow to run in real time!
-[16:20:11] Physics too slow to run in real time!
-[16:20:11] Physics too slow to run in real time!
-[16:20:11] Physics too slow to run in real time!
-[16:20:11] Physics too slow to run in real time!
-[16:20:11] Physics too slow to run in real time!
-[16:20:11] Physics too slow to run in real time!
-[16:20:11] Physics too slow to run in real time!
-[16:20:12] Physics too slow to run in real time!
-[16:20:12] Physics too slow to run in real time!
-[16:20:12] Physics too slow to run in real time!
-[16:20:12] [SceneManager] - Exiting scene -
-[16:20:12] 
-[16:20:12] [SceneManager] - Scene switched to: "Target Practise"
-[16:20:12] Physics too slow to run in real time!
-[16:20:25] [SceneManager] - Exiting scene -
-[16:20:25] 
-[16:20:25] [SceneManager] - Scene switched to: "Target Practise"
-[16:20:36] [SceneManager] - Exiting scene -
-[16:20:36] 
-[16:20:36] [SceneManager] - Scene switched to: "Target Practise"
-[16:20:40] [SceneManager] Closing scene manager
+[12:26:54] Loading Shader:
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexBasic.glsl
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechFragSuperSample.glsl
+[12:26:54]     -> Linking Shader: Success!
+[12:26:54] 
+[12:26:54] Loading Shader:
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexShadow.glsl
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/Common/EmptyFragment.glsl
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechGeomShadow.glsl
+[12:26:54]     -> Linking Shader: Success!
+[12:26:54] 
+[12:26:54] Loading Shader:
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexFull.glsl
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechFragForwardRender.glsl
+[12:26:54]     -> Linking Shader: Success!
+[12:26:54] 
+[12:26:54] Loading Shader:
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/PointVertex.glsl
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/PointFragment.glsl
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/PointGeometry.glsl
+[12:26:54]     -> Linking Shader: Success!
+[12:26:54] 
+[12:26:54] Loading Shader:
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/Vertex.glsl
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/Fragment.glsl
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/LineGeometry.glsl
+[12:26:54]     -> Linking Shader: Success!
+[12:26:54] 
+[12:26:54] Loading Shader:
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/VertexColOnly.glsl
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/Fragment.glsl
+[12:26:54]     -> Linking Shader: Success!
+[12:26:54] 
+[12:26:54] Loading Shader:
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/TextVertex.glsl
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/TextFragment.glsl
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/TextGeometry.glsl
+[12:26:54]     -> Linking Shader: Success!
+[12:26:54] 
+[12:26:54] Loading Shader:
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexPicker.glsl
+[12:26:54]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechFragScreenPicker_nsightfix.glsl
+[12:26:54]     -> Linking Shader: Success!
+[12:26:54] 
+[12:26:54] Loading Mesh: ../../Data/Meshes/cube.obj
+[12:26:54] 
+[12:26:54] Loading Mesh: ../../Data/Meshes/sphere.obj
+[12:26:54] 
+[12:26:54] [SceneManager] - Enqueued scene: "Target Practise"
+[12:26:54] 
+[12:26:54] [SceneManager] - Scene switched to: "Target Practise"
+[12:26:54] [SceneManager] - Enqueued scene: "CUDA_BallPool - GPU Acceleration"
+[12:26:54] [SceneManager] - Enqueued scene: "Framework Sandbox!"
+[12:26:54] Physics too slow to run in real time!
+[12:27:15] [SceneManager] - Exiting scene -
+[12:27:15] 
+[12:27:15] [SceneManager] - Scene switched to: "Target Practise"
+[12:27:17] [SceneManager] - Exiting scene -
+[12:27:17] 
+[12:27:17] [SceneManager] - Scene switched to: "Target Practise"
+[12:27:26] [SceneManager] Closing scene manager
