@@ -117,16 +117,6 @@ void SpringConstraint::ApplyImpulse()
 		if (pnodeB)
 			pnodeB->SetLinearVelocity(pnodeB->GetLinearVelocity() - force * pnodeB->GetInverseMass());
 
-		//// change this, maybe have a "affected by gravity" bool (??)
-		//if (pnodeA->GetParent()->GetName().compare(0, 6, "Target") == 0)
-		//	pnodeA->SetLinearVelocity(force);// +Vector3(0.0f, 2 * GRAVITY / pnodeA->GetInverseMass(), 0.0f));
-		//else
-		//	pnodeA->SetLinearVelocity(force);
-
-		//if (pnodeB)
-		//{
-		//	pnodeB->SetLinearVelocity(force);
-		//}
 
 		// This function prevents objects from rotating
 		// maybe change to a "can rotate?" bool (??)

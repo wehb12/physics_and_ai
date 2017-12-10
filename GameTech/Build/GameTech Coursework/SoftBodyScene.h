@@ -31,6 +31,10 @@ public:
 	{
 		Scene::OnInitializeScene();
 
+		uint drawFlags = PhysicsEngine::Instance()->GetDebugDrawFlags();
+		drawFlags ^= DEBUGDRAW_FLAGS_CONSTRAINT;
+		PhysicsEngine::Instance()->SetDebugDrawFlags(drawFlags);
+
 		this->AddGameObject(CommonUtils::BuildCuboidObject(
 			"Ground",
 			Vector3(0.0f, -1.5f, 0.0f),
@@ -117,20 +121,102 @@ public:
 				}
 			}
 		}
+
+		for (int i = 0; i < CLOTH_SIZE_X - 1; ++i)
+		{
+			for (int j = 0; j < CLOTH_SIZE_Y - 1; ++j)
+			{
+				int renderIndex = i * 2 * (CLOTH_SIZE_Y - 1) + 2 * j;
+				int index = 1 + (i * CLOTH_SIZE_Y) + j;
+				Vector3 triangle[3];
+				triangle[0] = m_vpObjects[index]->Physics()->GetPosition();
+				triangle[1] = m_vpObjects[index + 1]->Physics()->GetPosition();
+				triangle[2] = m_vpObjects[index + CLOTH_SIZE_X]->Physics()->GetPosition();
+				renderObjs[renderIndex] = new RenderNode(GenerateTriangle(triangle), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+				GraphicsPipeline::Instance()->AddRenderNode(renderObjs[renderIndex]);
+
+				triangle[0] = m_vpObjects[index + 1]->Physics()->GetPosition();
+				triangle[1] = m_vpObjects[index + CLOTH_SIZE_X + 1]->Physics()->GetPosition();
+				triangle[2] = m_vpObjects[index + CLOTH_SIZE_X]->Physics()->GetPosition();
+				renderObjs[renderIndex + 1] = new RenderNode(GenerateTriangle(triangle), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+
+				GraphicsPipeline::Instance()->AddRenderNode(renderObjs[renderIndex + 1]);
+			}
+		}
 	}
 
 	virtual void OnUpdateScene(float dt) override
 	{
 		Scene::OnUpdateScene(dt);
 
-		uint drawFlags = PhysicsEngine::Instance()->GetDebugDrawFlags();
+		BuildMesh();
+	}
 
-		//NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "Score: %d", score);
-		//NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "");
-		//NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "--- Controls ---");
-		//NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    Press [J] to fire a SPHERE");
-		//NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    Press [K] to fire a CUBE");
+private:
+	// two triangles per square, (CLOTH_SIZE_X - 1) * (CLOTH_SIZE_Y - 1) squares
+	RenderNode* renderObjs[2 * (CLOTH_SIZE_X - 1) * (CLOTH_SIZE_Y - 1)];
 
-	
+	void BuildMesh()
+	{
+		for (int i = 0; i < CLOTH_SIZE_X - 1; ++i)
+		{
+			for (int j = 0; j < CLOTH_SIZE_Y - 1; ++j)
+			{
+				int renderIndex = i * 2 * (CLOTH_SIZE_Y - 1) + 2 * j;
+				int index = 1 + (i * CLOTH_SIZE_Y) + j;
+				Vector3 triangle[3];
+				triangle[0] = m_vpObjects[index]->Physics()->GetPosition();
+				triangle[1] = m_vpObjects[index + 1]->Physics()->GetPosition();
+				triangle[2] = m_vpObjects[index + CLOTH_SIZE_X]->Physics()->GetPosition();
+				UpdateTraingleMesh(renderObjs[renderIndex]->GetMesh(), triangle);
+
+				triangle[0] = m_vpObjects[index + 1]->Physics()->GetPosition();
+				triangle[1] = m_vpObjects[index + CLOTH_SIZE_X + 1]->Physics()->GetPosition();
+				triangle[2] = m_vpObjects[index + CLOTH_SIZE_X]->Physics()->GetPosition();
+				UpdateTraingleMesh(renderObjs[renderIndex + 1]->GetMesh(), triangle);
+			}
+		}
+	}
+
+	Mesh* GenerateTriangle(Vector3 *points)
+	{
+		Mesh*m = new Mesh();
+		m->numVertices = 3;
+
+		m->vertices = new Vector3[m->numVertices];
+		m->vertices[0] = points[0];
+		m->vertices[1] = points[1];
+		m->vertices[2] = points[2];
+
+		m->textureCoords = new Vector2[m->numVertices];
+		m->textureCoords[0] = Vector2(points[0].x, points[0].y);
+		m->textureCoords[1] = Vector2(points[1].x, points[1].y);
+		m->textureCoords[2] = Vector2(points[2].x, points[2].y);
+
+		m->colours = new Vector4[m->numVertices];
+		m->colours[0] = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+		m->colours[1] = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+		m->colours[2] = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+
+		m->GenerateNormals();
+		m->GenerateTangents();
+		m->BufferData();
+
+		return m;
+	}
+
+	void UpdateTraingleMesh(Mesh* m, Vector3* points)
+	{
+		m->vertices[0] = points[0];
+		m->vertices[1] = points[1];
+		m->vertices[2] = points[2];
+
+		m->textureCoords[0] = Vector2(points[0].x, points[0].y);
+		m->textureCoords[1] = Vector2(points[1].x, points[1].y);
+		m->textureCoords[2] = Vector2(points[2].x, points[2].y);
+
+		m->GenerateNormals();
+		m->GenerateTangents();
+		m->BufferData();
 	}
 };
