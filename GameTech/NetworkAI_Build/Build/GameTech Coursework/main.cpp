@@ -66,7 +66,7 @@ void Initialize()
 
 								//Enqueue All Scenes
 								// - Add any new scenes you want here =D
-	SceneManager::Instance()->EnqueueScene(new Net1_Client("Network #1 - Example Client"));
+	SceneManager::Instance()->EnqueueScene(new Net1_Client("Network #1 - Example Client", thisEntity));
 }
 
 
@@ -78,6 +78,7 @@ void Quit(bool error, const string &reason)
 	PhysicsEngine::Release();
 	enet_deinitialize();  //!!!!!!!!!!!!!!!!!NEW!!!!!!!!!!!!!!
 	Window::Destroy();
+	delete thisEntity;
 
 
 	//Show console reason before exit
@@ -147,12 +148,12 @@ int main()
 		//fprintf(stderr, "An error occurred while trying to create an ENet server host.\n");
 		//onExit(EXIT_FAILURE);
 
+		thisEntity = new NetworkEntity(CLIENT, server.m_pNetwork);
+
 		//Initialize our Window, Physics, Scenes etc
 		Initialize();
 
 		Window::GetWindow().GetTimer()->GetTimedMS();
-
-		thisEntity = new NetworkEntity(CLIENT);
 	}
 	else
 	{
@@ -160,7 +161,7 @@ int main()
 
 		Win32_PrintAllAdapterIPAddresses();
 
-		thisEntity = new NetworkEntity(SERVER);
+		thisEntity = new NetworkEntity(SERVER, server.m_pNetwork);
 	}
 
 	//Create main game-loop
@@ -182,6 +183,7 @@ int main()
 
 			//Update Scene
 			SceneManager::Instance()->GetCurrentScene()->FireOnSceneUpdate(dt);
+
 
 			//Update Physics
 			PhysicsEngine::Instance()->Update(dt);

@@ -8,6 +8,7 @@
 #include <ncltech\DistanceConstraint.h>
 #include <ncltech\CommonUtils.h>
 #include <string>
+#include "NetworkEntity.h"
 
 #include "PacketTypes.h"
 
@@ -21,7 +22,7 @@ enum packetFlags
 class Net1_Client : public Scene
 {
 public:
-	Net1_Client(const std::string& friendly_name);
+	Net1_Client(const std::string& friendly_name, NetworkEntity* thisEntity);
 
 	virtual void OnInitializeScene() override;
 	virtual void OnCleanupScene() override;
@@ -38,4 +39,6 @@ protected:
 
 	NetworkBase network;
 	ENetPeer*	serverConnection;
+
+	NetworkEntity* packetHandler;
 };

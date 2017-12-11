@@ -15,10 +15,13 @@ enum NetworkEntityType
 class NetworkEntity
 {
 public:
-	NetworkEntity(enet_uint8 type) : type(type) { }
+	NetworkEntity(enet_uint8 type, ENetHost* host) : type(type), networkHost(host) { }
 	~NetworkEntity() { }
 
 	string HandlePacket(const ENetPacket* packet);
+
+	void BroadcastPacket(Packet* packet);
+	void SendPacket(ENetPeer* destination, Packet* packet);
 
 
 //////// GETTERS ////////
@@ -26,4 +29,6 @@ public:
 
 private:
 	enet_uint8 type;
+
+	ENetHost* networkHost;
 };

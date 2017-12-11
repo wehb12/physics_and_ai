@@ -37,12 +37,12 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 
 			if (mazeSize <= 16)
 			{
-				MazeDataPacket8 returnPacket;
 				int numWalls = walls.size();
-				returnPacket.numWalls = numWalls;
-				returnPacket.nodeA = new enet_uint8[numWalls];
-				returnPacket.nodeB = new enet_uint8[numWalls];
-				PopulateNodeLists<enet_uint8>(returnPacket.nodeA, returnPacket.nodeB, walls, maze, mazeSize * mazeSize);
+				MazeDataPacket8* returnPacket = new MazeDataPacket8(numWalls);
+				PopulateNodeLists<enet_uint8>(returnPacket->nodeA, returnPacket->nodeB, walls, maze, mazeSize * mazeSize);
+
+				BroadcastPacket(returnPacket);
+				delete returnPacket;
 			}
 
 			delete maze;
@@ -56,6 +56,28 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 	}
 
 	return output;
+}
+
+void NetworkEntity::SendPacket(ENetPeer* destination, Packet* packet)
+{
+	enet_uint8* stream = packet->CreateByteStream();
+
+	//Create the packet and send it (unreliable transport) to server
+	ENetPacket* enetPacket = enet_packet_create(stream, sizeof(stream), 0);
+	enet_peer_send(destination, 0, enetPacket);
+
+	delete stream;
+}
+
+void NetworkEntity::BroadcastPacket(Packet* packet)
+{
+	enet_uint8* stream = packet->CreateByteStream();
+
+	//Create the packet and broadcast it (unreliable transport) to all entitites
+	ENetPacket* enetPacket = enet_packet_create(stream, sizeof(stream), 0);
+	enet_host_broadcast(networkHost, 0, enetPacket);
+
+	delete stream;
 }
 
 // templated to either enet_uint8, enet_uint16 or enet_unit32

@@ -85,10 +85,11 @@ the servers game simulation. This methodology is known as "Dead Reckoning".
 const Vector3 status_color3 = Vector3(1.0f, 0.6f, 0.6f);
 const Vector4 status_color = Vector4(status_color3.x, status_color3.y, status_color3.z, 1.0f);
 
-Net1_Client::Net1_Client(const std::string& friendly_name)
+Net1_Client::Net1_Client(const std::string& friendly_name, NetworkEntity* thisEntity)
 	: Scene(friendly_name)
 	, serverConnection(NULL)
 	, box(NULL)
+	, packetHandler(thisEntity)
 {
 }
 
@@ -222,34 +223,10 @@ void Net1_Client::HandleKeyboardInput()
 {
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_G))
 	{
-		MazeRequestPacket packetData;
+		MazeRequestPacket* packet = new MazeRequestPacket(16, 0.5f);
 
-		auto PopulatePacket = [&](unsigned char type, unsigned char size, float density)
-		{
-			packetData.type = type;
-			packetData.mazeSize = size;
-			// convert float to 8 bit value
-			unsigned char charDens = (float)255 * density;
-			packetData.mazeDensity = charDens;
-		};
+		packetHandler->SendPacket(serverConnection, packet);
 
-		enet_uint8* data;
-		auto CreateByteStream = [&]()
-		{
-			data = new enet_uint8[sizeof(packetData)];
-
-			data[0] = packetData.type;
-			data[1] = packetData.mazeSize;
-			data[2] = packetData.mazeDensity;
-		};
-
-		PopulatePacket(MAZE_REQUEST, 16, 1.0f);
-		CreateByteStream();
-
-		//Create the packet and broadcast it (unreliable transport) to server
-		ENetPacket* packet = enet_packet_create(data, sizeof(packetData), 0);
-		enet_peer_send(serverConnection, 0, packet);
-
-		delete[] data;
+		delete packet;
 	}
 }
