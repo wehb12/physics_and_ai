@@ -42,12 +42,11 @@ Description:
 #include <nclgl\PerfTimer.h>
 #include <vector>
 #include <mutex>
-
+#include <bitset>
 
 //Number of jacobi iterations to apply in order to
 // assure the constraints are solved. (Last tutorial)
 #define SOLVER_ITERATIONS 50
-
 
 //Just saves including windows.h for the sake of defining true/false
 #ifndef FALSE
@@ -62,15 +61,28 @@ Description:
 #define DEBUGDRAW_FLAGS_COLLISIONVOLUMES		0x4
 #define DEBUGDRAW_FLAGS_COLLISIONNORMALS		0x8
 
+//define the max number of objects per octree zone
+#define MAX_OBJECTS 5
+#define MIN_OCTANT_SIZE 2.0f
+
 struct CollisionPair	//Forms the output of the broadphase collision detection
 {
 	PhysicsNode* pObjectA;
 	PhysicsNode* pObjectB;
 };
 
+struct Octree
+{
+	Vector3 pos;
+	Vector3 dimensions;
+	std::vector<PhysicsNode*> pnodesInZone;
+	Octree* children[8];
+	Octree* parent;
+};
+
 class PhysicsEngine : public TSingleton<PhysicsEngine>
 {
-	friend class TSingleton < PhysicsEngine > ;
+	friend class TSingleton <PhysicsEngine>;
 public:
 	//Reset Default Values like gravity/timestep - called when scene is switched out
 	void SetDefaults();
@@ -83,14 +95,11 @@ public:
 	//Add Constraints
 	void AddConstraint(Constraint* c) { constraints.push_back(c); }
 	
-
 	//Update Physics Engine
 	void Update(float deltaTime);			//DeltaTime here is 'seconds' since last update not milliseconds
 	
 	//Debug draw all physics objects, manifolds and constraints
 	void DebugRender();
-
-
 
 	//Getters / Setters 
 	inline bool IsPaused() const				{ return isPaused; }
@@ -100,7 +109,7 @@ public:
 	inline void SetDebugDrawFlags(uint flags)   { debugDrawFlags = flags; }
 	
 	inline float GetUpdateTimestep() const { return updateTimestep; }
-	inline void SetUpdateTimestep(float updateTimestep) { updateTimestep = updateTimestep; }
+	inline void SetUpdateTimestep(float updateTimestep) { this->updateTimestep = updateTimestep; }
 
 	inline const Vector3& GetGravity() const	{ return gravity; }
 	inline void SetGravity(const Vector3& g)	{ gravity = g; }
@@ -109,6 +118,16 @@ public:
 	inline void  SetDampingFactor(float d)		{ dampingFactor = d; }
 
 	inline float GetDeltaTime() const			{ return updateTimestep; }
+
+	inline void ToggleOctrees()					{ useOctree = !useOctree; }
+	inline bool Octrees()						{ return useOctree; }
+	void UpdateNodePosition(PhysicsNode* pnode);
+
+	inline void ToggleSphereCheck()				{ sphereSphere = !sphereSphere; }
+	inline bool SphereCheck()					{ return sphereSphere; }
+	inline int NumSphereChecks()				{ return numSphereChecks; }
+
+	inline size_t NumColPairs()			{ return broadphaseColPairs.size(); }
 
 	void PrintPerformanceTimers(const Vector4& color)
 	{
@@ -127,6 +146,18 @@ protected:
 
 	//Handles broadphase collision detection
 	void BroadPhaseCollisions();
+	//Generates Collsion pairs from an Octree
+	void GenColPairs(Octree* tree, std::vector<PhysicsNode*> parentPnodes);
+	void AddToOctree(Octree* tree, PhysicsNode* pnode);
+	void DrawOctree(Octree* tree);
+	void MoveUp(Octree* tree, PhysicsNode* pnode);
+	void ResetRoot();
+	bool FindAndDelete(Octree* tree, PhysicsNode* pnode);
+	//delete all heap Octree structs
+	void TerminateOctree(Octree* tree);
+	//checks to see which zones a node is in
+	std::bitset<8> WhichZones(Vector3 pos, PhysicsNode* pnode);
+	bool InOctree(Octree* tree, PhysicsNode* pnode);
 
 	//Handles narrowphase collision detection
 	void NarrowPhaseCollisions();
@@ -139,8 +170,11 @@ protected:
 	Vector3		gravity;
 	float		dampingFactor;
 
-
 	std::vector<CollisionPair>  broadphaseColPairs;
+	Octree*						root;
+	bool						useOctree;
+	bool						sphereSphere;
+	int							numSphereChecks;
 
 	std::vector<PhysicsNode*>	physicsNodes;
 

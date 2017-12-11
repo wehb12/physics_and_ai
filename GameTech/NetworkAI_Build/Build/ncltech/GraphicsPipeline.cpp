@@ -20,7 +20,7 @@ GraphicsPipeline::GraphicsPipeline()
 	, shadowFBO(NULL)
 	, shadowTex(NULL)
 {
-	
+
 
 	LoadShaders();
 	NCLDebug::_LoadShaders();
@@ -38,7 +38,7 @@ GraphicsPipeline::GraphicsPipeline()
 
 
 	sceneBoundingRadius = 30.f; ///Approx based on scene contents
-	
+
 	camera->SetPosition(Vector3(0.0f, 10.0f, 15.0f));
 	camera->SetYaw(0.f);
 	camera->SetPitch(-20.f);
@@ -50,7 +50,7 @@ GraphicsPipeline::GraphicsPipeline()
 GraphicsPipeline::~GraphicsPipeline()
 {
 	SAFE_DELETE(camera);
-	
+
 	SAFE_DELETE(fullscreenQuad);
 
 	SAFE_DELETE(shaderPresentToWindow);
@@ -186,8 +186,8 @@ void GraphicsPipeline::UpdateAssets(int width, int height)
 	if (!shadowTex) glGenTextures(1, &shadowTex);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, shadowTex);
 	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT32, SHADOWMAP_SIZE, SHADOWMAP_SIZE, SHADOWMAP_NUM);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S,		GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T,		GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
@@ -231,8 +231,8 @@ void GraphicsPipeline::RenderScene()
 	//   modelMatrices for objects (and their children) who have actually moved since last frame
 	for (RenderNode* node : allNodes)
 		node->Update(0.0f); //Not sure what the msec is here is for, apologies if this breaks anything in your framework!
-	
-	//Build Transparent/Opaque Renderlists
+
+							//Build Transparent/Opaque Renderlists
 	BuildAndSortRenderLists();
 
 	//NCLDebug - Build render lists
@@ -240,89 +240,89 @@ void GraphicsPipeline::RenderScene()
 
 
 	//Build shadowmaps
-		BuildShadowTransforms();
-		glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowTex, 0);
-		glViewport(0, 0, SHADOWMAP_SIZE, SHADOWMAP_SIZE);
-		glClear(GL_DEPTH_BUFFER_BIT);
+	BuildShadowTransforms();
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowTex, 0);
+	glViewport(0, 0, SHADOWMAP_SIZE, SHADOWMAP_SIZE);
+	glClear(GL_DEPTH_BUFFER_BIT);
 
-		glUseProgram(shaderShadow->GetProgram());
-		glUniformMatrix4fv(glGetUniformLocation(shaderShadow->GetProgram(), "uShadowTransform[0]"), SHADOWMAP_NUM, GL_FALSE, (float*)&shadowProj[0]);
-		GLint uModelMtx = glGetUniformLocation(shaderShadow->GetProgram(), "uModelMtx");
+	glUseProgram(shaderShadow->GetProgram());
+	glUniformMatrix4fv(glGetUniformLocation(shaderShadow->GetProgram(), "uShadowTransform[0]"), SHADOWMAP_NUM, GL_FALSE, (float*)&shadowProjView[0]);
+	GLint uModelMtx = glGetUniformLocation(shaderShadow->GetProgram(), "uModelMtx");
 
-		RenderAllObjects(false,
-			[&](RenderNode* node)
-			{
-				glUniformMatrix4fv(uModelMtx, 1, GL_FALSE, (float*)&node->GetWorldTransform());
-			}
-		);
-	
-	
+	RenderAllObjects(true,
+		[&](RenderNode* node)
+	{
+		glUniformMatrix4fv(uModelMtx, 1, GL_FALSE, (float*)&node->GetWorldTransform());
+	}
+	);
+
+
 
 
 	//Render scene to screen fbo
-		glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
-		glViewport(0, 0, screenTexWidth, screenTexHeight);
-		glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0f);
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-		
-		glUseProgram(shaderForwardLighting->GetProgram());
-		glUniformMatrix4fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uProjViewMtx"), 1, GL_FALSE, (float*)&projViewMatrix);
-		glUniform1i(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uDiffuseTex"), 0);
-		glUniform3fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uCameraPos"), 1, (float*)&camera->GetPosition());
-		glUniform3fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uAmbientColor"), 1, (float*)&ambientColor);
-		glUniform3fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uLightDirection"), 1, (float*)&lightDirection);
-		glUniform1fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uSpecularFactor"), 1, &specularFactor);
+	glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
+	glViewport(0, 0, screenTexWidth, screenTexHeight);
+	glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0f);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-		glUniform1fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uNormalizedFarPlanes[0]"), SHADOWMAP_NUM - 1, (float*)&normalizedFarPlanes[0]);
-		glUniformMatrix4fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uShadowTransform[0]"), SHADOWMAP_NUM, GL_FALSE, (float*)&shadowProj[0]);
-		glUniform1i(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uShadowTex"), 2);
-		glUniform2f(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uShadowSinglePixel"), 1.f / SHADOWMAP_SIZE, 1.f / SHADOWMAP_SIZE);
+	glUseProgram(shaderForwardLighting->GetProgram());
+	glUniformMatrix4fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uProjViewMtx"), 1, GL_FALSE, (float*)&projViewMatrix);
+	glUniform1i(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uDiffuseTex"), 0);
+	glUniform3fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uCameraPos"), 1, (float*)&camera->GetPosition());
+	glUniform3fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uAmbientColor"), 1, (float*)&ambientColor);
+	glUniform3fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uLightDirection"), 1, (float*)&lightDirection);
+	glUniform1fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uSpecularFactor"), 1, &specularFactor);
 
-		glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D_ARRAY, shadowTex);
+	glUniform1fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uNormalizedFarPlanes[0]"), SHADOWMAP_NUM - 1, (float*)&normalizedFarPlanes[0]);
+	glUniformMatrix4fv(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uShadowTransform[0]"), SHADOWMAP_NUM, GL_FALSE, (float*)&shadowProjView[0]);
+	glUniform1i(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uShadowTex"), 2);
+	glUniform2f(glGetUniformLocation(shaderForwardLighting->GetProgram(), "uShadowSinglePixel"), 1.f / SHADOWMAP_SIZE, 1.f / SHADOWMAP_SIZE);
 
-		uModelMtx = glGetUniformLocation(shaderForwardLighting->GetProgram(), "uModelMtx");
-		GLint uColor = glGetUniformLocation(shaderForwardLighting->GetProgram(), "uColor");
-		RenderAllObjects(true,
-			[&](RenderNode* node)
-			{
-				glUniformMatrix4fv(uModelMtx, 1, GL_FALSE, (float*)&node->GetWorldTransform());
-				glUniform4fv(uColor, 1, (float*)&node->GetColor());
-			}
-		);
+	glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D_ARRAY, shadowTex);
 
-		// Render Screen Picking ID's
-		// - This needs to be somewhere before we lose our depth buffer
-		//   BUT at the moment that means our screen picking is super sampled and rendered at 
-		//   a much higher resolution. Which is silly.
-		ScreenPicker::Instance()->RenderPickingScene(projViewMatrix, Matrix4::Inverse(projViewMatrix), screenTexDepth, screenTexWidth, screenTexHeight);
+	uModelMtx = glGetUniformLocation(shaderForwardLighting->GetProgram(), "uModelMtx");
+	GLint uColor = glGetUniformLocation(shaderForwardLighting->GetProgram(), "uColor");
+	RenderAllObjects(false,
+		[&](RenderNode* node)
+	{
+		glUniformMatrix4fv(uModelMtx, 1, GL_FALSE, (float*)&node->GetWorldTransform());
+		glUniform4fv(uColor, 1, (float*)&node->GetColor());
+	}
+	);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
-		glViewport(0, 0, screenTexWidth, screenTexHeight);
-		//NCLDEBUG - World Debug Data (anti-aliased)		
-		NCLDebug::_RenderDebugDepthTested();
-		NCLDebug::_RenderDebugNonDepthTested();
-	
+	// Render Screen Picking ID's
+	// - This needs to be somewhere before we lose our depth buffer
+	//   BUT at the moment that means our screen picking is super sampled and rendered at 
+	//   a much higher resolution. Which is silly.
+	ScreenPicker::Instance()->RenderPickingScene(projViewMatrix, Matrix4::Inverse(projViewMatrix), screenTexDepth, screenTexWidth, screenTexHeight);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
+	glViewport(0, 0, screenTexWidth, screenTexHeight);
+	//NCLDEBUG - World Debug Data (anti-aliased)		
+	NCLDebug::_RenderDebugDepthTested();
+	NCLDebug::_RenderDebugNonDepthTested();
+
 
 
 	//Downsample and present to screen
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, width, height);
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, width, height);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-		float superSamples = (float)(numSuperSamples);
-		glUseProgram(shaderPresentToWindow->GetProgram());
-		glUniform1i(glGetUniformLocation(shaderPresentToWindow->GetProgram(), "uColorTex"), 0);
-		glUniform1f(glGetUniformLocation(shaderPresentToWindow->GetProgram(), "uGammaCorrection"), gammaCorrection);
-		glUniform1f(glGetUniformLocation(shaderPresentToWindow->GetProgram(), "uNumSuperSamples"), superSamples);
-		glUniform2f(glGetUniformLocation(shaderPresentToWindow->GetProgram(), "uSinglepixel"), 1.f / screenTexWidth, 1.f / screenTexHeight);
-		fullscreenQuad->SetTexture(screenTexColor);
-		fullscreenQuad->Draw();
+	float superSamples = (float)(numSuperSamples);
+	glUseProgram(shaderPresentToWindow->GetProgram());
+	glUniform1i(glGetUniformLocation(shaderPresentToWindow->GetProgram(), "uColorTex"), 0);
+	glUniform1f(glGetUniformLocation(shaderPresentToWindow->GetProgram(), "uGammaCorrection"), gammaCorrection);
+	glUniform1f(glGetUniformLocation(shaderPresentToWindow->GetProgram(), "uNumSuperSamples"), superSamples);
+	glUniform2f(glGetUniformLocation(shaderPresentToWindow->GetProgram(), "uSinglepixel"), 1.f / screenTexWidth, 1.f / screenTexHeight);
+	fullscreenQuad->SetTexture(screenTexColor);
+	fullscreenQuad->Draw();
 
-		//NCLDEBUG - Text Elements (aliased)
-		NCLDebug::_RenderDebugClipSpace();
-		NCLDebug::_ClearDebugLists();
-	
+	//NCLDEBUG - Text Elements (aliased)
+	NCLDebug::_RenderDebugClipSpace();
+	NCLDebug::_ClearDebugLists();
+
 
 	OGLRenderer::SwapBuffers();
 }
@@ -334,7 +334,7 @@ void GraphicsPipeline::Resize(int x, int y)
 		x = 1;
 		y = 1;
 	}
-	
+
 	//Generate/Resize any screen textures (if needed)
 	UpdateAssets(x, y);
 
@@ -356,22 +356,22 @@ void GraphicsPipeline::BuildAndSortRenderLists()
 
 	for (RenderNode* node : allNodes)
 		RecursiveAddToRenderLists(node);
-	
+
 	//Sort transparent objects back to front
 	std::sort(
 		renderlistTransparent.begin(),
 		renderlistTransparent.end(),
 		[](const TransparentPair& a, const TransparentPair& b)
-		{
-			return a.second > b.second;
-		}
+	{
+		return a.second > b.second;
+	}
 	);
 }
 
 void GraphicsPipeline::RecursiveAddToRenderLists(RenderNode* node)
 {
 	//If the node is renderable, add it to either a opaque or transparent render list
-	if (node->GetMesh())
+	if (node->IsRenderable())
 	{
 		if (node->GetColor().w > 0.999f)
 		{
@@ -391,20 +391,20 @@ void GraphicsPipeline::RecursiveAddToRenderLists(RenderNode* node)
 		RecursiveAddToRenderLists(*itr);
 }
 
-void GraphicsPipeline::RenderAllObjects(bool renderTransparentBothSides, std::function<void(RenderNode*)> perObjectFunc)
+void GraphicsPipeline::RenderAllObjects(bool isShadowPass, std::function<void(RenderNode*)> perObjectFunc)
 {
 	for (RenderNode* node : renderlistOpaque)
 	{
 		perObjectFunc(node);
-		node->GetMesh()->Draw();
+		node->DrawOpenGL(isShadowPass);
 	}
 
-	if (!renderTransparentBothSides)
+	if (isShadowPass)
 	{
 		for (TransparentPair& node : renderlistTransparent)
 		{
 			perObjectFunc(node.first);
-			node.first->GetMesh()->Draw();
+			node.first->DrawOpenGL(isShadowPass);
 		}
 	}
 	else
@@ -413,10 +413,10 @@ void GraphicsPipeline::RenderAllObjects(bool renderTransparentBothSides, std::fu
 		{
 			perObjectFunc(node.first);
 			glCullFace(GL_FRONT);
-			node.first->GetMesh()->Draw();
+			node.first->DrawOpenGL(isShadowPass);
 
 			glCullFace(GL_BACK);
-			node.first->GetMesh()->Draw();
+			node.first->DrawOpenGL(isShadowPass);
 		}
 	}
 }
@@ -430,7 +430,7 @@ void GraphicsPipeline::BuildShadowTransforms()
 	//  Matrix4 lightview = Matrix4::BuildViewMatrix(Vector3(0.0f, 0.0f, 0.0f), -lightDirection, viewDir);	
 
 	//Fixed size shadow area (just moves with camera) 
-	Matrix4 lightview = Matrix4::BuildViewMatrix(Vector3(0.0f, 0.0f, 0.0f), -lightDirection, Vector3(0, 1, 0)); 
+	shadowViewMtx = Matrix4::BuildViewMatrix(Vector3(0.0f, 0.0f, 0.0f), -lightDirection, Vector3(0, 1, 0));
 
 	Matrix4 invCamProjView = Matrix4::Inverse(projMatrix * viewMatrix);
 
@@ -450,27 +450,28 @@ void GraphicsPipeline::BuildShadowTransforms()
 		//True non-linear depth ranging from -1.0f (near) to 1.0f (far)
 		float norm_near = compute_depth(lin_near);
 		float norm_far = compute_depth(lin_far);
-		
+
 		//Build Bounding Box around frustum section (Axis Aligned)
 		BoundingBox bb;
 		bb.ExpandToFit(invCamProjView * Vector3(-1.0f, -1.0f, norm_near));
-		bb.ExpandToFit(invCamProjView * Vector3(-1.0f,  1.0f, norm_near));
-		bb.ExpandToFit(invCamProjView * Vector3( 1.0f, -1.0f, norm_near));
-		bb.ExpandToFit(invCamProjView * Vector3( 1.0f,  1.0f, norm_near));
+		bb.ExpandToFit(invCamProjView * Vector3(-1.0f, 1.0f, norm_near));
+		bb.ExpandToFit(invCamProjView * Vector3(1.0f, -1.0f, norm_near));
+		bb.ExpandToFit(invCamProjView * Vector3(1.0f, 1.0f, norm_near));
 		bb.ExpandToFit(invCamProjView * Vector3(-1.0f, -1.0f, norm_far));
-		bb.ExpandToFit(invCamProjView * Vector3(-1.0f,  1.0f, norm_far));
-		bb.ExpandToFit(invCamProjView * Vector3( 1.0f, -1.0f, norm_far));
-		bb.ExpandToFit(invCamProjView * Vector3( 1.0f,  1.0f, norm_far));
-		
+		bb.ExpandToFit(invCamProjView * Vector3(-1.0f, 1.0f, norm_far));
+		bb.ExpandToFit(invCamProjView * Vector3(1.0f, -1.0f, norm_far));
+		bb.ExpandToFit(invCamProjView * Vector3(1.0f, 1.0f, norm_far));
+
 		//Rotate bounding box so it's orientated in the lights direction
 		// - Rotates bounding box and creates a new AABB that encompasses it
-		bb = bb.Transform(lightview);
+		bb = bb.Transform(shadowViewMtx);
 
 		//Extend the Z depths to catch shadow casters outside view frustum
 		bb._min.z = min(bb._min.z, -sceneBoundingRadius);
 		bb._max.z = max(bb._max.z, sceneBoundingRadius);
 
 		//Build Light Projection		
-		shadowProj[i] = Matrix4::Orthographic(bb._max.z, bb._min.z, bb._min.x, bb._max.x, bb._max.y, bb._min.y) * lightview;
+		shadowProj[i] = Matrix4::Orthographic(bb._max.z, bb._min.z, bb._min.x, bb._max.x, bb._max.y, bb._min.y);
+		shadowProjView[i] = shadowProj[i] * shadowViewMtx;
 	}
 }

@@ -47,10 +47,7 @@ public:
 
 	//Solves the constraint and applies a velocity impulse to the two
 	// objects in order to satisfy the constraint.
-	virtual void ApplyImpulse() override
-	{
-	
-	}
+	virtual void ApplyImpulse() override;
 
 	//Draw the constraint visually to the screen for debugging
 	virtual void DebugDraw() const

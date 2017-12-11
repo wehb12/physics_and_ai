@@ -88,6 +88,18 @@ public:
 		}
 	}
 
+	inline void SetBoundingRadius(float f)
+	{
+		if (physicsNode != NULL) physicsNode->SetBoundingRadius(f);
+		if (renderNode != NULL) renderNode->SetBoundingRadius(f);
+	}
+	inline float GetBoundingRadius()
+	{
+		if (physicsNode != NULL) return physicsNode->GetBoundingRadius();
+		else if (renderNode != NULL) return renderNode->GetBoundingRadius();
+		else return 0.0f;
+	}
+
 
 	//<---------- GRAPHICS ------------>
 	inline bool  HasRender() const						{ return (renderNode != NULL); }
@@ -134,7 +146,6 @@ public:
 			physicsNode->SetOnUpdateCallback([](const Matrix4&) {});
 		}
 	}
-
 
 public:
 	

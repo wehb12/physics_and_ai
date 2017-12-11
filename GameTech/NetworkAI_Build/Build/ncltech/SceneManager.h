@@ -50,7 +50,7 @@ public:
 	inline uint   GetCurrentSceneIndex()	{ return m_SceneIdx; }
 
 	//Get total number of enqueued scenes
-	inline uint   SceneCount()				{ return m_vpAllScenes.size(); }
+	inline size_t   SceneCount()				{ return m_vpAllScenes.size(); }
 
 
 protected:

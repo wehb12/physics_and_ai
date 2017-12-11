@@ -117,7 +117,6 @@ GameObject* CommonUtils::BuildSphereObject(
 	rnode->AddChild(dummy);
 
 	rnode->SetTransform(Matrix4::Translation(pos));
-	rnode->SetBoundingRadius(radius);
 
 	PhysicsNode* pnode = NULL;	
 	if (physics_enabled)
@@ -140,6 +139,9 @@ GameObject* CommonUtils::BuildSphereObject(
 	}
 
 	GameObject* obj = new GameObject(name, rnode, pnode);
+	obj->SetBoundingRadius(radius);
+	if (physics_enabled)
+		pnode->SetParent(obj);
 
 	if (dragable)
 	{
@@ -171,7 +173,6 @@ GameObject* CommonUtils::BuildCuboidObject(
 	rnode->AddChild(dummy);
 
 	rnode->SetTransform(Matrix4::Translation(pos));
-	rnode->SetBoundingRadius(halfdims.Length());
 
 	PhysicsNode* pnode = NULL;
 	if (physics_enabled)
@@ -194,6 +195,9 @@ GameObject* CommonUtils::BuildCuboidObject(
 	}
 
 	GameObject* obj = new GameObject(name, rnode, pnode);
+	obj->SetBoundingRadius(halfdims.Length());
+	if (physics_enabled)
+		pnode->SetParent(obj);
 
 	if (dragable)
 	{

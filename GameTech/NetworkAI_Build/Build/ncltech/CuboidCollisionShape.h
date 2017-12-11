@@ -70,8 +70,6 @@ public:
 		Vector3& out_normal,
 		std::vector<Plane>& out_adjacent_planes) const override;
 
-
-
 protected:
 	//Constructs the static cube hull 
 	static void ConstructCubeHull();

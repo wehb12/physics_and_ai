@@ -71,12 +71,15 @@ public:
 	//	 - Override to remove custom objects/physics here as needed
 	//	   Note: Default action here automatically delete all game objects and
 	//           remove all update callback's.
-	virtual void OnCleanupScene()		{ DeleteAllGameObjects(); };	
+	virtual void OnCleanupScene()
+	{
+		DeleteAllGameObjects();
+	}
 
 	// Update Scene Logic
 	//   - Called once per frame and should contain time-sensitive update logic
 	//	   Note: This is time relative to seconds not milliseconds! (e.g. msec / 1000)
-	virtual void OnUpdateScene(float dt) {}
+	virtual void OnUpdateScene(float dt) { }
 
 
 	// Should be the action fired by the main game loop when updating a scene
@@ -178,7 +181,10 @@ protected:
 		m_UpdateCallbacks.clear();
 
 		for (auto obj : m_vpObjects)
+		{
 			delete obj;
+			obj = NULL;
+		}
 		
 		m_vpObjects.clear();
 	}

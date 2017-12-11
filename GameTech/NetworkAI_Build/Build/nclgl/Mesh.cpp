@@ -115,7 +115,8 @@ void Mesh::Draw()	{
 		glBindVertexArray(0);
 }
 
-Mesh* Mesh::GenerateTriangle()	{
+Mesh* Mesh::GenerateTriangle()
+{
 	Mesh*m = new Mesh();
 	m->numVertices = 3;
 

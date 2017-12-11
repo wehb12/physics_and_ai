@@ -40,7 +40,7 @@ class PhysicsNode;
 //Callback function called whenever a collision is detected between two objects
 //Params:
 //	PhysicsNode* this_obj			- The current object class that contains the callback
-//	PhysicsNode* colliding_obj	- The object that is colliding with the given object
+//	PhysicsNode* colliding_obj		- The object that is colliding with the given object
 //Return:
 //  True	- The physics engine should process the collision as normal
 //	False	- The physics engine should drop the collision pair and not do any further collision resolution/manifold generation
@@ -53,7 +53,7 @@ typedef std::function<bool(PhysicsNode* this_obj, PhysicsNode* colliding_obj)> P
 //	const Matrix4& transform - New World transform of the physics node
 typedef std::function<void(const Matrix4& transform)> PhysicsUpdateCallback;
 
-
+struct Octree;
 class GameObject;
 class PhysicsNode
 {
@@ -68,8 +68,12 @@ public:
 		, torque(0.0f, 0.0f, 0.0f)
 		, invInertia(Matrix3::ZeroMatrix)
 		, collisionShape(NULL)
+		, parent(NULL)
+		, octree(NULL)
+		, distMoved(0.0f, 0.0f, 0.0f)
 		, friction(0.5f)
 		, elasticity(0.9f)
+		, boundingRadius(100.0f)
 	{
 	}
 
@@ -103,10 +107,11 @@ public:
 	inline const Matrix3&		GetInverseInertia()			const { return invInertia; }
 
 	inline CollisionShape*		GetCollisionShape()			const { return collisionShape; }
+	inline float				GetBoundingRadius()			const { return boundingRadius; }
 
 	const Matrix4&				GetWorldSpaceTransform()    const { return worldTransform; }
 
-
+	inline Octree*				GetOctree()					const { return octree; }
 
 
 	//<--------- SETTERS ------------->
@@ -125,13 +130,15 @@ public:
 	inline void SetTorque(const Vector3& v)							{ torque = v; }
 	inline void SetInverseInertia(const Matrix3& v)					{ invInertia = v; }
 
+	inline void SetOctree(Octree* o)								{ octree = o; }
+
 	inline void SetCollisionShape(CollisionShape* colShape)
 	{ 
 		if (collisionShape) collisionShape->SetParent(NULL);
 		collisionShape = colShape;
 		if (collisionShape) collisionShape->SetParent(this);
 	}
-	
+	inline void				SetBoundingRadius(float rad)			{ boundingRadius = rad; }
 
 
 
@@ -143,16 +150,7 @@ public:
 	}
 
 	inline void SetOnUpdateCallback(PhysicsUpdateCallback callback) { onUpdateCallback = callback; }
-	inline void FireOnUpdateCallback()
-	{
-		//Build world transform
-		worldTransform = orientation.ToMatrix4();
-		worldTransform.SetPositionVector(position);
-			
-		//Fire the OnUpdateCallback, notifying GameObject's and other potential
-		// listeners that this PhysicsNode has a new world transform.
-		if (onUpdateCallback) onUpdateCallback(worldTransform);
-	}
+	void FireOnUpdateCallback();
 	
 
 protected:
@@ -160,6 +158,10 @@ protected:
 	GameObject*				parent;
 	Matrix4					worldTransform;
 	PhysicsUpdateCallback	onUpdateCallback;
+
+	Octree*					octree;
+	bool					octreeEnabled;
+	Vector3					distMoved;
 
 
 //Added in Tutorial 2
@@ -180,6 +182,7 @@ protected:
 	//<----------COLLISION------------>
 	CollisionShape*				collisionShape;
 	PhysicsCollisionCallback	onCollisionCallback;
+	float boundingRadius;
 
 
 //Added in Tutorial 5
