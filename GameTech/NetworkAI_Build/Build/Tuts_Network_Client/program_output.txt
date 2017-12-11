@@ -1,0 +1,37 @@
+[12:01:07] [SceneManager] - Exiting scene -
+[12:01:07] 
+[12:01:07] Network: Initialized!
+[12:01:07] Network: Attempting to connect to server.
+[12:01:07] [SceneManager] - Scene switched to: "Network #1 - Example Client"
+[12:01:07] Network: Successfully connected to server!
+[12:01:07] [SceneManager] - Exiting scene -
+[12:01:07] 
+[12:01:07] Network: Initialized!
+[12:01:08] Network: Attempting to connect to server.
+[12:01:08] [SceneManager] - Scene switched to: "Network #1 - Example Client"
+[12:01:08] Network: Successfully connected to server!
+[12:01:08] [SceneManager] - Exiting scene -
+[12:01:08] 
+[12:01:08] Network: Initialized!
+[12:01:08] Network: Attempting to connect to server.
+[12:01:08] [SceneManager] - Scene switched to: "Network #1 - Example Client"
+[12:01:08] Network: Successfully connected to server!
+[12:01:08] [SceneManager] - Exiting scene -
+[12:01:08] 
+[12:01:08] Network: Initialized!
+[12:01:08] Network: Attempting to connect to server.
+[12:01:08] [SceneManager] - Scene switched to: "Network #1 - Example Client"
+[12:01:08] Network: Successfully connected to server!
+[12:01:09] [SceneManager] - Exiting scene -
+[12:01:09] 
+[12:01:09] Network: Initialized!
+[12:01:09] Network: Attempting to connect to server.
+[12:01:09] [SceneManager] - Scene switched to: "Network #1 - Example Client"
+[12:01:09] Network: Successfully connected to server!
+[12:01:09] [SceneManager] - Exiting scene -
+[12:01:09] 
+[12:01:09] Network: Initialized!
+[12:01:09] Network: Attempting to connect to server.
+[12:01:09] [SceneManager] - Scene switched to: "Network #1 - Example Client"
+[12:01:09] Network: Successfully connected to server!
+[12:01:12] [SceneManager] Closing scene manager

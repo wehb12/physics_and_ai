@@ -137,16 +137,8 @@
     <ClInclude Include="SphereCollisionShape.h">
       <Filter>Header Files\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="..\Tuts_Physics\CUDA_SphereSphereCheck.cuh">
-      <Filter>Source Files\Physics</Filter>
-    </ClInclude>
     <ClInclude Include="SpringConstraint.h">
       <Filter>Header Files\Physics</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="..\Tuts_Physics\CUDA_SphereSphereCheck.cu">
-      <Filter>Source Files\Physics</Filter>
-    </CudaCompile>
   </ItemGroup>
 </Project>

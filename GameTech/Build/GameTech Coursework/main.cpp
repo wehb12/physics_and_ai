@@ -10,7 +10,6 @@
 #include "TargetPractise.h"
 #include "SoftBodyScene.h"
 
-
 const Vector4 status_colour = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 const Vector4 status_color_debug = Vector4(1.0f, 0.6f, 1.0f, 1.0f);
 const Vector4 status_colour_header = Vector4(0.8f, 0.9f, 1.0f, 1.0f);
@@ -19,7 +18,6 @@ bool draw_debug = true;
 bool show_perf_metrics = false;
 PerfTimer timer_total, timer_physics, timer_update, timer_render;
 uint shadowCycleKey = 4;
-
 
 // Program Deconstructor
 //  - Releases all global components and memory

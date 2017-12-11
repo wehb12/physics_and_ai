@@ -38,5 +38,9 @@
     <ClInclude Include="SoftBodyScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CUDA_SphereSphereCheck.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="CUDA_SphereSphereCheck.cu" />
   </ItemGroup>
 </Project>

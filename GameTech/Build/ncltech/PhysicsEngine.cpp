@@ -6,18 +6,12 @@
 #include <omp.h>
 #include <algorithm>
 
-// CUDA includes
-#include<cuda_runtime.h>
-#include<vector_types.h>
-
-#if _WIN64
 extern "C" int CUDA_run(Vector3* cu_pos, float* cu_radius,
 	Vector3* cu_globalOnA, Vector3* cu_globalOnB,
 	Vector3* cu_normal, float* cu_penetration, int* cuda_nodeAIndex,
 	int* cuda_nodeBIndex, int entities);
 extern "C" bool CUDA_init(int arrSize);
 extern "C" bool CUDA_free();
-#endif
 
 void PhysicsEngine::SetDefaults()
 {
@@ -47,10 +41,9 @@ PhysicsEngine::PhysicsEngine()
 
 PhysicsEngine::~PhysicsEngine()
 {
-#if _WIN64
 	if (gpuAccel)
 		CUDA_free();
-#endif
+
 	RemoveAllPhysicsObjects();
 	TerminateOctree(root);
 }
@@ -61,10 +54,9 @@ void PhysicsEngine::AddPhysicsObject(PhysicsNode* obj)
 
 	if (InOctree(root, obj))
 		AddToOctree(root, obj);
-#if _WIN64
+
 	if (gpuAccel)
 		CUDA_init(physicsNodes.size());
-#endif
 }
 
 void PhysicsEngine::RemovePhysicsObject(PhysicsNode* obj)
@@ -167,7 +159,7 @@ void PhysicsEngine::UpdatePhysics()
 //1. Broadphase Collision Detection (Fast and dirty)
 	numSphereChecks = 0;
 	perfBroadphase.BeginTimingSection();
-#if _WIN64
+#ifdef USE_CUDA
 	if (!gpuAccel)
 		BroadPhaseCollisions();
 #elif _WIN32
@@ -177,10 +169,10 @@ void PhysicsEngine::UpdatePhysics()
 
 //2. Narrowphase Collision Detection (Accurate but slow)
 	perfNarrowphase.BeginTimingSection();
-#if _WIN64
+
 	if (gpuAccel)
 		GPUCollisionCheck();
-#endif
+
 	NarrowPhaseCollisions();
 	perfNarrowphase.EndTimingSection();
 
@@ -771,7 +763,6 @@ void PhysicsEngine::NarrowPhaseCollisions()
 	}
 }
 
-#if _WIN64
 void PhysicsEngine::ToggleGPUAcceleration()
 {
 	gpuAccel = !gpuAccel;
@@ -919,7 +910,6 @@ void PhysicsEngine::GPUCollisionCheck()
 	delete[] indexA;
 	delete[] indexB;
 }
-#endif
 
 void PhysicsEngine::DebugRender()
 {
