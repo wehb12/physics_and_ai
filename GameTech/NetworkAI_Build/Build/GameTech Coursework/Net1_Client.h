@@ -2,6 +2,11 @@
 
 #include <ncltech\Scene.h>
 #include <ncltech\NetworkBase.h>
+#include <ncltech\SceneManager.h>
+#include <ncltech\PhysicsEngine.h>
+#include <nclgl\NCLDebug.h>
+#include <ncltech\DistanceConstraint.h>
+#include <ncltech\CommonUtils.h>
 
 enum packetFlags
 {

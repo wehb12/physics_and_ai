@@ -1,5 +1,3 @@
-
-
 #include <enet\enet.h>  //<-- MUST include this before "<nclgl\Window.h>"
 
 #include <nclgl\Window.h>
@@ -7,10 +5,42 @@
 #include <ncltech\SceneManager.h>
 #include <nclgl\NCLDebug.h>
 #include <nclgl\PerfTimer.h>
+#include <nclgl\GameTimer.h>
+#include <nclgl\Vector3.h>
+#include <nclgl\common.h>
+#include <ncltech\NetworkBase.h>
+
+//Needed to get computer adapter IPv4 addresses via windows
+#include <iphlpapi.h>
+#pragma comment(lib, "IPHLPAPI.lib")
 
 #include "Net1_Client.h"
 
+#define SERVER_PORT 1234
+#define UPDATE_TIMESTEP (1.0f / 30.0f) //send 30 position updates per second
+
+NetworkBase server;
+GameTimer timer;
+float accum_time = 0.0f;
+float rotation = 0.0f;
+int networkEntityType;
+
+enum NetworkEntity
+{
+	CLIENT,
+	SERVER
+};
+
+void Win32_PrintAllAdapterIPAddresses();
+
 void Quit(bool error = false, const string &reason = "");
+
+int onExit(int exitcode)
+{
+	server.Release();
+	system("pause");
+	exit(exitcode);
+}
 
 void Initialize()
 {
@@ -105,37 +135,171 @@ void HandleKeyboardInputs()
 
 int main()
 {
-	//Initialize our Window, Physics, Scenes etc
-	Initialize();
+	if (enet_initialize() != 0)
+	{
+		fprintf(stderr, "An error occurred while initializing ENet.\n");
+		return EXIT_FAILURE;
+	}
 
-	Window::GetWindow().GetTimer()->GetTimedMS();
+	//Initialize Server on Port 1234, with a possible 32 clients connected at any time
+	if (!server.Initialize(SERVER_PORT, 32))
+	{
+		//fprintf(stderr, "An error occurred while trying to create an ENet server host.\n");
+		//onExit(EXIT_FAILURE);
+
+		//Initialize our Window, Physics, Scenes etc
+		Initialize();
+
+		Window::GetWindow().GetTimer()->GetTimedMS();
+
+		networkEntityType = CLIENT;
+	}
+	else
+	{
+		printf("Server Initiated\n");
+
+		Win32_PrintAllAdapterIPAddresses();
+
+		networkEntityType = SERVER;
+	}
 
 	//Create main game-loop
-	while (Window::GetWindow().UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE))
+	bool exitFlag = false;
+	while (!exitFlag)
 	{
-		//Start Timing
-		float dt = Window::GetWindow().GetTimer()->GetTimedMS() * 0.001f;	//How many milliseconds since last update?
+		float dt;
+		switch (networkEntityType)
+		{
+		case CLIENT:
+			//Start Timing
+			dt = Window::GetWindow().GetTimer()->GetTimedMS() * 0.001f;	//How many milliseconds since last update?
 
-																			//Print Status Entries
-		PrintStatusEntries();
+																				//Print Status Entries
+			PrintStatusEntries();
 
-		//Handle Keyboard Inputs
-		HandleKeyboardInputs();
+			//Handle Keyboard Inputs
+			HandleKeyboardInputs();
 
-		//Update Scene
-		SceneManager::Instance()->GetCurrentScene()->FireOnSceneUpdate(dt);
+			//Update Scene
+			SceneManager::Instance()->GetCurrentScene()->FireOnSceneUpdate(dt);
 
-		//Update Physics
-		PhysicsEngine::Instance()->Update(dt);
-		PhysicsEngine::Instance()->DebugRender();
+			//Update Physics
+			PhysicsEngine::Instance()->Update(dt);
+			PhysicsEngine::Instance()->DebugRender();
 
-		//Render Scene
+			//Render Scene
 
-		GraphicsPipeline::Instance()->UpdateScene(dt);
-		GraphicsPipeline::Instance()->RenderScene();				 //Finish Timing
+			GraphicsPipeline::Instance()->UpdateScene(dt);
+			GraphicsPipeline::Instance()->RenderScene();				 //Finish Timing
+
+			exitFlag = Window::GetWindow().UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE) ? false : true;
+			break;
+
+		case SERVER:
+			dt = timer.GetTimedMS() * 0.001f;
+			accum_time += dt;
+			rotation += 0.5f * PI * dt;
+
+			//Handle All Incoming Packets and Send any enqued packets
+			server.ServiceNetwork(dt, [&](const ENetEvent& evnt)
+			{
+				switch (evnt.type)
+				{
+				case ENET_EVENT_TYPE_CONNECT:
+					printf("- New Client Connected\n");
+					break;
+
+				case ENET_EVENT_TYPE_RECEIVE:
+					printf("\t Client %d says: %s\n", evnt.peer->incomingPeerID, evnt.packet->data);
+					enet_packet_destroy(evnt.packet);
+					break;
+
+				case ENET_EVENT_TYPE_DISCONNECT:
+					printf("- Client %d has disconnected.\n", evnt.peer->incomingPeerID);
+					break;
+				}
+			});
+
+			//Broadcast update packet to all connected clients at a rate of UPDATE_TIMESTEP updates per second
+			if (accum_time >= UPDATE_TIMESTEP)
+			{
+
+				//Packet data
+				// - At the moment this is just a position update that rotates around the origin of the world
+				//   though this can be any variable, structure or class you wish. Just remember that everything 
+				//   you send takes up valuable network bandwidth so no sending every PhysicsObject struct each frame ;)
+				accum_time = 0.0f;
+				Vector3 pos = Vector3(
+					cos(rotation) * 2.0f,
+					1.5f,
+					sin(rotation) * 2.0f);
+
+				//Create the packet and broadcast it (unreliable transport) to all clients
+				ENetPacket* position_update = enet_packet_create(&pos, sizeof(Vector3), 0);
+				enet_host_broadcast(server.m_pNetwork, 0, position_update);
+			}
+
+			Sleep(0);
+
+			break;
+		}
 	}
 
 	//Cleanup
 	Quit();
 	return 0;
+}
+
+//Yay Win32 code >.>
+//  - Grabs a list of all network adapters on the computer and prints out all IPv4 addresses associated with them.
+void Win32_PrintAllAdapterIPAddresses()
+{
+	//Initially allocate 5KB of memory to store all adapter info
+	ULONG outBufLen = 5000;
+
+
+	IP_ADAPTER_INFO* pAdapters = NULL;
+	DWORD status = ERROR_BUFFER_OVERFLOW;
+
+	//Keep attempting to fit all adapter info inside our buffer, allocating more memory if needed
+	// Note: Will exit after 5 failed attempts, or not enough memory. Lets pray it never comes to this!
+	for (int i = 0; i < 5 && (status == ERROR_BUFFER_OVERFLOW); i++)
+	{
+		pAdapters = (IP_ADAPTER_INFO *)malloc(outBufLen);
+		if (pAdapters != NULL) {
+
+			//Get Network Adapter Info
+			status = GetAdaptersInfo(pAdapters, &outBufLen);
+
+			// Increase memory pool if needed
+			if (status == ERROR_BUFFER_OVERFLOW) {
+				free(pAdapters);
+				pAdapters = NULL;
+			}
+			else {
+				break;
+			}
+		}
+	}
+
+
+	if (pAdapters != NULL)
+	{
+		//Iterate through all Network Adapters, and print all IPv4 addresses associated with them to the console
+		// - Adapters here are stored as a linked list termenated with a NULL next-pointer
+		IP_ADAPTER_INFO* cAdapter = &pAdapters[0];
+		while (cAdapter != NULL)
+		{
+			IP_ADDR_STRING* cIpAddress = &cAdapter->IpAddressList;
+			while (cIpAddress != NULL)
+			{
+				printf("\t - Listening for connections on %s:%u\n", cIpAddress->IpAddress.String, SERVER_PORT);
+				cIpAddress = cIpAddress->Next;
+			}
+			cAdapter = cAdapter->Next;
+		}
+
+		free(pAdapters);
+	}
+
 }

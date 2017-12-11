@@ -168,6 +168,8 @@ protected:
 
 	//Sends info to GPU to perform narrowphase collision checks on sphere-sphere collisions
 	void GPUCollisionCheck();
+	void InitCPUMemory();
+	void FreeCPUMemory();
 
 protected:
 	bool		isPaused;
@@ -184,6 +186,15 @@ protected:
 	int							numSphereChecks;
 
 	bool		gpuAccel;
+	Vector3* positions;
+	float* radii;
+
+	Vector3* globalOnA;
+	Vector3* globalOnB;
+	Vector3* normal;
+	float* penetration;
+	int* indexA;
+	int* indexB;
 
 	std::vector<PhysicsNode*>	physicsNodes;
 

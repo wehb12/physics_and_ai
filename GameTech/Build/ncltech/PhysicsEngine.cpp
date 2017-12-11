@@ -42,7 +42,10 @@ PhysicsEngine::PhysicsEngine()
 PhysicsEngine::~PhysicsEngine()
 {
 	if (gpuAccel)
+	{
 		CUDA_free();
+		FreeCPUMemory();
+	}
 
 	RemoveAllPhysicsObjects();
 	TerminateOctree(root);
@@ -56,7 +59,10 @@ void PhysicsEngine::AddPhysicsObject(PhysicsNode* obj)
 		AddToOctree(root, obj);
 
 	if (gpuAccel)
+	{
 		CUDA_init(physicsNodes.size());
+		InitCPUMemory();
+	}
 }
 
 void PhysicsEngine::RemovePhysicsObject(PhysicsNode* obj)
@@ -159,12 +165,9 @@ void PhysicsEngine::UpdatePhysics()
 //1. Broadphase Collision Detection (Fast and dirty)
 	numSphereChecks = 0;
 	perfBroadphase.BeginTimingSection();
-#ifdef USE_CUDA
 	if (!gpuAccel)
 		BroadPhaseCollisions();
-#elif _WIN32
 	BroadPhaseCollisions();
-#endif
 	perfBroadphase.EndTimingSection();
 
 //2. Narrowphase Collision Detection (Accurate but slow)
@@ -770,27 +773,54 @@ void PhysicsEngine::ToggleGPUAcceleration()
 	if (gpuAccel)
 	{
 		if (!CUDA_init(physicsNodes.size() - 5))
-			cout << "Error initialising CUDA memory" << endl;
+			cout << "Error initialising GPU memory" << endl;
+		InitCPUMemory();
 
-		for (int i = 0; i < physicsNodes.size(); ++i)
-		{
+		// (??)
+		//for (int i = 0; i < physicsNodes.size(); ++i)
+		//{
 
-		}
+		//}
 	}
 	else
 	{
-		if(!CUDA_free())
-			cout << "Error freeing CUDA memory" << endl;
+		if (!CUDA_free())
+			cout << "Error freeing GPU memory" << endl;
+		FreeCPUMemory();
 	}
+}
+
+void PhysicsEngine::InitCPUMemory()
+{
+	int arrSize = physicsNodes.size() - 5;   //5 is the number of walls and floors and ceilings
+	positions = new Vector3[arrSize];
+	radii = new float[arrSize];
+
+	int maxNumColPairs = arrSize * arrSize * 0.5;
+	globalOnA = new Vector3[maxNumColPairs];
+	globalOnB = new Vector3[maxNumColPairs];
+	normal = new Vector3[maxNumColPairs];
+	penetration = new float[maxNumColPairs];
+	indexA = new int[maxNumColPairs];
+	indexB = new int[maxNumColPairs];
+}
+
+void PhysicsEngine::FreeCPUMemory()
+{
+	delete[] positions;
+	delete[] radii;
+	delete[] globalOnA;
+	delete[] globalOnB;
+	delete[] normal;
+	delete[] penetration;
+	delete[] indexA;
+	delete[] indexB;
 }
 
 void PhysicsEngine::GPUCollisionCheck()
 {
 	broadphaseColPairs.clear();
-
 	int arrSize = physicsNodes.size() - 5;   //5 is the number of walls and floors and ceilings
-	Vector3* positions = new Vector3[arrSize];
-	float* radii = new float[arrSize];
 
 	int index = 0;
 	for (int i = 0; i < physicsNodes.size(); ++i)
@@ -868,16 +898,10 @@ void PhysicsEngine::GPUCollisionCheck()
 
 		++index;
 	}
-
-	int maxNumColPairs = arrSize * arrSize * 0.5;
-	Vector3* globalOnA = new Vector3[maxNumColPairs];
-	Vector3* globalOnB = new Vector3[maxNumColPairs];
-	Vector3* normal = new Vector3[maxNumColPairs];
-	float* penetration = new float[maxNumColPairs];
-	int* indexA = new int[maxNumColPairs];
-	int* indexB = new int[maxNumColPairs];
 	
 	CUDA_run(positions, radii, globalOnA, globalOnB, normal, penetration, indexA, indexB, arrSize);
+
+	int maxNumColPairs = arrSize * arrSize * 0.5;
 
 	for (int i = 0; i < maxNumColPairs; ++i)
 	{
@@ -900,15 +924,6 @@ void PhysicsEngine::GPUCollisionCheck()
 			}
 		}
 	}
-
-	delete[] positions;
-	delete[] radii;
-	delete[] globalOnA;
-	delete[] globalOnB;
-	delete[] normal;
-	delete[] penetration;
-	delete[] indexA;
-	delete[] indexB;
 }
 
 void PhysicsEngine::DebugRender()

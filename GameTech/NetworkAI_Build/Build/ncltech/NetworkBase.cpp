@@ -33,7 +33,7 @@ bool NetworkBase::Initialize(uint16_t external_port_number, size_t max_peers)
 
 	if (m_pNetwork == NULL)
 	{
-		NCLERROR("Unable to initialise Network Host!");
+		NCLLOG("Unable to initialise Network Host!");
 		return false;
 	}
 

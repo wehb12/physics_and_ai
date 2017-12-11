@@ -81,11 +81,6 @@ the servers game simulation. This methodology is known as "Dead Reckoning".
 *//////////////////////////////////////////////////////////////////////////////
 
 #include "Net1_Client.h"
-#include <ncltech\SceneManager.h>
-#include <ncltech\PhysicsEngine.h>
-#include <nclgl\NCLDebug.h>
-#include <ncltech\DistanceConstraint.h>
-#include <ncltech\CommonUtils.h>
 
 const Vector3 status_color3 = Vector3(1.0f, 0.6f, 0.6f);
 const Vector4 status_color = Vector4(status_color3.x, status_color3.y, status_color3.z, 1.0f);
@@ -219,7 +214,7 @@ void Net1_Client::HandleKeyboardInput()
 {
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_G))
 	{
-		string message = "Hello server!";
+		string message = "Hello!";
 		//message += to_string(16);
 		//Create the packet and broadcast it (unreliable transport) to all clients
 		ENetPacket* messagePacket = enet_packet_create(&message, message.size() * sizeof(char), 0);
