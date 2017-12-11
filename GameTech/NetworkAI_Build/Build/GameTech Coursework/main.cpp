@@ -18,6 +18,7 @@
 #include "PacketTypes.h"
 #include "MazeGenerator.h"
 #include "MazeRenderer.h"
+#include "SearchAlgorithm.h"
 
 #define SERVER_PORT 1234
 #define UPDATE_TIMESTEP (1.0f / 30.0f) //send 30 position updates per second
@@ -138,6 +139,10 @@ void HandleKeyboardInputs()
 
 }
 
+// templated to either enet_uint8, enet_uint16 or enet_unit32
+template<typename enet_uint>
+void PopulateNodeLists(enet_uint* nodeA, enet_uint* nodeB, vector<GraphEdge> walls, MazeGenerator* maze, int mazeSize);
+
 string HandlePacket(const ENetPacket* packet)
 {
 	enet_uint8 type = *packet->data;
@@ -155,6 +160,28 @@ string HandlePacket(const ENetPacket* packet)
 
 			MazeGenerator* maze = new MazeGenerator;
 			maze->Generate(mazeSize, mazeDensity);
+			
+			int possibleWalls = 2 * mazeSize * (mazeSize - 1);
+
+			vector<GraphEdge> walls;
+			for (int i = 0; i < possibleWalls; ++i)
+			{
+				if (!maze->allEdges[i]._iswall)
+					continue;
+				else
+					walls.push_back(maze->allEdges[i]);
+			}
+
+			if (mazeSize <= 16)
+			{
+				MazeDataPacket8 returnPacket;
+				int numWalls = walls.size();
+				returnPacket.numWalls = numWalls;
+				returnPacket.nodeA = new enet_uint8[numWalls];
+				returnPacket.nodeB = new enet_uint8[numWalls];
+				PopulateNodeLists<enet_uint8>(returnPacket.nodeA, returnPacket.nodeB, walls, maze, mazeSize * mazeSize);
+			}
+
 			delete maze;
 			break;
 		}
@@ -166,6 +193,31 @@ string HandlePacket(const ENetPacket* packet)
 	}
 
 	return output;
+}
+
+// templated to either enet_uint8, enet_uint16 or enet_unit32
+template<typename enet_uint>
+void PopulateNodeLists(enet_uint* nodeA, enet_uint* nodeB, vector<GraphEdge> walls, MazeGenerator* maze, int numNodes)
+{
+	int size = walls.size();
+
+	if (size == 0)
+		return;
+
+	auto FindNode = [&](GraphNode* node)
+	{
+		for (enet_uint i = 0; i < numNodes; ++i)
+		{
+			if (&maze->allNodes[i] == node)
+				return i;
+		}
+	};
+
+	for (int i = 0; i < size; ++i)
+	{
+		nodeA[i] = FindNode(walls[i]._a);
+		nodeB[i] = FindNode(walls[i]._b);
+	}
 }
 
 

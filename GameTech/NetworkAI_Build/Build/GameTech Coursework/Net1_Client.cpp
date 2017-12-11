@@ -243,7 +243,7 @@ void Net1_Client::HandleKeyboardInput()
 			data[2] = packetData.mazeDensity;
 		};
 
-		PopulatePacket(MAZE_REQUEST, 16, 0.5f);
+		PopulatePacket(MAZE_REQUEST, 16, 1.0f);
 		CreateByteStream();
 
 		//Create the packet and broadcast it (unreliable transport) to server
