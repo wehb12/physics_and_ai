@@ -7,6 +7,7 @@
 #include <nclgl\NCLDebug.h>
 #include <ncltech\DistanceConstraint.h>
 #include <ncltech\CommonUtils.h>
+#include <string>
 
 enum packetFlags
 {

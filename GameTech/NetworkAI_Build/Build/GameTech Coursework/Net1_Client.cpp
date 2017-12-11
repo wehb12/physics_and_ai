@@ -214,10 +214,11 @@ void Net1_Client::HandleKeyboardInput()
 {
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_G))
 	{
-		string message = "Hello!";
+		char message[7];
+		strcpy_s(message,"Hello!");
 		//message += to_string(16);
 		//Create the packet and broadcast it (unreliable transport) to all clients
-		ENetPacket* messagePacket = enet_packet_create(&message, message.size() * sizeof(char), 0);
+		ENetPacket* messagePacket = enet_packet_create(&message, 7 * sizeof(char), 0);
 		enet_host_broadcast(network.m_pNetwork, 0, messagePacket);
 	}
 }
