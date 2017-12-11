@@ -9,6 +9,8 @@
 #include <ncltech\CommonUtils.h>
 #include <string>
 
+#include "PacketTypes.h"
+
 enum packetFlags
 {
 	CREATE_MAZE = 0

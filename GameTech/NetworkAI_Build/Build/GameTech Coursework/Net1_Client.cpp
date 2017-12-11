@@ -182,7 +182,6 @@ void Net1_Client::ProcessNetworkEvent(const ENetEvent& evnt)
 	}
 	break;
 
-
 	//Server has sent us a new packet
 	case ENET_EVENT_TYPE_RECEIVE:
 	{
@@ -200,7 +199,6 @@ void Net1_Client::ProcessNetworkEvent(const ENetEvent& evnt)
 	}
 	break;
 
-
 	//Server has disconnected
 	case ENET_EVENT_TYPE_DISCONNECT:
 	{
@@ -214,11 +212,24 @@ void Net1_Client::HandleKeyboardInput()
 {
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_G))
 	{
-		char message[7];
-		strcpy_s(message,"Hello!");
-		//message += to_string(16);
-		//Create the packet and broadcast it (unreliable transport) to all clients
-		ENetPacket* messagePacket = enet_packet_create(&message, 7 * sizeof(char), 0);
-		enet_host_broadcast(network.m_pNetwork, 0, messagePacket);
+		Packet packetData;
+		packetData.data = new unsigned char[3];
+
+		auto PopulatePacket = [&](unsigned char type, unsigned char size, float density)
+		{
+			*packetData.data = type;
+			*(packetData.data + 1) = size;
+			// convert float to 8 bit value
+			unsigned char charDens = (float)255 * density;
+			*(packetData.data + 2) = charDens;
+		};
+
+		PopulatePacket(MAZE_REQUEST, 16, 0.5f);
+
+		//Create the packet and broadcast it (unreliable transport) to server
+		ENetPacket* packet = enet_packet_create(packetData.data, sizeof(packetData.data), 0);
+		enet_peer_send(serverConnection, 0, packet);
+
+		delete[] packetData.data;
 	}
 }

@@ -29,5 +29,8 @@
     <ClInclude Include="Net1_Client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PacketTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

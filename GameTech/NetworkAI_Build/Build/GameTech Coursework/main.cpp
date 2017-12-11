@@ -15,9 +15,14 @@
 #pragma comment(lib, "IPHLPAPI.lib")
 
 #include "Net1_Client.h"
+#include "PacketTypes.h"
 
 #define SERVER_PORT 1234
 #define UPDATE_TIMESTEP (1.0f / 30.0f) //send 30 position updates per second
+
+// the ascii code for the number '0'
+// add to any char (0 - 9) to output it's number
+#define CHAR_TO_NUM 48
 
 NetworkBase server;
 GameTimer timer;
@@ -131,6 +136,31 @@ void HandleKeyboardInputs()
 
 }
 
+string HandlePacket(const ENetPacket* packet)
+{
+	enet_uint8 type = *packet->data;
+	int size = sizeof(packet->data);
+
+	string output = "";
+
+	switch (type)
+	{
+		case MAZE_REQUEST:
+		{
+			enet_uint8 mazeSize = *(packet->data + 1);
+			float mazeDensity = (float)*(packet->data + 2) / (float)255;
+			output = "Create a maze of size " + to_string((int)mazeSize);
+			break;
+		}
+		default:
+		{
+			cout << "ERROR - Invalid packet sent" << endl;
+			break;
+		}
+	}
+
+	return output;
+}
 
 
 int main()
@@ -209,11 +239,14 @@ int main()
 					printf("- New Client Connected\n");
 					break;
 
-				case ENET_EVENT_TYPE_RECEIVE:
-					printf("\t Client %d says: %s\n", evnt.peer->incomingPeerID, evnt.packet->data);
-					enet_packet_destroy(evnt.packet);
-					break;
-
+					case ENET_EVENT_TYPE_RECEIVE:
+					{
+						string consoleOutput = HandlePacket(evnt.packet);
+						if (consoleOutput.size())
+							printf("\t Client %d says: %s\n", evnt.peer->incomingPeerID, consoleOutput.c_str());
+						enet_packet_destroy(evnt.packet);
+						break;
+					}
 				case ENET_EVENT_TYPE_DISCONNECT:
 					printf("- Client %d has disconnected.\n", evnt.peer->incomingPeerID);
 					break;
