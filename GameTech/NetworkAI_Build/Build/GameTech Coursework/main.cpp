@@ -16,6 +16,8 @@
 
 #include "Net1_Client.h"
 #include "PacketTypes.h"
+#include "MazeGenerator.h"
+#include "MazeRenderer.h"
 
 #define SERVER_PORT 1234
 #define UPDATE_TIMESTEP (1.0f / 30.0f) //send 30 position updates per second
@@ -149,7 +151,11 @@ string HandlePacket(const ENetPacket* packet)
 		{
 			enet_uint8 mazeSize = *(packet->data + 1);
 			float mazeDensity = (float)*(packet->data + 2) / (float)255;
-			output = "Create a maze of size " + to_string((int)mazeSize);
+			output = "Create a maze of size " + to_string((int)mazeSize) + " with a density of " + to_string(mazeDensity);
+
+			MazeGenerator* maze = new MazeGenerator;
+			maze->Generate(mazeSize, mazeDensity);
+			delete maze;
 			break;
 		}
 		default:

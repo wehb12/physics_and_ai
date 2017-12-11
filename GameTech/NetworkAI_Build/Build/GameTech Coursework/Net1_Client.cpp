@@ -115,6 +115,16 @@ void Net1_Client::OnInitializeScene()
 		false,
 		Vector4(0.2f, 0.5f, 1.0f, 1.0f));
 	this->AddGameObject(box);
+
+	this->AddGameObject(CommonUtils::BuildCuboidObject(
+		"Ground",
+		Vector3(0.0f, -1.5f, 0.0f),
+		Vector3(20.0f, 1.0f, 20.0f),
+		false,
+		0.0f,
+		false,
+		false,
+		Vector4(0.2f, 0.5f, 1.0f, 1.0f)));
 }
 
 void Net1_Client::OnCleanupScene()
@@ -212,24 +222,34 @@ void Net1_Client::HandleKeyboardInput()
 {
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_G))
 	{
-		Packet packetData;
-		packetData.data = new unsigned char[3];
+		MazeRequestPacket packetData;
 
 		auto PopulatePacket = [&](unsigned char type, unsigned char size, float density)
 		{
-			*packetData.data = type;
-			*(packetData.data + 1) = size;
+			packetData.type = type;
+			packetData.mazeSize = size;
 			// convert float to 8 bit value
 			unsigned char charDens = (float)255 * density;
-			*(packetData.data + 2) = charDens;
+			packetData.mazeDensity = charDens;
+		};
+
+		enet_uint8* data;
+		auto CreateByteStream = [&]()
+		{
+			data = new enet_uint8[sizeof(packetData)];
+
+			data[0] = packetData.type;
+			data[1] = packetData.mazeSize;
+			data[2] = packetData.mazeDensity;
 		};
 
 		PopulatePacket(MAZE_REQUEST, 16, 0.5f);
+		CreateByteStream();
 
 		//Create the packet and broadcast it (unreliable transport) to server
-		ENetPacket* packet = enet_packet_create(packetData.data, sizeof(packetData.data), 0);
+		ENetPacket* packet = enet_packet_create(data, sizeof(packetData), 0);
 		enet_peer_send(serverConnection, 0, packet);
 
-		delete[] packetData.data;
+		delete[] data;
 	}
 }

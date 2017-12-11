@@ -135,12 +135,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MazeGenerator.cpp" />
+    <ClCompile Include="MazeRenderer.cpp" />
     <ClCompile Include="Net1_Client.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EmptyScene.h" />
+    <ClInclude Include="MazeGenerator.h" />
+    <ClInclude Include="MazeRenderer.h" />
     <ClInclude Include="Net1_Client.h" />
     <ClInclude Include="PacketTypes.h" />
+    <ClInclude Include="SearchAlgorithm.h" />
+    <ClInclude Include="SearchAStar.h" />
+    <ClInclude Include="SearchBreadthFirst.h" />
+    <ClInclude Include="SearchDepthFirst.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

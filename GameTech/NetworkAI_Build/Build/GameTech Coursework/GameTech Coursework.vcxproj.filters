@@ -13,12 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\SearchAlgorithms">
+      <UniqueIdentifier>{9189937c-5b67-4743-92d7-a22ff4a1b3f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Net1_Client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MazeGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MazeRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -31,6 +40,24 @@
     </ClInclude>
     <ClInclude Include="PacketTypes.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MazeGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MazeRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SearchAlgorithm.h">
+      <Filter>Header Files\SearchAlgorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="SearchAStar.h">
+      <Filter>Header Files\SearchAlgorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="SearchBreadthFirst.h">
+      <Filter>Header Files\SearchAlgorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="SearchDepthFirst.h">
+      <Filter>Header Files\SearchAlgorithms</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
