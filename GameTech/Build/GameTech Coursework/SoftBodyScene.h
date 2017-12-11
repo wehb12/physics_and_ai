@@ -17,8 +17,13 @@
 #define GRAVITY 9.81f
 #endif
 
-#define CLOTH_SIZE_X 5
+#define CLOTH_SIZE_X 10
 #define CLOTH_SIZE_Y 5
+#define SEPARATION 1.0f
+#define MAX_X CLOTH_SIZE_X / 2
+#define MIN_X - CLOTH_SIZE_X / 2
+#define MIN_Y 5
+#define MAX_Y MIN_Y + CLOTH_SIZE_Y
 
 class SoftBodyScene : public Scene
 {
@@ -51,9 +56,9 @@ public:
 			for (int j = 0; j < CLOTH_SIZE_Y; ++j)
 			{
 				PhysicsNode* pointPhys = new PhysicsNode();
-				SphereCollisionShape* sphere = new SphereCollisionShape(0.45f);
+				SphereCollisionShape* sphere = new SphereCollisionShape(0.5f);
 				pointPhys->SetCollisionShape(sphere);
-				pointPhys->SetPosition(Vector3(i - 2.5f, j + 5, 0));
+				pointPhys->SetPosition(Vector3(i + MIN_X, j + MIN_Y, 0));
 				pointPhys->SetInverseMass(invMass);
 				pointPhys->SetInverseInertia(sphere->BuildInverseInertia(invMass));
 				pointPhys->SetElasticity(0.2f);
@@ -68,9 +73,10 @@ public:
 				this->AddGameObject(pointObj);
 			}
 		}
-		m_vpObjects.back()->Physics()->SetInverseMass(0.0f);
-		m_vpObjects[CLOTH_SIZE_Y]->Physics()->SetInverseMass(0.0f);
 
+		// make top row of points non-collidable
+		for (int i = 1; i <= m_vpObjects.size() / CLOTH_SIZE_Y; ++i)
+			m_vpObjects[i * CLOTH_SIZE_Y]->Physics()->SetInverseMass(0.0f);
 
 		for (int i = 0; i < CLOTH_SIZE_X; ++i)
 		{
@@ -87,7 +93,7 @@ public:
 					//	thisPos, m_vpObjects[nextIndex]->Physics()->GetPosition());
 					SpringConstraint* constraint = new SpringConstraint(thisNode, m_vpObjects[nextIndex]->Physics(),
 						thisPos, m_vpObjects[nextIndex]->Physics()->GetPosition(),
-						2.0f, 1.0f);
+						1.0f, 1.0f);
 
 					PhysicsEngine::Instance()->AddConstraint(constraint);
 				};
@@ -122,6 +128,19 @@ public:
 			}
 		}
 
+		tex = SOIL_load_OGL_texture(
+			TEXTUREDIR"Black_American_Flag.jpg",
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+			SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
+
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
 		for (int i = 0; i < CLOTH_SIZE_X - 1; ++i)
 		{
 			for (int j = 0; j < CLOTH_SIZE_Y - 1; ++j)
@@ -131,14 +150,14 @@ public:
 				Vector3 triangle[3];
 				triangle[0] = m_vpObjects[index]->Physics()->GetPosition();
 				triangle[1] = m_vpObjects[index + 1]->Physics()->GetPosition();
-				triangle[2] = m_vpObjects[index + CLOTH_SIZE_X]->Physics()->GetPosition();
-				renderObjs[renderIndex] = new RenderNode(GenerateTriangle(triangle), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+				triangle[2] = m_vpObjects[index + CLOTH_SIZE_Y]->Physics()->GetPosition();
+				renderObjs[renderIndex] = new RenderNode(GenerateTriangle(triangle), Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 				GraphicsPipeline::Instance()->AddRenderNode(renderObjs[renderIndex]);
 
 				triangle[0] = m_vpObjects[index + 1]->Physics()->GetPosition();
-				triangle[1] = m_vpObjects[index + CLOTH_SIZE_X + 1]->Physics()->GetPosition();
-				triangle[2] = m_vpObjects[index + CLOTH_SIZE_X]->Physics()->GetPosition();
-				renderObjs[renderIndex + 1] = new RenderNode(GenerateTriangle(triangle), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+				triangle[1] = m_vpObjects[index + CLOTH_SIZE_Y + 1]->Physics()->GetPosition();
+				triangle[2] = m_vpObjects[index + CLOTH_SIZE_Y]->Physics()->GetPosition();
+				renderObjs[renderIndex + 1] = new RenderNode(GenerateTriangle(triangle), Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 
 				GraphicsPipeline::Instance()->AddRenderNode(renderObjs[renderIndex + 1]);
 			}
@@ -155,6 +174,7 @@ public:
 private:
 	// two triangles per square, (CLOTH_SIZE_X - 1) * (CLOTH_SIZE_Y - 1) squares
 	RenderNode* renderObjs[2 * (CLOTH_SIZE_X - 1) * (CLOTH_SIZE_Y - 1)];
+	GLuint tex;
 
 	void BuildMesh()
 	{
@@ -167,12 +187,12 @@ private:
 				Vector3 triangle[3];
 				triangle[0] = m_vpObjects[index]->Physics()->GetPosition();
 				triangle[1] = m_vpObjects[index + 1]->Physics()->GetPosition();
-				triangle[2] = m_vpObjects[index + CLOTH_SIZE_X]->Physics()->GetPosition();
+				triangle[2] = m_vpObjects[index + CLOTH_SIZE_Y]->Physics()->GetPosition();
 				UpdateTraingleMesh(renderObjs[renderIndex]->GetMesh(), triangle);
 
 				triangle[0] = m_vpObjects[index + 1]->Physics()->GetPosition();
-				triangle[1] = m_vpObjects[index + CLOTH_SIZE_X + 1]->Physics()->GetPosition();
-				triangle[2] = m_vpObjects[index + CLOTH_SIZE_X]->Physics()->GetPosition();
+				triangle[1] = m_vpObjects[index + CLOTH_SIZE_Y + 1]->Physics()->GetPosition();
+				triangle[2] = m_vpObjects[index + CLOTH_SIZE_Y]->Physics()->GetPosition();
 				UpdateTraingleMesh(renderObjs[renderIndex + 1]->GetMesh(), triangle);
 			}
 		}
@@ -189,15 +209,16 @@ private:
 		m->vertices[2] = points[2];
 
 		m->textureCoords = new Vector2[m->numVertices];
-		m->textureCoords[0] = Vector2(points[0].x, points[0].y);
-		m->textureCoords[1] = Vector2(points[1].x, points[1].y);
-		m->textureCoords[2] = Vector2(points[2].x, points[2].y);
+		m->textureCoords[0] = Vector2(points[0].x / (MAX_X - MIN_X), points[0].y / (MAX_Y - MIN_Y));
+		m->textureCoords[1] = Vector2(points[1].x / (MAX_X - MIN_X), points[1].y / (MAX_Y - MIN_Y));
+		m->textureCoords[2] = Vector2(points[2].x / (MAX_X - MIN_X), points[2].y / (MAX_Y - MIN_Y));
 
 		m->colours = new Vector4[m->numVertices];
-		m->colours[0] = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-		m->colours[1] = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-		m->colours[2] = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+		m->colours[0] = Vector4(1.0f, 1.0f, 1.0f, 0.0f);
+		m->colours[1] = Vector4(1.0f, 1.0f, 1.0f, 0.0f);
+		m->colours[2] = Vector4(1.0f, 1.0f, 1.0f, 0.0f);
 
+		m->SetTexture(tex);
 		m->GenerateNormals();
 		m->GenerateTangents();
 		m->BufferData();
@@ -210,10 +231,6 @@ private:
 		m->vertices[0] = points[0];
 		m->vertices[1] = points[1];
 		m->vertices[2] = points[2];
-
-		m->textureCoords[0] = Vector2(points[0].x, points[0].y);
-		m->textureCoords[1] = Vector2(points[1].x, points[1].y);
-		m->textureCoords[2] = Vector2(points[2].x, points[2].y);
 
 		m->GenerateNormals();
 		m->GenerateTangents();

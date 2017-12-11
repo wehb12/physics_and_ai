@@ -44,6 +44,11 @@ Description:
 #include <mutex>
 #include <bitset>
 
+#ifdef _WIN64
+// CUDA includes
+#include<cuda_runtime.h>
+#include<vector_types.h>
+#endif
 
 //Number of jacobi iterations to apply in order to
 // assure the constraints are solved. (Last tutorial)
@@ -129,10 +134,12 @@ public:
 	inline bool SphereCheck()					{ return sphereSphere; }
 	inline int NumSphereChecks()				{ return numSphereChecks; }
 
+#if _WIN64
 	void ToggleGPUAcceleration();
 	inline bool GetGPUAccelerationState()		{ return gpuAccel; }
+#endif
 
-	inline int NumColPairs()					{ return broadphaseColPairs.size(); }
+	inline size_t NumColPairs()			{ return broadphaseColPairs.size(); }
 
 	void PrintPerformanceTimers(const Vector4& color)
 	{

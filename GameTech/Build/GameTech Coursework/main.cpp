@@ -10,9 +10,6 @@
 #include "TargetPractise.h"
 #include "SoftBodyScene.h"
 
-// CUDA includes
-#include<cuda_runtime.h>
-#include<vector_types.h>
 
 const Vector4 status_colour = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 const Vector4 status_color_debug = Vector4(1.0f, 0.6f, 1.0f, 1.0f);

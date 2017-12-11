@@ -1,5 +1,3 @@
-
-
 #include <enet\enet.h>  //<-- MUST include this before "<nclgl\Window.h>"
 
 #include <nclgl\Window.h>
