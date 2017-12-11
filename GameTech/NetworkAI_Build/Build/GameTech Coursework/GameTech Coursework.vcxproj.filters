@@ -30,6 +30,9 @@
     <ClCompile Include="MazeRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="NetworkEntity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EmptyScene.h">
@@ -58,6 +61,9 @@
     </ClInclude>
     <ClInclude Include="SearchDepthFirst.h">
       <Filter>Header Files\SearchAlgorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkEntity.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
