@@ -1,64 +1,100 @@
-[12:47:43] Loading Shader:
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexBasic.glsl
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechFragSuperSample.glsl
-[12:47:43]     -> Linking Shader: Success!
-[12:47:43] 
-[12:47:43] Loading Shader:
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexShadow.glsl
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/Common/EmptyFragment.glsl
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechGeomShadow.glsl
-[12:47:43]     -> Linking Shader: Success!
-[12:47:43] 
-[12:47:43] Loading Shader:
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexFull.glsl
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechFragForwardRender.glsl
-[12:47:43]     -> Linking Shader: Success!
-[12:47:43] 
-[12:47:43] Loading Shader:
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/PointVertex.glsl
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/PointFragment.glsl
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/PointGeometry.glsl
-[12:47:43]     -> Linking Shader: Success!
-[12:47:43] 
-[12:47:43] Loading Shader:
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/Vertex.glsl
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/Fragment.glsl
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/LineGeometry.glsl
-[12:47:43]     -> Linking Shader: Success!
-[12:47:43] 
-[12:47:43] Loading Shader:
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/VertexColOnly.glsl
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/Fragment.glsl
-[12:47:43]     -> Linking Shader: Success!
-[12:47:43] 
-[12:47:43] Loading Shader:
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/TextVertex.glsl
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/TextFragment.glsl
-[12:47:43]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/TextGeometry.glsl
-[12:47:43]     -> Linking Shader: Success!
-[12:47:43] 
-[12:47:44] Loading Shader:
-[12:47:44]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexPicker.glsl
-[12:47:44]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechFragScreenPicker_nsightfix.glsl
-[12:47:44]     -> Linking Shader: Success!
-[12:47:44] 
-[12:47:44] Loading Mesh: ../../Data/Meshes/cube.obj
-[12:47:44] 
-[12:47:44] Loading Mesh: ../../Data/Meshes/sphere.obj
-[12:47:44] 
-[12:47:44] [SceneManager] - Enqueued scene: "Network #1 - Example Client"
-[12:47:44] 
-[12:47:44] Network: Initialized!
-[12:47:44] Network: Attempting to connect to server.
-[12:47:44] [SceneManager] - Scene switched to: "Network #1 - Example Client"
-[12:47:44] Network: Successfully connected to server!
-[12:47:44] Physics too slow to run in real time!
-[12:47:49] Physics too slow to run in real time!
-[12:47:50] Physics too slow to run in real time!
-[12:47:50] Physics too slow to run in real time!
-[12:47:50] Physics too slow to run in real time!
-[12:47:50] Physics too slow to run in real time!
-[12:48:39] Physics too slow to run in real time!
-[12:48:40] Physics too slow to run in real time!
-[12:50:16] Physics too slow to run in real time!
-[12:50:17] [SceneManager] Closing scene manager
+[13:47:21] Loading Shader:
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexBasic.glsl
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechFragSuperSample.glsl
+[13:47:21]     -> Linking Shader: Success!
+[13:47:21] 
+[13:47:21] Loading Shader:
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexShadow.glsl
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/Common/EmptyFragment.glsl
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechGeomShadow.glsl
+[13:47:21]     -> Linking Shader: Success!
+[13:47:21] 
+[13:47:21] Loading Shader:
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexFull.glsl
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechFragForwardRender.glsl
+[13:47:21]     -> Linking Shader: Success!
+[13:47:21] 
+[13:47:21] Loading Shader:
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/PointVertex.glsl
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/PointFragment.glsl
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/PointGeometry.glsl
+[13:47:21]     -> Linking Shader: Success!
+[13:47:21] 
+[13:47:21] Loading Shader:
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/Vertex.glsl
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/Fragment.glsl
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/LineGeometry.glsl
+[13:47:21]     -> Linking Shader: Success!
+[13:47:21] 
+[13:47:21] Loading Shader:
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/VertexColOnly.glsl
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/Fragment.glsl
+[13:47:21]     -> Linking Shader: Success!
+[13:47:21] 
+[13:47:21] Loading Shader:
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/TextVertex.glsl
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/TextFragment.glsl
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/DebugShaders/TextGeometry.glsl
+[13:47:21]     -> Linking Shader: Success!
+[13:47:21] 
+[13:47:21] Loading Shader:
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechVertexPicker.glsl
+[13:47:21]     -> Compiling Shader: ../../Data/Shaders/SceneRenderer/TechFragScreenPicker_nsightfix.glsl
+[13:47:21]     -> Linking Shader: Success!
+[13:47:21] 
+[13:47:21] Loading Mesh: ../../Data/Meshes/cube.obj
+[13:47:21] 
+[13:47:21] Loading Mesh: ../../Data/Meshes/sphere.obj
+[13:47:21] 
+[13:47:21] [SceneManager] - Enqueued scene: "Network #1 - Example Client"
+[13:47:21] 
+[13:47:21] Network: Initialized!
+[13:47:21] Network: Attempting to connect to server.
+[13:47:21] [SceneManager] - Scene switched to: "Network #1 - Example Client"
+[13:47:21] Network: Successfully connected to server!
+[13:47:21] Physics too slow to run in real time!
+[13:47:22] Physics too slow to run in real time!
+[13:47:25] Physics too slow to run in real time!
+[13:47:25] Physics too slow to run in real time!
+[13:47:25] Physics too slow to run in real time!
+[13:47:26] Physics too slow to run in real time!
+[13:47:27] Physics too slow to run in real time!
+[13:47:28] Physics too slow to run in real time!
+[13:47:28] Physics too slow to run in real time!
+[13:47:28] Physics too slow to run in real time!
+[13:47:29] Physics too slow to run in real time!
+[13:47:30] Physics too slow to run in real time!
+[13:47:31] Physics too slow to run in real time!
+[13:47:34] Physics too slow to run in real time!
+[13:47:35] Physics too slow to run in real time!
+[13:48:10] Physics too slow to run in real time!
+[13:48:11] Physics too slow to run in real time!
+[13:48:11] Physics too slow to run in real time!
+[13:48:12] Physics too slow to run in real time!
+[13:48:15] Physics too slow to run in real time!
+[13:48:15] Physics too slow to run in real time!
+[13:48:15] Physics too slow to run in real time!
+[13:48:17] Physics too slow to run in real time!
+[13:48:17] Physics too slow to run in real time!
+[13:48:20] Physics too slow to run in real time!
+[13:48:20] Physics too slow to run in real time!
+[13:48:21] Physics too slow to run in real time!
+[13:48:24] Physics too slow to run in real time!
+[13:48:30] Physics too slow to run in real time!
+[13:48:32] Physics too slow to run in real time!
+[13:48:34] Physics too slow to run in real time!
+[13:48:35] Physics too slow to run in real time!
+[13:48:38] Physics too slow to run in real time!
+[13:48:38] Physics too slow to run in real time!
+[13:48:39] Physics too slow to run in real time!
+[13:48:41] Physics too slow to run in real time!
+[13:48:42] Physics too slow to run in real time!
+[13:48:42] Physics too slow to run in real time!
+[13:48:43] Physics too slow to run in real time!
+[13:48:43] Physics too slow to run in real time!
+[13:48:43] Physics too slow to run in real time!
+[13:48:45] Physics too slow to run in real time!
+[13:48:48] Physics too slow to run in real time!
+[13:48:48] Physics too slow to run in real time!
+[13:48:49] Physics too slow to run in real time!
+[13:48:49] Physics too slow to run in real time!

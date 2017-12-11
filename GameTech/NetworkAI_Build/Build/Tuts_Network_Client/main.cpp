@@ -15,7 +15,7 @@ void Quit(bool error = false, const string &reason = "");
 void Initialize()
 {
 	//Initialise the Window
-	if (!Window::Initialise("Game Technologies - Collision Resolution", 1280, 800, false))
+	if (!Window::Initialise("Networking - Client", 1280, 800, false))
 		Quit(true, "Window failed to initialise!");
 
 	//Initialise ENET for networking  //!!!!!!NEW!!!!!!!!
@@ -37,7 +37,8 @@ void Initialize()
 }
 
 
-void Quit(bool error, const string &reason) {
+void Quit(bool error, const string &reason)
+{
 	//Release Singletons
 	SceneManager::Release();
 	GraphicsPipeline::Release();
@@ -47,15 +48,13 @@ void Quit(bool error, const string &reason) {
 	
 
 						  //Show console reason before exit
-	if (error) {
+	if (error)
+	{
 		std::cout << reason << std::endl;
 		system("PAUSE");
 		exit(-1);
 	}
 }
-
-
-
 
 
 
@@ -90,6 +89,7 @@ void HandleKeyboardInputs()
 {
 	uint sceneIdx = SceneManager::Instance()->GetCurrentSceneIndex();
 	uint sceneMax = SceneManager::Instance()->SceneCount();
+
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_Y))
 		SceneManager::Instance()->JumpToScene((sceneIdx + 1) % sceneMax);
 
@@ -98,6 +98,7 @@ void HandleKeyboardInputs()
 
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_R))
 		SceneManager::Instance()->JumpToScene(sceneIdx);
+
 }
 
 
@@ -110,7 +111,8 @@ int main()
 	Window::GetWindow().GetTimer()->GetTimedMS();
 
 	//Create main game-loop
-	while (Window::GetWindow().UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE)) {
+	while (Window::GetWindow().UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE))
+	{
 		//Start Timing
 		float dt = Window::GetWindow().GetTimer()->GetTimedMS() * 0.001f;	//How many milliseconds since last update?
 

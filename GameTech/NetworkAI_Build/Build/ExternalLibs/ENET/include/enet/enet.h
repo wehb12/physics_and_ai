@@ -419,7 +419,9 @@ typedef enum _ENetEventType
      * the packet that was received; this packet must be destroyed with
      * enet_packet_destroy after use.
      */
-   ENET_EVENT_TYPE_RECEIVE    = 3
+   ENET_EVENT_TYPE_RECEIVE    = 3,
+
+   ENET_EVENT_TYPE_GENMAZE
 } ENetEventType;
 
 /**

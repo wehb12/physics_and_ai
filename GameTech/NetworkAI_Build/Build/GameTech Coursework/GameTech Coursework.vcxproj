@@ -135,11 +135,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="TestScene.cpp" />
+    <ClCompile Include="Net1_Client.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EmptyScene.h" />
-    <ClInclude Include="TestScene.h" />
+    <ClInclude Include="Net1_Client.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

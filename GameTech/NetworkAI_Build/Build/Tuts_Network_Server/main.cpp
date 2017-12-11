@@ -107,6 +107,9 @@ int main(int arcg, char** argv)
 			case ENET_EVENT_TYPE_DISCONNECT:
 				printf("- Client %d has disconnected.\n", evnt.peer->incomingPeerID);
 				break;
+
+			case ENET_EVENT_TYPE_GENMAZE:
+				break;
 			}
 		});
 		
@@ -135,9 +138,6 @@ int main(int arcg, char** argv)
 	system("pause");
 	server.Release();
 }
-
-
-
 
 //Yay Win32 code >.>
 //  - Grabs a list of all network adapters on the computer and prints out all IPv4 addresses associated with them.
