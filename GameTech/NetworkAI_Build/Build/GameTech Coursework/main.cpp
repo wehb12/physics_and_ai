@@ -16,7 +16,7 @@
 
 #include "NetworkEntity.h"
 #include "Net1_Client.h"
-#include "PacketTypes.h"
+#include "AllPacketTypes.h"
 #include "MazeGenerator.h"
 #include "MazeRenderer.h"
 #include "SearchAlgorithm.h"

@@ -146,6 +146,7 @@
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="ScreenPicker.cpp" />
     <ClCompile Include="SphereCollisionShape.cpp" />
+    <ClCompile Include="SpringConstraint.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BoundingBox.h" />
@@ -168,6 +169,7 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="ScreenPicker.h" />
     <ClInclude Include="SphereCollisionShape.h" />
+    <ClInclude Include="SpringConstraint.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

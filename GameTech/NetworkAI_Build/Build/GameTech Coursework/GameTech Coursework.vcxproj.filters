@@ -16,6 +16,9 @@
     <Filter Include="Header Files\SearchAlgorithms">
       <UniqueIdentifier>{9189937c-5b67-4743-92d7-a22ff4a1b3f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\PacketTypes">
+      <UniqueIdentifier>{ec03e263-bfab-437b-8f95-abaf8f376920}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -41,9 +44,6 @@
     <ClInclude Include="Net1_Client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PacketTypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MazeGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -64,6 +64,18 @@
     </ClInclude>
     <ClInclude Include="NetworkEntity.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AllPacketTypes.h">
+      <Filter>Header Files\PacketTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="MazeDataPackets.h">
+      <Filter>Header Files\PacketTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet.h">
+      <Filter>Header Files\PacketTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="GenericPackets.h">
+      <Filter>Header Files\PacketTypes</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

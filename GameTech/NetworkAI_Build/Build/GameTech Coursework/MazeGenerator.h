@@ -3,7 +3,7 @@
 #include <ncltech\Scene.h>
 #include "SearchAlgorithm.h"
 
-#define MAX_MAZE_SIZE 100
+#define MAX_MAZE_SIZE 255
 #define MIN_MAZE_SIZE 2
 
 class MazeGenerator

@@ -128,6 +128,8 @@ void Net1_Client::OnInitializeScene()
 		false,
 		false,
 		Vector4(0.2f, 0.5f, 1.0f, 1.0f)));
+
+	packetHandler->SetServerConnection(serverConnection);
 }
 
 void Net1_Client::OnCleanupScene()
@@ -178,9 +180,12 @@ void Net1_Client::OnUpdateScene(float dt)
 	
 	Vector4 controlsColour = Vector4(1.0f, 0.2f, 0.2f, 1.0f);
 	NCLDebug::AddStatusEntry(controlsColour, "");
-	NCLDebug::AddStatusEntry(controlsColour, "Maze Parameters");
-	NCLDebug::AddStatusEntry(controlsColour, "    Maze Size: %d [1/2] to change", mazeSize);
-	NCLDebug::AddStatusEntry(controlsColour, "    Maze Density: %5.2f [3/4] to change", mazeDensity);
+	NCLDebug::AddStatusEntry(controlsColour, "Maze Parameters:");
+	NCLDebug::AddStatusEntry(controlsColour, "    Current Maze Size: %d", packetHandler->GetCurrentMazeSize());
+	NCLDebug::AddStatusEntry(controlsColour, "    Current Maze Density: %5.2f", packetHandler->GetCurrentMazeDensity());
+	NCLDebug::AddStatusEntry(controlsColour, "");
+	NCLDebug::AddStatusEntry(controlsColour, "    Next Maze Size: %d [1/2] to change", mazeSize);
+	NCLDebug::AddStatusEntry(controlsColour, "    Next Maze Density: %5.2f [3/4] to change", mazeDensity);
 }
 
 void Net1_Client::ProcessNetworkEvent(const ENetEvent& evnt)
@@ -195,9 +200,9 @@ void Net1_Client::ProcessNetworkEvent(const ENetEvent& evnt)
 			NCLDebug::Log(status_color3, "Network: Successfully connected to server!");
 
 			//Send a 'hello' packet
-			char* text_data = "Hellooo!";
-			ENetPacket* packet = enet_packet_create(text_data, strlen(text_data) + 1, 0);
-			enet_peer_send(serverConnection, 0, packet);
+			MessagePacket* message = new MessagePacket("Helloo!");
+			packetHandler->SendPacket(serverConnection, message);
+			delete message;
 		}
 	}
 	break;

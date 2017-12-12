@@ -12,43 +12,36 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 
 	switch (type)
 	{
+		case MESSAGE:
+		{
+			MessagePacket* message = new MessagePacket(packet->data);
+			output = message->message;
+			break;
+		}
 		case MAZE_REQUEST:
 		{
-			enet_uint8 mazeSize = *(packet->data + 1);
-			float mazeDensity = (float)*(packet->data + 2) / (float)255;
-			output = "Create a maze of size " + to_string((int)mazeSize) + " with a density of " + to_string(mazeDensity);
+			MazeRequestPacket* dataPacket = new MazeRequestPacket(packet->data);
+			output = "Create a maze of size " + to_string((int)dataPacket->mazeSize) + " with a density of " + to_string((float)(dataPacket->mazeDensity) / MAX_VAL_8BIT);
 
-			MazeGenerator* maze = new MazeGenerator;
-			maze->Generate(mazeSize, mazeDensity);
+			SAFE_DELETE(maze);
+			maze = new MazeGenerator;
+			maze->Generate(dataPacket->mazeSize, dataPacket->mazeDensity);
 
-			int possibleWalls = 2 * mazeSize * (mazeSize - 1);
-
-			//vector<GraphEdge> walls;
-			//for (int i = 0; i < possibleWalls; ++i)
-			//{
-			//	if (!maze->allEdges[i]._iswall)
-			//		continue;
-			//	else
-			//		walls.push_back(maze->allEdges[i]);
-			//}
+			int possibleWalls = 2 * dataPacket->mazeSize * (dataPacket->mazeSize - 1);
 
 			// mazeSize of 11 or lower can fit in an enet_unit8
-			if (possibleWalls < 256)
+			if (possibleWalls <= MAX_VAL_8BIT)
 			{
-				//int numWalls = walls.size();
 				MazeDataPacket8* returnPacket = new MazeDataPacket8(possibleWalls);
-				//PopulateNodeLists<enet_uint8>(returnPacket->nodeA, returnPacket->nodeB, walls, maze, mazeSize * mazeSize);
 				PopulateEdgeList(returnPacket->edgesThatAreWalls, maze->allEdges, possibleWalls);
 
 				BroadcastPacket(returnPacket);
 				delete returnPacket;
 			}
 			// maxSize of 181 or lower can fit in an enet_uint16
-			else if (possibleWalls < 65536)
+			else if (possibleWalls <= MAX_VAL_16BIT)
 			{
-				//int numWalls = walls.size();
 				MazeDataPacket16* returnPacket = new MazeDataPacket16(possibleWalls);
-				//PopulateNodeLists<enet_uint8>(returnPacket->nodeA, returnPacket->nodeB, walls, maze, mazeSize * mazeSize);
 				PopulateEdgeList(returnPacket->edgesThatAreWalls, maze->allEdges, possibleWalls);
 
 				BroadcastPacket(returnPacket);
@@ -57,8 +50,6 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 			else
 				NCLERROR("Maze size too large");
 
-
-			delete maze;
 			break;
 		}
 		case MAZE_DATA8:
@@ -67,61 +58,8 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 			{
 				MazeDataPacket8* dataPacket = new MazeDataPacket8(packet->data);
 
-				SAFE_DELETE(maze);
-
-				maze = new MazeGenerator();
-				maze->Generate(mazeSize, 0.0f);
-
-				//auto FindEdge = [&](int index)
-				//{
-				//	enet_uint8 indexA = dataPacket->nodeA[index];
-				//	enet_uint8 indexB = dataPacket->nodeB[index];
-
-				//	for (int i = 0; i < 2 * mazeSize * (mazeSize + 1); ++i)
-				//	{
-				//		if (maze->allEdges[i]._a->_pos == maze->allNodes[indexA]._pos)
-				//		{
-				//			if (maze->allEdges[i]._b->_pos == maze->allNodes[indexB]._pos)
-				//				return i;
-				//		}
-				//		else if (maze->allEdges[i]._a->_pos == maze->allNodes[indexB]._pos)
-				//		{
-				//			if (maze->allEdges[i]._b->_pos == maze->allNodes[indexA]._pos)
-				//				return i;
-				//		}
-				//	}
-
-				//	return -1;
-				//};
-
-				for (int i = 0; i < dataPacket->numEdges; ++i)
-				{
-					//int index = FindEdge(i);
-					if (dataPacket->edgesThatAreWalls[i])
-						maze->allEdges[i]._iswall = true;
-				}
-
-				SAFE_DELETE(mazeRender);
-				if (!wallmesh)
-				{
-					GLuint whitetex;
-					glGenTextures(1, &whitetex);
-					glBindTexture(GL_TEXTURE_2D, whitetex);
-					unsigned int pixel = 0xFFFFFFFF;
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, &pixel);
-					glBindTexture(GL_TEXTURE_2D, 0);
-
-					wallmesh = new OBJMesh("../../Data/Meshes/cube.obj");
-					wallmesh->SetTexture(whitetex);
-				}
-				mazeRender = new MazeRenderer(maze, wallmesh);
-
-				//The maze is returned in a [0,0,0] - [1,1,1] cube (with edge walls outside) regardless of grid_size,
-				// so we need to scale it to whatever size we want
-				Matrix4 maze_scalar = Matrix4::Scale(Vector3(5.f, 5.0f / float(mazeSize), 5.f)) * Matrix4::Translation(Vector3(-0.5f, 0.f, -0.5f));
-				mazeRender->Render()->SetTransform(maze_scalar);
-
-				SceneManager::Instance()->GetCurrentScene()->AddGameObject(mazeRender);
+				HandleMazeDataPacket(dataPacket);
+				delete dataPacket;
 			}
 			else
 				NCLLOG("No maze request data present to reconstruct from");
@@ -133,42 +71,29 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 			{
 				MazeDataPacket16* dataPacket = new MazeDataPacket16(packet->data);
 
-				SAFE_DELETE(maze);
-
-				maze = new MazeGenerator();
-				maze->Generate(mazeSize, 0.0f);
-
-
-				for (int i = 0; i < dataPacket->numEdges; ++i)
-				{
-					if (dataPacket->edgesThatAreWalls[i])
-						maze->allEdges[i]._iswall = true;
-				}
-
-				SceneManager::Instance()->GetCurrentScene()->RemoveGameObject(mazeRender);
-				SAFE_DELETE(mazeRender);
-				if (!wallmesh)
-				{
-					GLuint whitetex;
-					glGenTextures(1, &whitetex);
-					glBindTexture(GL_TEXTURE_2D, whitetex);
-					unsigned int pixel = 0xFFFFFFFF;
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, &pixel);
-					glBindTexture(GL_TEXTURE_2D, 0);
-
-					wallmesh = new OBJMesh("../../Data/Meshes/cube.obj");
-					wallmesh->SetTexture(whitetex);
-				}
-				mazeRender = new MazeRenderer(maze, wallmesh);
-
-				//The maze is returned in a [0,0,0] - [1,1,1] cube (with edge walls outside) regardless of grid_size,
-				// so we need to scale it to whatever size we want
-				Matrix4 maze_scalar = Matrix4::Scale(Vector3(5.f, 5.0f / float(mazeSize), 5.f)) * Matrix4::Translation(Vector3(-0.5f, 0.f, -0.5f));
-				mazeRender->Render()->SetTransform(maze_scalar);
-				SceneManager::Instance()->GetCurrentScene()->AddGameObject(mazeRender);
+				HandleMazeDataPacket(dataPacket);
+				delete dataPacket;
 			}
 			else
 				NCLLOG("No maze request data present to reconstruct from");
+			break;
+		}
+		case MAZE_POSITIONS8:
+		{
+			MazePositionsPacket8* posPacket = new MazePositionsPacket8(packet->data);
+			
+			*maze->start = maze->allNodes[posPacket->start];
+			*maze->end = maze->allNodes[posPacket->end];
+
+			break;
+		}
+		case MAZE_POSITIONS16:
+		{
+			MazePositionsPacket16* posPacket = new MazePositionsPacket16(packet->data);
+
+			*maze->start = maze->allNodes[posPacket->start];
+			*maze->end = maze->allNodes[posPacket->end];
+
 			break;
 		}
 		default:
@@ -181,10 +106,95 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 	return output;
 }
 
+template <class DataPacket>
+void NetworkEntity::HandleMazeDataPacket(DataPacket* dataPacket)
+{
+	SAFE_DELETE(maze);
+
+	maze = new MazeGenerator();
+	maze->Generate(mazeSize, 0.0f);
+
+
+	for (int i = 0; i < dataPacket->numEdges; ++i)
+	{
+		if (dataPacket->edgesThatAreWalls[i])
+			maze->allEdges[i]._iswall = true;
+	}
+
+	if (mazeRender)
+	{
+		SceneManager::Instance()->GetCurrentScene()->RemoveGameObject(mazeRender);
+		delete mazeRender;
+		mazeRender = NULL;
+	}
+	if (!wallmesh)
+	{
+		GLuint whitetex;
+		glGenTextures(1, &whitetex);
+		glBindTexture(GL_TEXTURE_2D, whitetex);
+		unsigned int pixel = 0xFFFFFFFF;
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, &pixel);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		wallmesh = new OBJMesh("../../Data/Meshes/cube.obj");
+		wallmesh->SetTexture(whitetex);
+	}
+	mazeRender = new MazeRenderer(maze, wallmesh);
+
+	//The maze is returned in a [0,0,0] - [1,1,1] cube (with edge walls outside) regardless of grid_size,
+	// so we need to scale it to whatever size we want
+	Matrix4 maze_scalar = Matrix4::Scale(Vector3(5.f, 5.0f / float(mazeSize), 5.f)) * Matrix4::Translation(Vector3(-0.5f, 0.f, -0.5f));
+	mazeRender->Render()->SetTransform(maze_scalar);
+	SceneManager::Instance()->GetCurrentScene()->AddGameObject(mazeRender);
+
+	// now send back to the server the start and end positions
+
+	int numNodes = maze->size * maze->size;
+
+	// lambda function takes in a node and returns the index into the array
+	auto FindNode = [&](GraphNode* node)
+	{
+		Vector3 posToFind = node->_pos;
+
+		for (int i = 0; i < numNodes; ++i)
+		{
+			if (maze->allNodes[i]._pos == posToFind)
+				return i;
+		}
+		return -1;
+	};
+
+	// finmd indices into the allNodes array
+	int startIndex = FindNode(maze->start);
+	int endIndex = FindNode(maze->end);
+
+	if (startIndex < 0 || endIndex < 0)
+		NCLERROR("Invalid start or end position");
+
+	// mazeSize of 16 or lower has fewer than MAX_VAL_8BIT nodes
+	if (numNodes <= MAX_VAL_8BIT)
+	{
+		MazePositionsPacket8* posPacket = new MazePositionsPacket8(startIndex, endIndex);
+		SendPacket(serverConnection, posPacket);
+		delete posPacket;
+	}
+	// mazeSize of 256 or lower has fewer than MAX_VAL_16BIT nodes
+	else if (numNodes <= MAX_VAL_16BIT)
+	{
+		MazePositionsPacket16* posPacket = new MazePositionsPacket16(startIndex, endIndex);
+		SendPacket(serverConnection, posPacket);
+		delete posPacket;
+	}
+}
+
 void NetworkEntity::SendPacket(ENetPeer* destination, Packet* packet)
 {
 	if (packet->type == MAZE_REQUEST)
-		mazeSize = dynamic_cast<MazeRequestPacket*>(packet)->mazeSize;
+	{
+		MazeRequestPacket* requestPacket = dynamic_cast<MazeRequestPacket*>(packet);
+		mazeSize = requestPacket->mazeSize;
+		mazeDensity = requestPacket->mazeDensity / MAX_VAL_8BIT;
+	}
 
 	enet_uint8* stream = packet->CreateByteStream();
 

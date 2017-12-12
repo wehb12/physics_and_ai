@@ -10,12 +10,7 @@
 #include <string>
 #include "NetworkEntity.h"
 
-#include "PacketTypes.h"
-
-enum packetFlags
-{
-	CREATE_MAZE = 0
-};
+#include "AllPacketTypes.h"
 
 //Basic Network Example
 
