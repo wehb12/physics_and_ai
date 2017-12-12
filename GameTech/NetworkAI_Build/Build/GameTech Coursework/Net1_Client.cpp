@@ -151,7 +151,7 @@ void Net1_Client::OnCleanupScene()
 void Net1_Client::OnUpdateScene(float dt)
 {
 	Scene::OnUpdateScene(dt);
-
+	packetHandler->Update();
 
 	HandleKeyboardInput();
 
@@ -190,6 +190,7 @@ void Net1_Client::OnUpdateScene(float dt)
 
 void Net1_Client::ProcessNetworkEvent(const ENetEvent& evnt)
 {
+	packetHandler->SetCurrentSender(evnt.peer);
 	switch (evnt.type)
 	{
 		//New connection request or an existing peer accepted our connection request

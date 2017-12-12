@@ -214,6 +214,7 @@ int main()
 
 					case ENET_EVENT_TYPE_RECEIVE:
 					{
+						thisEntity->SetCurrentSender(evnt.peer);
 						string consoleOutput = thisEntity->HandlePacket(evnt.packet);
 						if (consoleOutput.size())
 							printf("\t Client %d says: %s\n", evnt.peer->incomingPeerID, consoleOutput.c_str());

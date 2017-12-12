@@ -21,13 +21,16 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 		case MAZE_REQUEST:
 		{
 			MazeRequestPacket* dataPacket = new MazeRequestPacket(packet->data);
-			output = "Create a maze of size " + to_string((int)dataPacket->mazeSize) + " with a density of " + to_string((float)(dataPacket->mazeDensity) / MAX_VAL_8BIT);
+			mazeSize = dataPacket->mazeSize;
+			mazeDensity = (float)(dataPacket->mazeDensity) / (float)(MAX_VAL_8BIT);
+			output = "Create a maze of size " + to_string(mazeSize) + " with a density of " + to_string(mazeDensity);
 
+			printPath = false;
 			SAFE_DELETE(maze);
 			maze = new MazeGenerator;
-			maze->Generate(dataPacket->mazeSize, dataPacket->mazeDensity);
+			maze->Generate(mazeSize, mazeDensity);
 
-			int possibleWalls = 2 * dataPacket->mazeSize * (dataPacket->mazeSize - 1);
+			int possibleWalls = 2 * mazeSize * (mazeSize - 1);
 
 			// mazeSize of 11 or lower can fit in an enet_unit8
 			if (possibleWalls <= MAX_VAL_8BIT)
@@ -50,6 +53,7 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 			else
 				NCLERROR("Maze size too large");
 
+			delete dataPacket;
 			break;
 		}
 		case MAZE_DATA8:
@@ -58,6 +62,7 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 			{
 				MazeDataPacket8* dataPacket = new MazeDataPacket8(packet->data);
 
+				printPath = false;
 				HandleMazeDataPacket(dataPacket);
 				delete dataPacket;
 			}
@@ -71,6 +76,7 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 			{
 				MazeDataPacket16* dataPacket = new MazeDataPacket16(packet->data);
 
+				printPath = false;
 				HandleMazeDataPacket(dataPacket);
 				delete dataPacket;
 			}
@@ -81,19 +87,29 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 		case MAZE_POSITIONS8:
 		{
 			MazePositionsPacket8* posPacket = new MazePositionsPacket8(packet->data);
-			
-			*maze->start = maze->allNodes[posPacket->start];
-			*maze->end = maze->allNodes[posPacket->end];
-
+			HandlePositionPacket(posPacket);
+			delete posPacket;
 			break;
 		}
 		case MAZE_POSITIONS16:
 		{
 			MazePositionsPacket16* posPacket = new MazePositionsPacket16(packet->data);
-
-			*maze->start = maze->allNodes[posPacket->start];
-			*maze->end = maze->allNodes[posPacket->end];
-
+			HandlePositionPacket(posPacket);
+			delete posPacket;
+			break;
+		}
+		case MAZE_PATH8:
+		{
+			MazePathPacket8* pathPacket = new MazePathPacket8(packet->data);
+			PopulatePath(pathPacket);
+			delete pathPacket;
+			break;
+		}
+		case MAZE_PATH16:
+		{
+			MazePathPacket16* pathPacket = new MazePathPacket16(packet->data);
+			PopulatePath(pathPacket);
+			delete pathPacket;
 			break;
 		}
 		default:
@@ -187,13 +203,99 @@ void NetworkEntity::HandleMazeDataPacket(DataPacket* dataPacket)
 	}
 }
 
+template <class PositionPacket>
+void NetworkEntity::HandlePositionPacket(PositionPacket* posPacket)
+{
+	*maze->start = maze->allNodes[posPacket->start];
+	*maze->end = maze->allNodes[posPacket->end];
+
+	aStarSearch->FindBestPath(maze->start, maze->end);
+
+	const std::list<const GraphNode*> path = aStarSearch->GetFinalPath();
+
+	int* pathIndices = new int[path.size()];
+
+	// lambda function takes in a node and returns the index into the array
+	auto FindNode = [&](const GraphNode* node)
+	{
+		Vector3 posToFind = node->_pos;
+
+		for (int i = 0; i < maze->size * maze->size; ++i)
+		{
+			if (maze->allNodes[i]._pos == posToFind)
+				return i;
+		}
+		return -1;
+	};
+
+	int i = 0;
+	for (auto it = path.begin(); it != path.end(); ++it)
+	{
+		pathIndices[i] = FindNode(*it);
+		++i;
+	}
+
+	if ((maze->size * maze->size < MAX_VAL_8BIT) && (path.size() < MAX_VAL_8BIT))
+	{
+		MazePathPacket8* pathPacket = new MazePathPacket8(pathIndices, path.size());
+		SendPacket(currentPacketSender, pathPacket);
+		delete pathPacket;
+	}
+	else if ((maze->size * maze->size < MAX_VAL_16BIT) && (path.size() < MAX_VAL_16BIT))
+	{
+		MazePathPacket16* pathPacket = new MazePathPacket16(pathIndices, path.size());
+		SendPacket(currentPacketSender, pathPacket);
+		delete pathPacket;
+	}
+}
+
+template <class PathPacket>
+void NetworkEntity::PopulatePath(PathPacket* pathPacket)
+{
+	pathLength = pathPacket->length;
+	if (path)
+	{
+		delete[] path;
+		path = NULL;
+	}
+	path = new int[pathLength];
+	for (int i = 0; i < pathLength; ++i)
+		path[i] = pathPacket->path[i];
+
+	printPath = true;
+}
+
+void NetworkEntity::PrintPath()
+{
+	float grid_scalar = 1.0f / (float)maze->GetSize();
+	float col_factor = 0.2f / (float)pathLength;
+
+	Matrix4 transform = mazeRender->Render()->GetWorldTransform();
+
+	float index = 0.0f;
+	for (int i = 0; i < pathLength - 1; ++i)
+	{
+		Vector3 start = transform * Vector3(
+			(maze->allNodes[path[i]]._pos.x + 0.5f) * grid_scalar,
+			0.1f,
+			(maze->allNodes[path[i]]._pos.y + 0.5f) * grid_scalar);
+
+		Vector3 end = transform * Vector3(
+			(maze->allNodes[path[i + 1]]._pos.x + 0.5f) * grid_scalar,
+			0.1f,
+			(maze->allNodes[path[i + 1]]._pos.y + 0.5f) * grid_scalar);
+
+		NCLDebug::DrawThickLine(start, end, 2.5f / mazeSize, CommonUtils::GenColor(0.8f + i * col_factor));
+	}
+}
+
 void NetworkEntity::SendPacket(ENetPeer* destination, Packet* packet)
 {
 	if (packet->type == MAZE_REQUEST)
 	{
 		MazeRequestPacket* requestPacket = dynamic_cast<MazeRequestPacket*>(packet);
 		mazeSize = requestPacket->mazeSize;
-		mazeDensity = requestPacket->mazeDensity / MAX_VAL_8BIT;
+		mazeDensity = (float)(requestPacket->mazeDensity) / MAX_VAL_8BIT;
 	}
 
 	enet_uint8* stream = packet->CreateByteStream();

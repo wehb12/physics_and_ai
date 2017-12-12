@@ -306,3 +306,131 @@ public:
 	enet_uint16 start;
 	enet_uint16 end;
 };
+
+class MazePathPacket8 : public Packet
+{
+public:
+	MazePathPacket8(enet_uint8* finalPath, enet_uint8 lngth) :
+		Packet(MAZE_PATH8, 2 + lngth)
+	{
+		length = lngth;
+		path = new enet_uint8[length];
+
+		for (int i = 0; i < length; ++i)
+			path[i] = finalPath[i];
+	}
+
+	MazePathPacket8(int* finalPath, int lngth) :
+		Packet(MAZE_PATH8, 2 + lngth)
+	{
+		length = lngth;
+		path = new enet_uint8[length];
+
+		for (int i = 0; i < length; ++i)
+			path[i] = finalPath[i];
+	}
+
+	MazePathPacket8(enet_uint8* data) :
+		Packet(MAZE_PATH8, 2 + *(data + 1))
+	{
+		length = *(data + 1);
+
+		path = new enet_uint8[length];
+
+		for (int i = 0; i < length; ++i)
+			path[i] = data[2 + i];
+	}
+
+	~MazePathPacket8()
+	{
+		if (path)
+			delete[] path;
+		path = NULL;
+	}
+
+	virtual enet_uint8* CreateByteStream() override
+	{
+		enet_uint8* data = new enet_uint8[size];
+
+		data[0] = type;
+		data[1] = length;
+		
+		for (int i = 0; i < length; ++i)
+			data[2 + i] = path[i];
+
+		return data;
+	}
+
+public:
+	enet_uint8 length;
+	enet_uint8* path;
+};
+
+class MazePathPacket16 : public Packet
+{
+public:
+	MazePathPacket16(enet_uint16* finalPath, enet_uint16 lngth) :
+		Packet(MAZE_PATH16, 3 + 2 * lngth)
+	{
+		length = lngth;
+		path = new enet_uint16[length];
+
+		for (int i = 0; i < length; ++i)
+			path[i] = finalPath[i];
+	}
+
+	MazePathPacket16(int* finalPath, int lngth) :
+		Packet(MAZE_PATH16, 3 + 2 * lngth)
+	{
+		length = lngth;
+		path = new enet_uint16[length];
+
+		for (int i = 0; i < length; ++i)
+			path[i] = finalPath[i];
+	}
+
+	MazePathPacket16(enet_uint8* data) :
+		length(*(data + 1) | (*(data + 2) << 8)),
+		Packet(MAZE_PATH16, 3 + 2 * length)
+	{
+		path = new enet_uint16[length];
+
+		for (int i = 0; i < length; ++i)
+		{
+			path[i] = data[3 + 2 * i];
+			path[i] ^= data[4 + 2 * i] << 8;
+		}
+	}
+
+	~MazePathPacket16()
+	{
+		if (path)
+			delete[] path;
+		path = NULL;
+	}
+
+	virtual enet_uint8* CreateByteStream() override
+	{
+		enet_uint8* data = new enet_uint8[size];
+
+		data[0] = type;
+		data[1] = 0;
+		data[2] = 0;
+		data[1] ^= length;
+		data[2] ^= length >> 8;
+
+		for (int i = 0; i < length; ++i)
+		{
+			data[3 + 2 * i] = 0;
+			data[4 + 2 * i] = 0;
+			data[3 + 2 * i] = path[i];
+			data[4 + 2 * i] = path[i] >> 8;
+		}
+
+		return data;
+	}
+
+public:
+	enet_uint16 length;
+	enet_uint16* path;
+};
