@@ -198,13 +198,15 @@ public:
 		for (int i = 0; i <= (numEdges / 8); ++i)
 		{
 			int max = 8;
-			if (i == numEdges / 8)
+			if (i == (numEdges / 8))
 				max = numEdges % 8;
 
 			enet_uint8 byte = 0;
 			for (int j = 0; j < max; ++j)
 				byte ^= edgesThatAreWalls[(i * 8) + j] << j;
-			data[3 + i] = byte;
+
+			if (i != (numEdges / 8))
+				data[3 + i] = byte;
 		}
 
 		return data;

@@ -41,4 +41,7 @@ protected:
 	ENetPeer*	serverConnection;
 
 	NetworkEntity* packetHandler;
+
+	int mazeSize;
+	float mazeDensity;
 };

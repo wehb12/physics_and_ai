@@ -90,6 +90,8 @@ Net1_Client::Net1_Client(const std::string& friendly_name, NetworkEntity* thisEn
 	, serverConnection(NULL)
 	, box(NULL)
 	, packetHandler(thisEntity)
+	, mazeSize(16)
+	, mazeDensity(1.0f)
 {
 }
 
@@ -173,6 +175,12 @@ void Net1_Client::OnUpdateScene(float dt)
 	NCLDebug::AddStatusEntry(status_color, "Network Traffic");
 	NCLDebug::AddStatusEntry(status_color, "    Incoming: %5.2fKbps", network.m_IncomingKb);
 	NCLDebug::AddStatusEntry(status_color, "    Outgoing: %5.2fKbps", network.m_OutgoingKb);
+	
+	Vector4 controlsColour = Vector4(1.0f, 0.2f, 0.2f, 1.0f);
+	NCLDebug::AddStatusEntry(controlsColour, "");
+	NCLDebug::AddStatusEntry(controlsColour, "Maze Parameters");
+	NCLDebug::AddStatusEntry(controlsColour, "    Maze Size: %d [1/2] to change", mazeSize);
+	NCLDebug::AddStatusEntry(controlsColour, "    Maze Density: %5.2f [3/4] to change", mazeDensity);
 }
 
 void Net1_Client::ProcessNetworkEvent(const ENetEvent& evnt)
@@ -223,10 +231,21 @@ void Net1_Client::HandleKeyboardInput()
 {
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_G))
 	{
-		MazeRequestPacket* packet = new MazeRequestPacket(16, 1.0f);
+		MazeRequestPacket* packet = new MazeRequestPacket(mazeSize, mazeDensity);
 
 		packetHandler->SendPacket(serverConnection, packet);
 
 		delete packet;
 	}
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_1))
+		mazeSize = max(mazeSize - 1, MIN_MAZE_SIZE);
+		
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_2))
+		mazeSize = min(mazeSize + 1, MAX_MAZE_SIZE);
+
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_3))
+		mazeDensity = max(mazeDensity - 0.1f, 0.0f);
+	
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_4))
+		mazeDensity = min(mazeDensity + 0.1f, 1.0f);
 }
