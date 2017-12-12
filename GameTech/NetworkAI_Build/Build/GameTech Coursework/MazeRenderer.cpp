@@ -1,9 +1,7 @@
-#include "MazeRenderer.h"
 #include <ncltech\CommonUtils.h>
+#include "MazeRenderer.h"
 
 const Vector4 wall_color = Vector4(1.f, 0.8f, 0.3f, 1);
-
-
 
 MazeRenderer::MazeRenderer(MazeGenerator* gen, Mesh* wallmesh)
 	: GameObject("")

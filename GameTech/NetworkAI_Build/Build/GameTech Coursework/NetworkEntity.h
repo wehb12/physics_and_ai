@@ -5,6 +5,7 @@
 #include "PacketTypes.h"
 #include "MazeGenerator.h"
 #include "MazeRenderer.h"
+#include "../ncltech/SceneManager.h"
 
 enum NetworkEntityType
 {
@@ -15,8 +16,15 @@ enum NetworkEntityType
 class NetworkEntity
 {
 public:
-	NetworkEntity(enet_uint8 type, ENetHost* host) : type(type), networkHost(host) { }
-	~NetworkEntity() { }
+	NetworkEntity(enet_uint8 type, ENetHost* host) :
+		type(type),
+		networkHost(host),
+		mazeSize(0),
+		maze(NULL),
+		mazeRender(NULL)
+	{ }
+
+	~NetworkEntity() { SAFE_DELETE(maze); SAFE_DELETE(mazeRender); }
 
 	string HandlePacket(const ENetPacket* packet);
 
@@ -31,4 +39,8 @@ private:
 	enet_uint8 type;
 
 	ENetHost* networkHost;
+
+	int mazeSize;
+	MazeGenerator* maze;
+	MazeRenderer* mazeRender;
 };

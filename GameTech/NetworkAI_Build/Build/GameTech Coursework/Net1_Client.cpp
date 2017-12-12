@@ -204,9 +204,8 @@ void Net1_Client::ProcessNetworkEvent(const ENetEvent& evnt)
 		}
 		else
 		{
-			NCLERROR("Recieved Invalid Network Packet!");
+			packetHandler->HandlePacket(evnt.packet);
 		}
-
 	}
 	break;
 

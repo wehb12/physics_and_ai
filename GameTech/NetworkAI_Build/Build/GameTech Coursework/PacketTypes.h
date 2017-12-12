@@ -95,6 +95,20 @@ public:
 		}
 	}
 
+	MazeDataPacket8(enet_uint8* data) :
+		Packet(MAZE_DATA8, (2 + 2 * *(data + 1)))
+	{
+		numWalls = *(data + 1);
+		nodeA = new enet_uint8[numWalls];
+		nodeB = new enet_uint8[numWalls];
+		
+		for (int i = 0; i < numWalls; ++i)
+		{
+			nodeA[i] = *(data + 2 + i);
+			nodeB[i] = *(data + 2 + numWalls + i);
+		}
+	}
+
 
 	virtual enet_uint8* CreateByteStream() override
 	{
@@ -105,7 +119,7 @@ public:
 		for (int i = 0; i < numWalls; ++i)
 			data[2 + i] = nodeA[i];
 		for (int i = 0; i < numWalls; ++i)
-			data[2 + numWalls + 1] = nodeB[i];
+			data[2 + numWalls + i] = nodeB[i];
 
 		return data;
 	}

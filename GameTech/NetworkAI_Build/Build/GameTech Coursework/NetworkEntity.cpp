@@ -48,6 +48,55 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 			delete maze;
 			break;
 		}
+		case MAZE_DATA8:
+		{
+			if (mazeSize)
+			{
+				MazeDataPacket8* dataPacket = new MazeDataPacket8(packet->data);
+
+				SAFE_DELETE(maze);
+
+				maze = new MazeGenerator();
+				maze->Generate(mazeSize, 0.0f);
+
+				auto FindEdge = [&](int index)
+				{
+					enet_uint8 indexA = dataPacket->nodeA[index];
+					enet_uint8 indexB = dataPacket->nodeB[index];
+
+					for (int i = 0; i < 2 * mazeSize * (mazeSize + 1); ++i)
+					{
+						if (maze->allEdges[i]._a->_pos == maze->allNodes[indexA]._pos)
+						{
+							if (maze->allEdges[i]._b->_pos == maze->allNodes[indexB]._pos)
+								return i;
+						}
+						else if (maze->allEdges[i]._a->_pos == maze->allNodes[indexB]._pos)
+						{
+							if (maze->allEdges[i]._b->_pos == maze->allNodes[indexA]._pos)
+								return i;
+						}
+					}
+
+					return -1;
+				};
+
+				for (int i = 0; i < dataPacket->numWalls; ++i)
+				{
+					int index = FindEdge(i);
+					if (index > 0)
+						maze->allEdges[FindEdge(i)]._iswall = true;
+				}
+
+				SAFE_DELETE(mazeRender);
+				mazeRender = new MazeRenderer(maze);
+
+				SceneManager::Instance()->GetCurrentScene()->AddGameObject(mazeRender);
+			}
+			else
+				NCLLOG("No maze request data present to reconstruct from");
+
+		}
 		default:
 		{
 			cout << "ERROR - Invalid packet sent" << endl;
@@ -60,6 +109,9 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 
 void NetworkEntity::SendPacket(ENetPeer* destination, Packet* packet)
 {
+	if (packet->type == MAZE_REQUEST)
+		mazeSize = dynamic_cast<MazeRequestPacket*>(packet)->mazeSize;
+
 	enet_uint8* stream = packet->CreateByteStream();
 
 	//Create the packet and send it (unreliable transport) to server
@@ -74,7 +126,7 @@ void NetworkEntity::BroadcastPacket(Packet* packet)
 	enet_uint8* stream = packet->CreateByteStream();
 
 	//Create the packet and broadcast it (unreliable transport) to all entitites
-	ENetPacket* enetPacket = enet_packet_create(stream, sizeof(stream), 0);
+	ENetPacket* enetPacket = enet_packet_create(stream, packet->size, 0);
 	enet_host_broadcast(networkHost, 0, enetPacket);
 
 	delete stream;
