@@ -7,7 +7,6 @@ void PopulateEdgeList(bool* edgeList, GraphEdge* edges, int numEdges);
 string NetworkEntity::HandlePacket(const ENetPacket* packet)
 {
 	enet_uint8 type = *packet->data;
-	int size = sizeof(packet->data);
 
 	string output = "";
 
@@ -55,6 +54,8 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 				BroadcastPacket(returnPacket);
 				delete returnPacket;
 			}
+			else
+				NCLERROR("Maze size too large");
 
 
 			delete maze;
@@ -101,13 +102,30 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 				}
 
 				SAFE_DELETE(mazeRender);
-				mazeRender = new MazeRenderer(maze);
+				if (!wallmesh)
+				{
+					GLuint whitetex;
+					glGenTextures(1, &whitetex);
+					glBindTexture(GL_TEXTURE_2D, whitetex);
+					unsigned int pixel = 0xFFFFFFFF;
+					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, &pixel);
+					glBindTexture(GL_TEXTURE_2D, 0);
+
+					wallmesh = new OBJMesh("../../Data/Meshes/cube.obj");
+					wallmesh->SetTexture(whitetex);
+				}
+				mazeRender = new MazeRenderer(maze, wallmesh);
+
+				//The maze is returned in a [0,0,0] - [1,1,1] cube (with edge walls outside) regardless of grid_size,
+				// so we need to scale it to whatever size we want
+				Matrix4 maze_scalar = Matrix4::Scale(Vector3(5.f, 5.0f / float(mazeSize), 5.f)) * Matrix4::Translation(Vector3(-0.5f, 0.f, -0.5f));
+				mazeRender->Render()->SetTransform(maze_scalar);
 
 				SceneManager::Instance()->GetCurrentScene()->AddGameObject(mazeRender);
 			}
 			else
 				NCLLOG("No maze request data present to reconstruct from");
-
+			break;
 		}
 		case MAZE_DATA16:
 		{
@@ -129,12 +147,29 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 
 				SceneManager::Instance()->GetCurrentScene()->RemoveGameObject(mazeRender);
 				SAFE_DELETE(mazeRender);
-				mazeRender = new MazeRenderer(maze);
+				if (!wallmesh)
+				{
+					GLuint whitetex;
+					glGenTextures(1, &whitetex);
+					glBindTexture(GL_TEXTURE_2D, whitetex);
+					unsigned int pixel = 0xFFFFFFFF;
+					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, &pixel);
+					glBindTexture(GL_TEXTURE_2D, 0);
+
+					wallmesh = new OBJMesh("../../Data/Meshes/cube.obj");
+					wallmesh->SetTexture(whitetex);
+				}
+				mazeRender = new MazeRenderer(maze, wallmesh);
+
+				//The maze is returned in a [0,0,0] - [1,1,1] cube (with edge walls outside) regardless of grid_size,
+				// so we need to scale it to whatever size we want
+				Matrix4 maze_scalar = Matrix4::Scale(Vector3(5.f, 5.0f / float(mazeSize), 5.f)) * Matrix4::Translation(Vector3(-0.5f, 0.f, -0.5f));
+				mazeRender->Render()->SetTransform(maze_scalar);
 				SceneManager::Instance()->GetCurrentScene()->AddGameObject(mazeRender);
 			}
 			else
 				NCLLOG("No maze request data present to reconstruct from");
-
+			break;
 		}
 		default:
 		{

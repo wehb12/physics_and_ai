@@ -25,7 +25,7 @@ void CommonMeshes::InitializeMeshes()
 		}
 		else
 		{
-			NCLERROR("Unable to load checkerboard texture!");
+			NCLLOG("Unable to load checkerboard texture!");
 		}
 
 		m_pCube = new OBJMesh(MESHDIR"cube.obj");

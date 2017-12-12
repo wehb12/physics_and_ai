@@ -223,7 +223,7 @@ void Net1_Client::HandleKeyboardInput()
 {
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_G))
 	{
-		MazeRequestPacket* packet = new MazeRequestPacket(16, 0.5f);
+		MazeRequestPacket* packet = new MazeRequestPacket(16, 1.0f);
 
 		packetHandler->SendPacket(serverConnection, packet);
 

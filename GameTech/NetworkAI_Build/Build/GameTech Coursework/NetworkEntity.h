@@ -6,6 +6,7 @@
 #include "MazeGenerator.h"
 #include "MazeRenderer.h"
 #include "../ncltech/SceneManager.h"
+#include "../nclgl/OBJMesh.h"
 
 enum NetworkEntityType
 {
@@ -21,8 +22,11 @@ public:
 		networkHost(host),
 		mazeSize(0),
 		maze(NULL),
-		mazeRender(NULL)
-	{ }
+		mazeRender(NULL),
+		wallmesh(NULL)
+	{
+
+	}
 
 	~NetworkEntity()
 	{
@@ -34,14 +38,18 @@ public:
 			delete mazeRender;
 			mazeRender = NULL;
 		}
+
+		SAFE_DELETE(wallmesh);
 	}
 
 	string HandlePacket(const ENetPacket* packet);
 
 	void CleanUp()
 	{
+		SAFE_DELETE(mazeRender);
 		mazeRender = NULL;
 		SAFE_DELETE(maze);
+		maze = NULL;
 	}
 
 
@@ -61,4 +69,5 @@ private:
 	int mazeSize;
 	MazeGenerator* maze;
 	MazeRenderer* mazeRender;
+	Mesh* wallmesh;
 };

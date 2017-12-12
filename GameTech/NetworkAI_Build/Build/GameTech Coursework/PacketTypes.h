@@ -94,10 +94,16 @@ public:
 		numEdges = *(data + 1);
 		if (numEdges)
 			edgesThatAreWalls = new bool[numEdges];
-		
-		for (int i = 0; i < numEdges; ++i)
+
+		for (int i = 0; i <= (numEdges / 8); ++i)
 		{
-			edgesThatAreWalls[i] = *(data + 8 + i);
+			int max = 8;
+			if (i == numEdges / 8)
+				max = numEdges % 8;
+
+			enet_uint8 thisByte = *(data + 2 + i);
+			for (int j = 0; j < max; ++j)
+				edgesThatAreWalls[i * 8 + j] = (thisByte >> j) & 1;
 		}
 	}
 
@@ -116,7 +122,7 @@ public:
 
 			enet_uint8 byte = 0;
 			for (int j = 0; j < max; ++j)
-				byte ^= edgesThatAreWalls[(i * 8) + j] << (max - j);
+				byte ^= edgesThatAreWalls[(i * 8) + j] << j;
 			data[2 + i] = byte;
 		}
 
@@ -197,7 +203,7 @@ public:
 
 			enet_uint8 byte = 0;
 			for (int j = 0; j < max; ++j)
-				byte ^= edgesThatAreWalls[(i * 8) + j] << (max - 1 - j);
+				byte ^= edgesThatAreWalls[(i * 8) + j] << j;
 			data[3 + i] = byte;
 		}
 

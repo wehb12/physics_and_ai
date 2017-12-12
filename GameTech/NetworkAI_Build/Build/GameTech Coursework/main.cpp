@@ -72,13 +72,14 @@ void Initialize()
 
 void Quit(bool error, const string &reason)
 {
+	delete thisEntity;
+
 	//Release Singletons
 	SceneManager::Release();
 	GraphicsPipeline::Release();
 	PhysicsEngine::Release();
 	enet_deinitialize();  //!!!!!!!!!!!!!!!!!NEW!!!!!!!!!!!!!!
 	Window::Destroy();
-	delete thisEntity;
 
 
 	//Show console reason before exit
