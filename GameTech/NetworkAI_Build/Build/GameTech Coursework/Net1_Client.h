@@ -28,6 +28,13 @@ public:
 
 protected:
 	void HandleKeyboardInput();
+	void PrintPath();
+	void MoveNodeUp(bool start, int index);
+	void MoveNodeDown(bool start, int index);
+	void MoveNodeLeft(bool start, int index);
+	void MoveNodeRight(bool start, int index);
+
+	void ReconstructPosition(bool ifStart);
 
 protected:
 	GameObject* box;
@@ -39,4 +46,7 @@ protected:
 
 	int mazeSize;
 	float mazeDensity;
+
+	// bool that controls which position (start/ end) the user is moving
+	bool start;
 };

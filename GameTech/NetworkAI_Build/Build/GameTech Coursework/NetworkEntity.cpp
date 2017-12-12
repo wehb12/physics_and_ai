@@ -21,38 +21,9 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 		case MAZE_REQUEST:
 		{
 			MazeRequestPacket* dataPacket = new MazeRequestPacket(packet->data);
-			mazeSize = dataPacket->mazeSize;
-			mazeDensity = (float)(dataPacket->mazeDensity) / (float)(MAX_VAL_8BIT);
+			HandleMazeRequestPacket(dataPacket);
+
 			output = "Create a maze of size " + to_string(mazeSize) + " with a density of " + to_string(mazeDensity);
-
-			printPath = false;
-			SAFE_DELETE(maze);
-			maze = new MazeGenerator;
-			maze->Generate(mazeSize, mazeDensity);
-
-			int possibleWalls = 2 * mazeSize * (mazeSize - 1);
-
-			// mazeSize of 11 or lower can fit in an enet_unit8
-			if (possibleWalls <= MAX_VAL_8BIT)
-			{
-				MazeDataPacket8* returnPacket = new MazeDataPacket8(possibleWalls);
-				PopulateEdgeList(returnPacket->edgesThatAreWalls, maze->allEdges, possibleWalls);
-
-				BroadcastPacket(returnPacket);
-				delete returnPacket;
-			}
-			// maxSize of 181 or lower can fit in an enet_uint16
-			else if (possibleWalls <= MAX_VAL_16BIT)
-			{
-				MazeDataPacket16* returnPacket = new MazeDataPacket16(possibleWalls);
-				PopulateEdgeList(returnPacket->edgesThatAreWalls, maze->allEdges, possibleWalls);
-
-				BroadcastPacket(returnPacket);
-				delete returnPacket;
-			}
-			else
-				NCLERROR("Maze size too large");
-
 			delete dataPacket;
 			break;
 		}
@@ -61,6 +32,7 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 			if (mazeSize)
 			{
 				MazeDataPacket8* dataPacket = new MazeDataPacket8(packet->data);
+				output = "Construct a maze";
 
 				printPath = false;
 				HandleMazeDataPacket(dataPacket);
@@ -75,10 +47,11 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 			if (mazeSize)
 			{
 				MazeDataPacket16* dataPacket = new MazeDataPacket16(packet->data);
+				output = "Construct a maze";
 
 				printPath = false;
 				HandleMazeDataPacket(dataPacket);
-				delete dataPacket;
+				delete dataPacket; 
 			}
 			else
 				NCLLOG("No maze request data present to reconstruct from");
@@ -87,6 +60,8 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 		case MAZE_POSITIONS8:
 		{
 			MazePositionsPacket8* posPacket = new MazePositionsPacket8(packet->data);
+			output = "Here are my start and end positions.";
+
 			HandlePositionPacket(posPacket);
 			delete posPacket;
 			break;
@@ -94,6 +69,8 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 		case MAZE_POSITIONS16:
 		{
 			MazePositionsPacket16* posPacket = new MazePositionsPacket16(packet->data);
+			output = "Here are my start and end positions.";
+
 			HandlePositionPacket(posPacket);
 			delete posPacket;
 			break;
@@ -101,6 +78,8 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 		case MAZE_PATH8:
 		{
 			MazePathPacket8* pathPacket = new MazePathPacket8(packet->data);
+			output = "Here is your path.";
+
 			PopulatePath(pathPacket);
 			delete pathPacket;
 			break;
@@ -108,6 +87,8 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 		case MAZE_PATH16:
 		{
 			MazePathPacket16* pathPacket = new MazePathPacket16(packet->data);
+			output = "Here is your path.";
+
 			PopulatePath(pathPacket);
 			delete pathPacket;
 			break;
@@ -120,6 +101,40 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 	}
 
 	return output;
+}
+
+void NetworkEntity::HandleMazeRequestPacket(MazeRequestPacket* reqPacket)
+{
+	mazeSize = reqPacket->mazeSize;
+	mazeDensity = (float)(reqPacket->mazeDensity) / (float)(MAX_VAL_8BIT);
+
+	printPath = false;
+	SAFE_DELETE(maze);
+	maze = new MazeGenerator;
+	maze->Generate(mazeSize, mazeDensity);
+
+	int possibleWalls = 2 * mazeSize * (mazeSize - 1);
+
+	// mazeSize of 11 or lower can fit in an enet_unit8
+	if (possibleWalls <= MAX_VAL_8BIT)
+	{
+		MazeDataPacket8* returnPacket = new MazeDataPacket8(possibleWalls);
+		PopulateEdgeList(returnPacket->edgesThatAreWalls, maze->allEdges, possibleWalls);
+
+		BroadcastPacket(returnPacket);
+		delete returnPacket;
+	}
+	// maxSize of 181 or lower can fit in an enet_uint16
+	else if (possibleWalls <= MAX_VAL_16BIT)
+	{
+		MazeDataPacket16* returnPacket = new MazeDataPacket16(possibleWalls);
+		PopulateEdgeList(returnPacket->edgesThatAreWalls, maze->allEdges, possibleWalls);
+
+		BroadcastPacket(returnPacket);
+		delete returnPacket;
+	}
+	else
+		NCLERROR("Maze size too large");
 }
 
 template <class DataPacket>
@@ -165,6 +180,11 @@ void NetworkEntity::HandleMazeDataPacket(DataPacket* dataPacket)
 
 	// now send back to the server the start and end positions
 
+	SendPositionPacket();
+}
+
+void NetworkEntity::SendPositionPacket()
+{
 	int numNodes = maze->size * maze->size;
 
 	// lambda function takes in a node and returns the index into the array
@@ -206,8 +226,8 @@ void NetworkEntity::HandleMazeDataPacket(DataPacket* dataPacket)
 template <class PositionPacket>
 void NetworkEntity::HandlePositionPacket(PositionPacket* posPacket)
 {
-	*maze->start = maze->allNodes[posPacket->start];
-	*maze->end = maze->allNodes[posPacket->end];
+	maze->start = &maze->allNodes[posPacket->start];
+	maze->end = &maze->allNodes[posPacket->end];
 
 	aStarSearch->FindBestPath(maze->start, maze->end);
 
@@ -247,6 +267,7 @@ void NetworkEntity::HandlePositionPacket(PositionPacket* posPacket)
 		SendPacket(currentPacketSender, pathPacket);
 		delete pathPacket;
 	}
+	delete[] pathIndices;
 }
 
 template <class PathPacket>
@@ -263,30 +284,6 @@ void NetworkEntity::PopulatePath(PathPacket* pathPacket)
 		path[i] = pathPacket->path[i];
 
 	printPath = true;
-}
-
-void NetworkEntity::PrintPath()
-{
-	float grid_scalar = 1.0f / (float)maze->GetSize();
-	float col_factor = 0.2f / (float)pathLength;
-
-	Matrix4 transform = mazeRender->Render()->GetWorldTransform();
-
-	float index = 0.0f;
-	for (int i = 0; i < pathLength - 1; ++i)
-	{
-		Vector3 start = transform * Vector3(
-			(maze->allNodes[path[i]]._pos.x + 0.5f) * grid_scalar,
-			0.1f,
-			(maze->allNodes[path[i]]._pos.y + 0.5f) * grid_scalar);
-
-		Vector3 end = transform * Vector3(
-			(maze->allNodes[path[i + 1]]._pos.x + 0.5f) * grid_scalar,
-			0.1f,
-			(maze->allNodes[path[i + 1]]._pos.y + 0.5f) * grid_scalar);
-
-		NCLDebug::DrawThickLine(start, end, 2.5f / mazeSize, CommonUtils::GenColor(0.8f + i * col_factor));
-	}
 }
 
 void NetworkEntity::SendPacket(ENetPeer* destination, Packet* packet)

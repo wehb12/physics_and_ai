@@ -27,6 +27,16 @@ public:
 	// and 'from' of GraphNodes.
 	void DrawSearchHistory(const SearchHistory& history, float line_width);
 
+	void UpdateStartNodeTransform(Matrix4 transform)
+	{
+		(*(renderNode->GetChildIteratorEnd() - 2))->SetTransform(transform);
+	}
+
+	void UpdateEndNodeTransform(Matrix4 transform)
+	{
+		(*(renderNode->GetChildIteratorEnd() - 1))->SetTransform(transform);
+	}
+
 
 protected:
 	//Turn MazeGenerator data into flat 2D map (3 size x 3 size) of boolean's

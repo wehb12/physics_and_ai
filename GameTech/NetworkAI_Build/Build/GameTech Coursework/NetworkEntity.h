@@ -18,6 +18,7 @@ enum NetworkEntityType
 
 class NetworkEntity
 {
+	friend class Net1_Client;
 public:
 	NetworkEntity(enet_uint8 type, ENetHost* host) :
 		type(type),
@@ -28,10 +29,7 @@ public:
 		maze(NULL),
 		mazeRender(NULL),
 		wallmesh(NULL),
-		aStarSearch(new SearchAStar()),
-		path(NULL),
-		pathLength(0),
-		printPath(false)
+		aStarSearch(new SearchAStar())
 	{
 	}
 
@@ -40,6 +38,7 @@ public:
 		CleanUp();
 		SAFE_DELETE(maze);
 		SAFE_DELETE(wallmesh);
+		SAFE_DELETE(aStarSearch);
 	}
 
 	string HandlePacket(const ENetPacket* packet);
@@ -47,12 +46,6 @@ public:
 	void CleanUp()
 	{
 		mazeRender = NULL;	// should be deleted by Scene->RemoveAllGameObjects (??)
-	}
-
-	void Update()
-	{
-		if (printPath)
-			PrintPath();
 	}
 
 
@@ -69,27 +62,12 @@ public:
 	inline enet_uint8 GetType()				{ return type; }
 	inline int GetCurrentMazeSize()			{ return mazeSize; }
 	inline float GetCurrentMazeDensity()	{ return mazeDensity; }
-	inline MazeGenerator* GetMaze() { return maze; }
+	inline MazeGenerator* GetMaze()			{ return maze; }
 
-private:
-	template <class DataPacket>
-	void HandleMazeDataPacket(DataPacket* dataPacket);
+protected:
+	inline bool GetPrintPathState()			{ return printPath; }
 
-	template <class PositionPacket>
-	void HandlePositionPacket(PositionPacket* posPacket);
-
-	template <class PathPacket>
-	void PopulatePath(PathPacket* pathPacket);
-
-	void PrintPath();
-
-private:
-	enet_uint8 type;
-
-	ENetHost*	networkHost;
-	ENetPeer*	serverConnection;
-	ENetPeer*	currentPacketSender;
-
+protected:
 	int mazeSize;
 	float mazeDensity;
 	MazeGenerator* maze;
@@ -100,4 +78,24 @@ private:
 	bool printPath;
 	int* path;
 	int pathLength;
+
+private:
+	void HandleMazeRequestPacket(MazeRequestPacket* reqPacket);
+
+	template <class DataPacket>
+	void HandleMazeDataPacket(DataPacket* dataPacket);
+	void SendPositionPacket();
+
+	template <class PositionPacket>
+	void HandlePositionPacket(PositionPacket* posPacket);
+
+	template <class PathPacket>
+	void PopulatePath(PathPacket* pathPacket);
+
+private:
+	enet_uint8 type;
+
+	ENetHost*	networkHost;
+	ENetPeer*	serverConnection;
+	ENetPeer*	currentPacketSender;
 };

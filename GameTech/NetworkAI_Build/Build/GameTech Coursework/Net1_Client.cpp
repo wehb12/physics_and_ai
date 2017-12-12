@@ -92,6 +92,7 @@ Net1_Client::Net1_Client(const std::string& friendly_name, NetworkEntity* thisEn
 	, packetHandler(thisEntity)
 	, mazeSize(16)
 	, mazeDensity(1.0f)
+	, start(true)
 {
 }
 
@@ -151,7 +152,9 @@ void Net1_Client::OnCleanupScene()
 void Net1_Client::OnUpdateScene(float dt)
 {
 	Scene::OnUpdateScene(dt);
-	packetHandler->Update();
+
+	if (packetHandler->GetPrintPathState())
+		PrintPath();
 
 	HandleKeyboardInput();
 
@@ -186,6 +189,9 @@ void Net1_Client::OnUpdateScene(float dt)
 	NCLDebug::AddStatusEntry(controlsColour, "");
 	NCLDebug::AddStatusEntry(controlsColour, "    Next Maze Size: %d [1/2] to change", mazeSize);
 	NCLDebug::AddStatusEntry(controlsColour, "    Next Maze Density: %5.2f [3/4] to change", mazeDensity);
+	NCLDebug::AddStatusEntry(controlsColour, "");
+	NCLDebug::AddStatusEntry(controlsColour, "    Move the %s position with the arrow keys", start ? "start" : "end");
+	NCLDebug::AddStatusEntry(controlsColour, "    Swap to moving the %s position by pressing [CTRL]", start ? "end" : "start");
 }
 
 void Net1_Client::ProcessNetworkEvent(const ENetEvent& evnt)
@@ -254,4 +260,154 @@ void Net1_Client::HandleKeyboardInput()
 	
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_4))
 		mazeDensity = min(mazeDensity + 0.1f, 1.0f);
+
+	if (packetHandler->maze)
+	{
+		bool moved = false;
+		GraphNode* nodeToMove = start ? packetHandler->maze->start : packetHandler->maze->end;
+
+		int index = -1;
+		for (int i = 0; i < (packetHandler->mazeSize * packetHandler->mazeSize); ++i)
+		{
+			if (packetHandler->maze->allNodes[i]._pos == nodeToMove->_pos)
+			{
+				index = i;
+				break;
+			}
+		}
+
+		if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_UP))
+		{
+			MoveNodeUp(start, index);
+			moved = true;
+		}
+		if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_DOWN))
+		{
+			MoveNodeDown(start, index);
+			moved = true;
+		}
+		if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_LEFT))
+		{
+			MoveNodeLeft(start, index);
+			moved = true;
+		}
+		if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_RIGHT))
+		{
+			MoveNodeRight(start, index);
+			moved = true;
+		}
+		if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_CONTROL))
+			start = !start;
+
+		if (moved)
+		{
+			// remake MazeRenderer start and end RenderNodes
+			ReconstructPosition(start);
+			// resend destination positions to server
+			packetHandler->SendPositionPacket();
+		}
+	}
+}
+
+void Net1_Client::MoveNodeDown(bool start, int index)
+{
+	index = index < (packetHandler->mazeSize) * (packetHandler->mazeSize - 1) ? index + packetHandler->mazeSize : index;
+	if (start)
+		packetHandler->maze->start = &packetHandler->maze->allNodes[index];
+	else
+		packetHandler->maze->end = &packetHandler->maze->allNodes[index];
+}
+
+void Net1_Client::MoveNodeUp(bool start, int index)
+{
+	index = index >= packetHandler->mazeSize ? index - packetHandler->mazeSize : index;
+	if (start)
+		packetHandler->maze->start = &packetHandler->maze->allNodes[index];
+	else
+		packetHandler->maze->end = &packetHandler->maze->allNodes[index];
+}
+
+void Net1_Client::MoveNodeLeft(bool start, int index)
+{
+	index = index % (packetHandler->maze->size) > 0 ? index - 1 : index;
+	if (start)
+		packetHandler->maze->start = &packetHandler->maze->allNodes[index];
+	else
+		packetHandler->maze->end = &packetHandler->maze->allNodes[index];
+}
+
+void Net1_Client::MoveNodeRight(bool start, int index)
+{
+	index = index % (packetHandler->maze->size) < (packetHandler->mazeSize - 1) ? index + 1 : index;
+	if (start)
+		packetHandler->maze->start = &packetHandler->maze->allNodes[index];
+	else
+		packetHandler->maze->end = &packetHandler->maze->allNodes[index];
+}
+
+void Net1_Client::ReconstructPosition(bool ifStart)
+{
+	RenderNode* cube;
+
+	float scalar = 1.0f / (packetHandler->maze->size * 3 - 1);
+	Vector3 cellsize = Vector3(
+		scalar * 2,
+		1.0f,
+		scalar * 2
+	);
+
+	if (ifStart)
+	{
+		GraphNode* start = packetHandler->maze->start;
+
+		Vector3 cellpos = Vector3(
+			start->_pos.x * 3,
+			0.0f,
+			start->_pos.y * 3
+		) * scalar;
+
+		cube = new RenderNode(packetHandler->wallmesh, Vector4(0.0f, 1.0f, 0.0f, 1.0f));
+		cube->SetTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
+		packetHandler->mazeRender->UpdateStartNodeTransform(cube->GetTransform());
+	}
+	else
+	{
+		GraphNode* end = packetHandler->maze->end;
+
+		Vector3 cellpos = Vector3(
+			end->_pos.x * 3,
+			0.0f,
+			end->_pos.y * 3
+		) * scalar;
+		cube = new RenderNode(packetHandler->wallmesh, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+		cube->SetTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
+		packetHandler->mazeRender->UpdateEndNodeTransform(cube->GetTransform());
+	}
+}
+
+void Net1_Client::PrintPath()
+{
+	if (packetHandler->maze && packetHandler->mazeRender)
+	{
+		float grid_scalar = 1.0f / (float)packetHandler->maze->GetSize();
+		float col_factor = 0.2f / (float)packetHandler->pathLength;
+
+		Matrix4 transform = packetHandler->mazeRender->Render()->GetWorldTransform();
+
+		float index = 0.0f;
+		for (int i = 0; i < packetHandler->pathLength - 1; ++i)
+		{
+			Vector3 start = transform * Vector3(
+				(packetHandler->maze->allNodes[packetHandler->path[i]]._pos.x + 0.5f) * grid_scalar,
+				0.1f,
+				(packetHandler->maze->allNodes[packetHandler->path[i]]._pos.y + 0.5f) * grid_scalar);
+
+			Vector3 end = transform * Vector3(
+				(packetHandler->maze->allNodes[packetHandler->path[i + 1]]._pos.x + 0.5f) * grid_scalar,
+				0.1f,
+				(packetHandler->maze->allNodes[packetHandler->path[i + 1]]._pos.y + 0.5f) * grid_scalar);
+
+			NCLDebug::DrawThickLine(start, end, 2.5f / packetHandler->mazeSize, CommonUtils::GenColor(0.8f + i * col_factor));
+		}
+	}
 }
