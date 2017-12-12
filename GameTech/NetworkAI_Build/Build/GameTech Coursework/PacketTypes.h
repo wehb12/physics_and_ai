@@ -9,7 +9,8 @@
 enum packetType
 {
 	MAZE_REQUEST = 12,
-	MAZE_DATA8
+	MAZE_DATA8,
+	MAZE_DATA16
 };
 
 class Packet
@@ -64,48 +65,39 @@ class MazeDataPacket8 : public Packet
 public:
 	~MazeDataPacket8()
 	{
-		if (numWalls)
-		{
-			delete[] nodeA;
-			delete[] nodeB;
-		}
+		if (edgesThatAreWalls)
+			delete[] edgesThatAreWalls;
 	}
-	MazeDataPacket8(enet_uint8 numWalls, enet_uint8* nodeA, enet_uint8* nodeB) :
-		Packet(MAZE_DATA8, (2 + 2 * numWalls)),
-		numWalls(numWalls),
-		nodeA(nodeA),
-		nodeB(nodeB)
+	MazeDataPacket8(enet_uint8 numEdges, bool* walls) :
+		Packet(MAZE_DATA8, (2 + (numEdges / 8) + (numEdges % 8))),
+		numEdges(numEdges),
+		edgesThatAreWalls(walls)
 	{ }
 
-	MazeDataPacket8(int numWalls, enet_uint8* nodeA, enet_uint8* nodeB) :
-		Packet(MAZE_DATA8, (2 + 2 * numWalls)),
-		numWalls(numWalls),
-		nodeA(nodeA),
-		nodeB(nodeB)
+	MazeDataPacket8(int numEdges, bool* walls) :
+		Packet(MAZE_DATA8, (2 + (numEdges / 8) + (numEdges % 8))),
+		numEdges(numEdges),
+		edgesThatAreWalls(walls)
 	{ }
 
-	MazeDataPacket8(int numWalls) :
-		Packet(MAZE_DATA8, (2 + 2 * numWalls)),
-		numWalls(numWalls)
+	MazeDataPacket8(int numEdges) :
+		Packet(MAZE_DATA8, (2 + (numEdges / 8) + (numEdges % 8))),
+		numEdges(numEdges)
 	{
-		if (numWalls)
-		{
-			nodeA = new enet_uint8[numWalls];
-			nodeB = new enet_uint8[numWalls];
-		}
+		if (numEdges)
+			edgesThatAreWalls = new bool[numEdges];
 	}
 
 	MazeDataPacket8(enet_uint8* data) :
-		Packet(MAZE_DATA8, (2 + 2 * *(data + 1)))
+		Packet(MAZE_DATA8, (2 + (*(data + 1) / 8) + (*(data + 1) % 8)))
 	{
-		numWalls = *(data + 1);
-		nodeA = new enet_uint8[numWalls];
-		nodeB = new enet_uint8[numWalls];
+		numEdges = *(data + 1);
+		if (numEdges)
+			edgesThatAreWalls = new bool[numEdges];
 		
-		for (int i = 0; i < numWalls; ++i)
+		for (int i = 0; i < numEdges; ++i)
 		{
-			nodeA[i] = *(data + 2 + i);
-			nodeB[i] = *(data + 2 + numWalls + i);
+			edgesThatAreWalls[i] = *(data + 8 + i);
 		}
 	}
 
@@ -115,20 +107,107 @@ public:
 		enet_uint8* data = new enet_uint8[size];
 
 		data[0] = type;
-		data[1] = numWalls;
-		for (int i = 0; i < numWalls; ++i)
-			data[2 + i] = nodeA[i];
-		for (int i = 0; i < numWalls; ++i)
-			data[2 + numWalls + i] = nodeB[i];
+		data[1] = numEdges;
+		for (int i = 0; i <= (numEdges / 8); ++i)
+		{
+			int max = 8;
+			if (i == numEdges / 8)
+				max = numEdges % 8;
+
+			enet_uint8 byte = 0;
+			for (int j = 0; j < max; ++j)
+				byte ^= edgesThatAreWalls[(i * 8) + j] << (max - j);
+			data[2 + i] = byte;
+		}
 
 		return data;
 	}
 
 public:
-	enet_uint8 numWalls;
-	// contains lists of nodes numWalls in size
+	enet_uint8 numEdges;
+	// contains lists of nodes numEdges in size
 	// each index of which provides information about
 	// which two nodes a wall separates
-	enet_uint8* nodeA;
-	enet_uint8* nodeB;
+	bool* edgesThatAreWalls;
+};
+
+// maze data struct with 8 bit wall number
+class MazeDataPacket16 : public Packet
+{
+public:
+	~MazeDataPacket16()
+	{
+		if (edgesThatAreWalls)
+			delete[] edgesThatAreWalls;
+	}
+	MazeDataPacket16(enet_uint16 numEdges, bool* walls) :
+		Packet(MAZE_DATA16, (3 + (numEdges / 8) + (numEdges % 8))),
+		numEdges(numEdges),
+		edgesThatAreWalls(walls)
+	{ }
+
+	MazeDataPacket16(int numEdges, bool* walls) :
+		Packet(MAZE_DATA16, (3 + (numEdges / 8) + (numEdges % 8))),
+		numEdges(numEdges),
+		edgesThatAreWalls(walls)
+	{ }
+
+	MazeDataPacket16(int numEdges) :
+		Packet(MAZE_DATA16, (3 + (numEdges / 8) + (numEdges % 8))),
+		numEdges(numEdges)
+	{
+		if (numEdges)
+			edgesThatAreWalls = new bool[numEdges];
+	}
+
+	MazeDataPacket16(enet_uint8* data) :
+		Packet(MAZE_DATA16, (3 + (*(data + 1) / 8) + (*(data + 1) % 8)))
+	{
+		numEdges = *(data + 1) | (*(data + 2) << 8);
+		if (numEdges)
+			edgesThatAreWalls = new bool[numEdges];
+
+		for (int i = 0; i <= (numEdges / 8); ++i)
+		{
+			int max = 8;
+			if (i == numEdges / 8)
+				max = numEdges % 8;
+
+			enet_uint8 thisByte = *(data + 3 + i);
+			for (int j = 0; j < max; ++j)
+				edgesThatAreWalls[i * 8 + j] = (thisByte >> j) & 1;
+		}
+	}
+
+
+	virtual enet_uint8* CreateByteStream() override
+	{
+		enet_uint8* data = new enet_uint8[size];
+
+		data[0] = type;
+		data[1] = 0;
+		data[1] ^= numEdges;
+		data[2] = 0;
+		data[2] ^= numEdges >> 8;
+		for (int i = 0; i <= (numEdges / 8); ++i)
+		{
+			int max = 8;
+			if (i == numEdges / 8)
+				max = numEdges % 8;
+
+			enet_uint8 byte = 0;
+			for (int j = 0; j < max; ++j)
+				byte ^= edgesThatAreWalls[(i * 8) + j] << (max - 1 - j);
+			data[3 + i] = byte;
+		}
+
+		return data;
+	}
+
+public:
+	enet_uint16 numEdges;
+	// contains lists of nodes numEdges in size
+	// each index of which provides information about
+	// which two nodes a wall separates
+	bool* edgesThatAreWalls;
 };

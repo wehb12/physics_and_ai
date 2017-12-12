@@ -137,6 +137,7 @@ void Net1_Client::OnCleanupScene()
 				// - We are not waiting to resend this, so if it fails to arrive
 				//   the server will have to wait until we time out naturally
 	enet_peer_disconnect_now(serverConnection, 0);
+	packetHandler->CleanUp();
 
 	//Release network and all associated data/peer connections
 	network.Release();

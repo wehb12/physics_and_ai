@@ -2,9 +2,7 @@
 
 using namespace std;
 
-// templated to either enet_uint8, enet_uint16 or enet_unit32
-template<typename enet_uint>
-void PopulateNodeLists(enet_uint* nodeA, enet_uint* nodeB, vector<GraphEdge> walls, MazeGenerator* maze, int numNodes);
+void PopulateEdgeList(bool* edgeList, GraphEdge* edges, int numEdges);
 
 string NetworkEntity::HandlePacket(const ENetPacket* packet)
 {
@@ -26,24 +24,38 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 
 			int possibleWalls = 2 * mazeSize * (mazeSize - 1);
 
-			vector<GraphEdge> walls;
-			for (int i = 0; i < possibleWalls; ++i)
-			{
-				if (!maze->allEdges[i]._iswall)
-					continue;
-				else
-					walls.push_back(maze->allEdges[i]);
-			}
+			//vector<GraphEdge> walls;
+			//for (int i = 0; i < possibleWalls; ++i)
+			//{
+			//	if (!maze->allEdges[i]._iswall)
+			//		continue;
+			//	else
+			//		walls.push_back(maze->allEdges[i]);
+			//}
 
-			if (mazeSize <= 16)
+			// mazeSize of 11 or lower can fit in an enet_unit8
+			if (possibleWalls < 256)
 			{
-				int numWalls = walls.size();
-				MazeDataPacket8* returnPacket = new MazeDataPacket8(numWalls);
-				PopulateNodeLists<enet_uint8>(returnPacket->nodeA, returnPacket->nodeB, walls, maze, mazeSize * mazeSize);
+				//int numWalls = walls.size();
+				MazeDataPacket8* returnPacket = new MazeDataPacket8(possibleWalls);
+				//PopulateNodeLists<enet_uint8>(returnPacket->nodeA, returnPacket->nodeB, walls, maze, mazeSize * mazeSize);
+				PopulateEdgeList(returnPacket->edgesThatAreWalls, maze->allEdges, possibleWalls);
 
 				BroadcastPacket(returnPacket);
 				delete returnPacket;
 			}
+			// maxSize of 181 or lower can fit in an enet_uint16
+			else if (possibleWalls < 65536)
+			{
+				//int numWalls = walls.size();
+				MazeDataPacket16* returnPacket = new MazeDataPacket16(possibleWalls);
+				//PopulateNodeLists<enet_uint8>(returnPacket->nodeA, returnPacket->nodeB, walls, maze, mazeSize * mazeSize);
+				PopulateEdgeList(returnPacket->edgesThatAreWalls, maze->allEdges, possibleWalls);
+
+				BroadcastPacket(returnPacket);
+				delete returnPacket;
+			}
+
 
 			delete maze;
 			break;
@@ -59,38 +71,65 @@ string NetworkEntity::HandlePacket(const ENetPacket* packet)
 				maze = new MazeGenerator();
 				maze->Generate(mazeSize, 0.0f);
 
-				auto FindEdge = [&](int index)
+				//auto FindEdge = [&](int index)
+				//{
+				//	enet_uint8 indexA = dataPacket->nodeA[index];
+				//	enet_uint8 indexB = dataPacket->nodeB[index];
+
+				//	for (int i = 0; i < 2 * mazeSize * (mazeSize + 1); ++i)
+				//	{
+				//		if (maze->allEdges[i]._a->_pos == maze->allNodes[indexA]._pos)
+				//		{
+				//			if (maze->allEdges[i]._b->_pos == maze->allNodes[indexB]._pos)
+				//				return i;
+				//		}
+				//		else if (maze->allEdges[i]._a->_pos == maze->allNodes[indexB]._pos)
+				//		{
+				//			if (maze->allEdges[i]._b->_pos == maze->allNodes[indexA]._pos)
+				//				return i;
+				//		}
+				//	}
+
+				//	return -1;
+				//};
+
+				for (int i = 0; i < dataPacket->numEdges; ++i)
 				{
-					enet_uint8 indexA = dataPacket->nodeA[index];
-					enet_uint8 indexB = dataPacket->nodeB[index];
-
-					for (int i = 0; i < 2 * mazeSize * (mazeSize + 1); ++i)
-					{
-						if (maze->allEdges[i]._a->_pos == maze->allNodes[indexA]._pos)
-						{
-							if (maze->allEdges[i]._b->_pos == maze->allNodes[indexB]._pos)
-								return i;
-						}
-						else if (maze->allEdges[i]._a->_pos == maze->allNodes[indexB]._pos)
-						{
-							if (maze->allEdges[i]._b->_pos == maze->allNodes[indexA]._pos)
-								return i;
-						}
-					}
-
-					return -1;
-				};
-
-				for (int i = 0; i < dataPacket->numWalls; ++i)
-				{
-					int index = FindEdge(i);
-					if (index > 0)
-						maze->allEdges[FindEdge(i)]._iswall = true;
+					//int index = FindEdge(i);
+					if (dataPacket->edgesThatAreWalls[i])
+						maze->allEdges[i]._iswall = true;
 				}
 
 				SAFE_DELETE(mazeRender);
 				mazeRender = new MazeRenderer(maze);
 
+				SceneManager::Instance()->GetCurrentScene()->AddGameObject(mazeRender);
+			}
+			else
+				NCLLOG("No maze request data present to reconstruct from");
+
+		}
+		case MAZE_DATA16:
+		{
+			if (mazeSize)
+			{
+				MazeDataPacket16* dataPacket = new MazeDataPacket16(packet->data);
+
+				SAFE_DELETE(maze);
+
+				maze = new MazeGenerator();
+				maze->Generate(mazeSize, 0.0f);
+
+
+				for (int i = 0; i < dataPacket->numEdges; ++i)
+				{
+					if (dataPacket->edgesThatAreWalls[i])
+						maze->allEdges[i]._iswall = true;
+				}
+
+				SceneManager::Instance()->GetCurrentScene()->RemoveGameObject(mazeRender);
+				SAFE_DELETE(mazeRender);
+				mazeRender = new MazeRenderer(maze);
 				SceneManager::Instance()->GetCurrentScene()->AddGameObject(mazeRender);
 			}
 			else
@@ -115,10 +154,10 @@ void NetworkEntity::SendPacket(ENetPeer* destination, Packet* packet)
 	enet_uint8* stream = packet->CreateByteStream();
 
 	//Create the packet and send it (unreliable transport) to server
-	ENetPacket* enetPacket = enet_packet_create(stream, sizeof(stream), 0);
+	ENetPacket* enetPacket = enet_packet_create(stream, packet->size, 0);
 	enet_peer_send(destination, 0, enetPacket);
 
-	delete stream;
+	delete[] stream;
 }
 
 void NetworkEntity::BroadcastPacket(Packet* packet)
@@ -129,30 +168,16 @@ void NetworkEntity::BroadcastPacket(Packet* packet)
 	ENetPacket* enetPacket = enet_packet_create(stream, packet->size, 0);
 	enet_host_broadcast(networkHost, 0, enetPacket);
 
-	delete stream;
+	delete[] stream;
 }
 
-// templated to either enet_uint8, enet_uint16 or enet_unit32
-template<typename enet_uint>
-void PopulateNodeLists(enet_uint* nodeA, enet_uint* nodeB, vector<GraphEdge> walls, MazeGenerator* maze, int numNodes)
+void PopulateEdgeList(bool* edgeList, GraphEdge* edges, int numEdges)
 {
-	int size = walls.size();
-
-	if (size == 0)
-		return;
-
-	auto FindNode = [&](GraphNode* node)
+	for (int i = 0; i < numEdges; ++i)
 	{
-		for (enet_uint i = 0; i < numNodes; ++i)
-		{
-			if (&maze->allNodes[i] == node)
-				return i;
-		}
-	};
-
-	for (int i = 0; i < size; ++i)
-	{
-		nodeA[i] = FindNode(walls[i]._a);
-		nodeB[i] = FindNode(walls[i]._b);
+		if (edges[i]._iswall)
+			edgeList[i] = true;
+		else
+			edgeList[i] = false;
 	}
 }

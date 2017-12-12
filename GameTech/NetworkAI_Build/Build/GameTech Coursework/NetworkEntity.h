@@ -24,10 +24,28 @@ public:
 		mazeRender(NULL)
 	{ }
 
-	~NetworkEntity() { SAFE_DELETE(maze); SAFE_DELETE(mazeRender); }
+	~NetworkEntity()
+	{
+		SAFE_DELETE(maze);
+
+		if (mazeRender)
+		{
+			SceneManager::Instance()->GetCurrentScene()->RemoveGameObject(mazeRender);
+			delete mazeRender;
+			mazeRender = NULL;
+		}
+	}
 
 	string HandlePacket(const ENetPacket* packet);
 
+	void CleanUp()
+	{
+		mazeRender = NULL;
+		SAFE_DELETE(maze);
+	}
+
+
+//////// SEND PACKETS ////////
 	void BroadcastPacket(Packet* packet);
 	void SendPacket(ENetPeer* destination, Packet* packet);
 
