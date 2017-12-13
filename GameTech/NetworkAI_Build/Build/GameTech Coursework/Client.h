@@ -8,7 +8,7 @@
 #include <ncltech\DistanceConstraint.h>
 #include <ncltech\CommonUtils.h>
 #include <string>
-#include "NetworkEntity.h"
+#include "PacketHandler.h"
 
 #include "AllPacketTypes.h"
 
@@ -17,7 +17,7 @@
 class Client : public Scene
 {
 public:
-	Client(const std::string& friendly_name, NetworkEntity* thisEntity);
+	Client(const std::string& friendly_name, PacketHandler* thisEntity);
 
 	virtual void OnInitializeScene() override;
 	virtual void OnCleanupScene() override;
@@ -42,7 +42,7 @@ protected:
 	NetworkBase network;
 	ENetPeer*	serverConnection;
 
-	NetworkEntity* packetHandler;
+	PacketHandler* packetHandler;
 
 	int mazeSize;
 	float mazeDensity;

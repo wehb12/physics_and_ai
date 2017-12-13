@@ -21,6 +21,7 @@ which handles packet transmissions and receipt
 #include "../ncltech/SceneManager.h"
 #include "../nclgl/OBJMesh.h"
 #include "../ncltech/CommonUtils.h"
+#include "Server.h"
 
 enum NetworkEntityType
 {
@@ -28,12 +29,13 @@ enum NetworkEntityType
 	SERVER
 };
 
-class NetworkEntity
+class PacketHandler
 {
 	friend class Client;
+	friend class Server;
 public:
-	NetworkEntity(enet_uint8 type, ENetHost* host) :
-		type(type),
+	PacketHandler(enet_uint8 type, ENetHost* host) :
+		entityType(type),
 		networkHost(host),
 		serverConnection(NULL),
 		mazeSize(0),
@@ -42,10 +44,9 @@ public:
 		mazeRender(NULL),
 		wallmesh(NULL),
 		aStarSearch(new SearchAStar())
-	{
-	}
+	{ }
 
-	~NetworkEntity()
+	~PacketHandler()
 	{
 		CleanUp();
 		SAFE_DELETE(maze);
@@ -71,10 +72,10 @@ public:
 	inline void SetCurrentSender(ENetPeer* sender) { currentPacketSender = sender; }
 
 //////// GETTERS ////////
-	inline enet_uint8 GetType()				{ return type; }
-	inline int GetCurrentMazeSize()			{ return mazeSize; }
-	inline float GetCurrentMazeDensity()	{ return mazeDensity; }
-	inline MazeGenerator* GetMaze()			{ return maze; }
+	inline enet_uint8 GetType()				 { return entityType; }
+	inline int GetCurrentMazeSize()			 { return mazeSize; }
+	inline float GetCurrentMazeDensity()	 { return mazeDensity; }
+	inline MazeGenerator* GetMaze()			 { return maze; }
 
 protected:
 	inline bool GetPrintPathState()			{ return printPath; }
@@ -105,7 +106,7 @@ private:
 	void PopulatePath(PathPacket* pathPacket);
 
 private:
-	enet_uint8 type;
+	enet_uint8 entityType;
 
 	ENetHost*	networkHost;
 	ENetPeer*	serverConnection;

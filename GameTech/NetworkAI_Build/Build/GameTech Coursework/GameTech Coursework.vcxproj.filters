@@ -30,10 +30,13 @@
     <ClCompile Include="MazeRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NetworkEntity.cpp">
+    <ClCompile Include="Client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Client.cpp">
+    <ClCompile Include="Server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PacketHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,9 +62,6 @@
     <ClInclude Include="SearchDepthFirst.h">
       <Filter>Header Files\SearchAlgorithms</Filter>
     </ClInclude>
-    <ClInclude Include="NetworkEntity.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="AllPacketTypes.h">
       <Filter>Header Files\PacketTypes</Filter>
     </ClInclude>
@@ -75,6 +75,12 @@
       <Filter>Header Files\PacketTypes</Filter>
     </ClInclude>
     <ClInclude Include="Client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

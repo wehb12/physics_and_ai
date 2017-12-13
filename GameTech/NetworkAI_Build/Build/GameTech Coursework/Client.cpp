@@ -85,7 +85,7 @@ the servers game simulation. This methodology is known as "Dead Reckoning".
 const Vector3 status_color3 = Vector3(1.0f, 0.6f, 0.6f);
 const Vector4 status_color = Vector4(status_color3.x, status_color3.y, status_color3.z, 1.0f);
 
-Client::Client(const std::string& friendly_name, NetworkEntity* thisEntity)
+Client::Client(const std::string& friendly_name, PacketHandler* thisEntity)
 	: Scene(friendly_name)
 	, serverConnection(NULL)
 	, box(NULL)

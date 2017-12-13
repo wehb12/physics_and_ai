@@ -138,7 +138,8 @@
     <ClCompile Include="MazeGenerator.cpp" />
     <ClCompile Include="MazeRenderer.cpp" />
     <ClCompile Include="Client.cpp" />
-    <ClCompile Include="NetworkEntity.cpp" />
+    <ClCompile Include="PacketHandler.cpp" />
+    <ClCompile Include="Server.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AllPacketTypes.h" />
@@ -148,12 +149,13 @@
     <ClInclude Include="MazeGenerator.h" />
     <ClInclude Include="MazeRenderer.h" />
     <ClInclude Include="Client.h" />
-    <ClInclude Include="NetworkEntity.h" />
+    <ClInclude Include="PacketHandler.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="SearchAlgorithm.h" />
     <ClInclude Include="SearchAStar.h" />
     <ClInclude Include="SearchBreadthFirst.h" />
     <ClInclude Include="SearchDepthFirst.h" />
+    <ClInclude Include="Server.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

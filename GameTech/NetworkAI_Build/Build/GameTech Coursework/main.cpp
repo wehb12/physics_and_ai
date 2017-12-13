@@ -14,7 +14,8 @@
 #include <iphlpapi.h>
 #pragma comment(lib, "IPHLPAPI.lib")
 
-#include "NetworkEntity.h"
+#include "Server.h"
+#include "PacketHandler.h"
 #include "Client.h"
 #include "AllPacketTypes.h"
 #include "MazeGenerator.h"
@@ -32,7 +33,7 @@ NetworkBase server;
 GameTimer timer;
 float accum_time = 0.0f;
 float rotation = 0.0f;
-NetworkEntity* thisEntity = NULL;
+PacketHandler* packetHandler = NULL;
 
 void Win32_PrintAllAdapterIPAddresses();
 
@@ -66,18 +67,19 @@ void Initialize()
 
 								//Enqueue All Scenes
 								// - Add any new scenes you want here =D
-	SceneManager::Instance()->EnqueueScene(new Client("Network #1 - Example Client", thisEntity));
+	SceneManager::Instance()->EnqueueScene(new Client("Network #1 - Example Client", packetHandler));
 }
 
 
 void Quit(bool error, const string &reason)
 {
-	delete thisEntity;
+	SAFE_DELETE(packetHandler);
 
 	//Release Singletons
 	SceneManager::Release();
 	GraphicsPipeline::Release();
 	PhysicsEngine::Release();
+	Server::Release();
 	enet_deinitialize();  //!!!!!!!!!!!!!!!!!NEW!!!!!!!!!!!!!!
 	Window::Destroy();
 
@@ -149,7 +151,7 @@ int main()
 		//fprintf(stderr, "An error occurred while trying to create an ENet server host.\n");
 		//onExit(EXIT_FAILURE);
 
-		thisEntity = new NetworkEntity(CLIENT, server.m_pNetwork);
+		packetHandler = new PacketHandler(CLIENT, server.m_pNetwork);
 
 		//Initialize our Window, Physics, Scenes etc
 		Initialize();
@@ -162,7 +164,10 @@ int main()
 
 		Win32_PrintAllAdapterIPAddresses();
 
-		thisEntity = new NetworkEntity(SERVER, server.m_pNetwork);
+		packetHandler = new PacketHandler(SERVER, server.m_pNetwork);
+		
+		Server::Instance();
+		Server::Instance()->SetPacketHandler(packetHandler);
 	}
 
 	//Create main game-loop
@@ -170,7 +175,7 @@ int main()
 	while (!exitFlag)
 	{
 		float dt;
-		switch (thisEntity->GetType())
+		switch (packetHandler->GetType())
 		{
 		case CLIENT:
 			//Start Timing
@@ -214,8 +219,8 @@ int main()
 
 					case ENET_EVENT_TYPE_RECEIVE:
 					{
-						thisEntity->SetCurrentSender(evnt.peer);
-						string consoleOutput = thisEntity->HandlePacket(evnt.packet);
+						Server::Instance()->SetCurrentSender(evnt.peer);
+						string consoleOutput = packetHandler->HandlePacket(evnt.packet);
 						if (consoleOutput.size())
 							printf("\t Client %d says: %s\n", evnt.peer->incomingPeerID, consoleOutput.c_str());
 						enet_packet_destroy(evnt.packet);
