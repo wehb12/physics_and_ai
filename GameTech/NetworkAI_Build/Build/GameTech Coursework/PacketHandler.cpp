@@ -1,8 +1,8 @@
+#include "Server.h"
+#include "Client.h"
 #include "PacketHandler.h"
 
 using namespace std;
-
-void PopulateEdgeList(bool* edgeList, GraphEdge* edges, int numEdges);
 
 string PacketHandler::HandlePacket(const ENetPacket* packet)
 {
@@ -86,20 +86,26 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 		}
 		case MAZE_PATH8:
 		{
-			MazePathPacket8* pathPacket = new MazePathPacket8(packet->data);
-			output = "Here is your path.";
+			if (entityType == CLIENT)
+			{
+				MazePathPacket8* pathPacket = new MazePathPacket8(packet->data);
+				output = "Here is your path.";
 
-			PopulatePath(pathPacket);
-			delete pathPacket;
+				Client::Instance()->PopulatePath(pathPacket);
+				delete pathPacket;
+			}
 			break;
 		}
 		case MAZE_PATH16:
 		{
-			MazePathPacket16* pathPacket = new MazePathPacket16(packet->data);
-			output = "Here is your path.";
+			if (entityType == CLIENT)
+			{
+				MazePathPacket16* pathPacket = new MazePathPacket16(packet->data);
+				output = "Here is your path.";
 
-			PopulatePath(pathPacket);
-			delete pathPacket;
+				Client::Instance()->PopulatePath(pathPacket);
+				delete pathPacket;
+			}
 			break;
 		}
 		default:
@@ -146,50 +152,12 @@ void PacketHandler::HandleMazeRequestPacket(MazeRequestPacket* reqPacket)
 template <class DataPacket>
 void PacketHandler::HandleMazeDataPacket(DataPacket* dataPacket)
 {
-	SAFE_DELETE(maze);
+	Client::Instance()->GenerateWalledMaze(dataPacket->edgesThatAreWalls, dataPacket->numEdges);
 
-	maze = new MazeGenerator();
-	maze->Generate(mazeSize, 0.0f);
-
-
-	for (int i = 0; i < dataPacket->numEdges; ++i)
-	{
-		if (dataPacket->edgesThatAreWalls[i])
-			maze->allEdges[i]._iswall = true;
-	}
-
-	if (mazeRender)
-	{
-		SceneManager::Instance()->GetCurrentScene()->RemoveGameObject(mazeRender);
-		delete mazeRender;
-		mazeRender = NULL;
-	}
-	if (!wallmesh)
-	{
-		GLuint whitetex;
-		glGenTextures(1, &whitetex);
-		glBindTexture(GL_TEXTURE_2D, whitetex);
-		unsigned int pixel = 0xFFFFFFFF;
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, &pixel);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		wallmesh = new OBJMesh("../../Data/Meshes/cube.obj");
-		wallmesh->SetTexture(whitetex);
-	}
-	mazeRender = new MazeRenderer(maze, wallmesh);
-
-	//The maze is returned in a [0,0,0] - [1,1,1] cube (with edge walls outside) regardless of grid_size,
-	// so we need to scale it to whatever size we want
-	Matrix4 maze_scalar = Matrix4::Scale(Vector3(5.f, 5.0f / float(mazeSize), 5.f)) * Matrix4::Translation(Vector3(-0.5f, 0.f, -0.5f));
-	mazeRender->Render()->SetTransform(maze_scalar);
-	SceneManager::Instance()->GetCurrentScene()->AddGameObject(mazeRender);
-
-	// now send back to the server the start and end positions
-
-	SendPositionPacket();
+	Client::Instance()->RenderNewMaze();
 }
 
-void PacketHandler::SendPositionPacket()
+void PacketHandler::SendPositionPacket(ENetPeer* dest, MazeGenerator* maze)
 {
 	int numNodes = maze->size * maze->size;
 
@@ -217,14 +185,14 @@ void PacketHandler::SendPositionPacket()
 	if (numNodes <= MAX_VAL_8BIT)
 	{
 		MazePositionsPacket8* posPacket = new MazePositionsPacket8(startIndex, endIndex);
-		SendPacket(serverConnection, posPacket);
+		SendPacket(Client::Instance()->GetServerConnection(), posPacket);
 		delete posPacket;
 	}
 	// mazeSize of 256 or lower has fewer than MAX_VAL_16BIT nodes
 	else if (numNodes <= MAX_VAL_16BIT)
 	{
 		MazePositionsPacket16* posPacket = new MazePositionsPacket16(startIndex, endIndex);
-		SendPacket(serverConnection, posPacket);
+		SendPacket(Client::Instance()->GetServerConnection(), posPacket);
 		delete posPacket;
 	}
 }
@@ -254,22 +222,6 @@ void PacketHandler::HandlePositionPacket(PositionPacket* posPacket)
 		SendPacket(Server::Instance()->GetCurrentLinkAddress(), pathPacket);
 		delete pathPacket;
 	}
-}
-
-template <class PathPacket>
-void PacketHandler::PopulatePath(PathPacket* pathPacket)
-{
-	pathLength = pathPacket->length;
-	if (path)
-	{
-		delete[] path;
-		path = NULL;
-	}
-	path = new int[pathLength];
-	for (int i = 0; i < pathLength; ++i)
-		path[i] = pathPacket->path[i];
-
-	printPath = true;
 }
 
 void PacketHandler::SendPacket(ENetPeer* destination, Packet* packet)

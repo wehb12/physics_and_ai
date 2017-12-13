@@ -8,25 +8,48 @@
 #include <ncltech\DistanceConstraint.h>
 #include <ncltech\CommonUtils.h>
 #include <string>
-#include "PacketHandler.h"
+#include "../nclgl/TSingleton.h"
+#include "MazeGenerator.h"
+#include "MazeRenderer.h"
+#include "../nclgl/OBJMesh.h"
 
 #include "AllPacketTypes.h"
 
 //Basic Network Example
 
-class Client : public Scene
+class PacketHandler;
+
+class Client : public Scene, public TSingleton<Client>
 {
 public:
-	Client(const std::string& friendly_name, PacketHandler* thisEntity);
+	Client();
+	~Client()
+	{
+		mazeRender = NULL;	// GameObject, should be deleted by Scene destructor
+		SAFE_DELETE(maze);
+		SAFE_DELETE(wallmesh);
+	}
 
 	virtual void OnInitializeScene() override;
 	virtual void OnCleanupScene() override;
 	virtual void OnUpdateScene(float dt) override;
 
-
 	void ProcessNetworkEvent(const ENetEvent& evnt);
 
+	void GenerateWalledMaze(bool* walledEdges, int numEdges);
+	void RenderNewMaze();
+	void PopulatePath(Packet* pathPacket);
+
+//////// SETTERS ////////
+	inline void SetPacketHandler(PacketHandler* pktHndl)	{ packetHandler = pktHndl; }
+	inline void SetName(string name)						{ m_SceneName = name; }
+
+//////// GETTERS ////////
+	inline ENetPeer* GetServerConnection() { return serverConnection; }
+
 protected:
+	void GenerateEmptyMaze();
+
 	void HandleKeyboardInput();
 	void PrintPath();
 	void MoveNodeUp(bool start, int index);
@@ -46,6 +69,15 @@ protected:
 
 	int mazeSize;
 	float mazeDensity;
+	float lastDensity;
+
+	MazeGenerator* maze;
+	MazeRenderer* mazeRender;
+	Mesh* wallmesh;
+
+	int* path;
+	int pathLength;
+	bool printPath;
 
 	// bool that controls which position (start/ end) the user is moving
 	bool start;

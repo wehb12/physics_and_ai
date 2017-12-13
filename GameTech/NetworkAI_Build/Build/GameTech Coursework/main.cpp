@@ -67,7 +67,7 @@ void Initialize()
 
 								//Enqueue All Scenes
 								// - Add any new scenes you want here =D
-	SceneManager::Instance()->EnqueueScene(new Client("Network #1 - Example Client", packetHandler));
+	SceneManager::Instance()->EnqueueScene(Client::Instance());
 }
 
 
@@ -80,6 +80,7 @@ void Quit(bool error, const string &reason)
 	GraphicsPipeline::Release();
 	PhysicsEngine::Release();
 	Server::Release();
+	Client::Release();
 	enet_deinitialize();  //!!!!!!!!!!!!!!!!!NEW!!!!!!!!!!!!!!
 	Window::Destroy();
 
@@ -157,6 +158,9 @@ int main()
 		Initialize();
 
 		Window::GetWindow().GetTimer()->GetTimedMS();
+
+		Client::Instance()->SetPacketHandler(packetHandler);
+		Client::Instance()->SetName("Client");
 	}
 	else
 	{

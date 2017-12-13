@@ -21,7 +21,6 @@ which handles packet transmissions and receipt
 #include "../ncltech/SceneManager.h"
 #include "../nclgl/OBJMesh.h"
 #include "../ncltech/CommonUtils.h"
-#include "Server.h"
 
 enum NetworkEntityType
 {
@@ -48,19 +47,13 @@ public:
 
 	~PacketHandler()
 	{
-		CleanUp();
+		mazeRender = NULL;	// should be deleted by Scene->RemoveAllGameObjects (??)
 		SAFE_DELETE(maze);
 		SAFE_DELETE(wallmesh);
 		SAFE_DELETE(aStarSearch);
 	}
 
 	string HandlePacket(const ENetPacket* packet);
-
-	void CleanUp()
-	{
-		mazeRender = NULL;	// should be deleted by Scene->RemoveAllGameObjects (??)
-	}
-
 
 //////// SEND PACKETS ////////
 	void BroadcastPacket(Packet* packet);
@@ -97,13 +90,10 @@ private:
 
 	template <class DataPacket>
 	void HandleMazeDataPacket(DataPacket* dataPacket);
-	void SendPositionPacket();
+	void SendPositionPacket(ENetPeer* dest, MazeGenerator* maze);
 
 	template <class PositionPacket>
 	void HandlePositionPacket(PositionPacket* posPacket);
-
-	template <class PathPacket>
-	void PopulatePath(PathPacket* pathPacket);
 
 private:
 	enet_uint8 entityType;

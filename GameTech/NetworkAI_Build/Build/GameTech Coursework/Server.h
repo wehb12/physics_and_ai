@@ -39,9 +39,10 @@ struct ConnectedClient
 	}
 };
 
+class PacketHandler;
+
 class Server : public TSingleton<Server>
 {
-	friend class PacketHandler;
 public:
 	Server() :
 		packetHandler(NULL),
@@ -61,6 +62,8 @@ public:
 			SAFE_DELETE(clients[i]);
 		}
 		clients.clear();
+
+		SAFE_DELETE(maze);
 	}
 
 	void CreateNewMaze(int size, float density);

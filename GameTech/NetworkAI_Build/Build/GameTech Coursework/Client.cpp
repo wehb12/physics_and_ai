@@ -80,20 +80,33 @@ the servers game simulation. This methodology is known as "Dead Reckoning".
 
 *//////////////////////////////////////////////////////////////////////////////
 
+#include "PacketHandler.h"
 #include "Client.h"
 
 const Vector3 status_color3 = Vector3(1.0f, 0.6f, 0.6f);
 const Vector4 status_color = Vector4(status_color3.x, status_color3.y, status_color3.z, 1.0f);
 
-Client::Client(const std::string& friendly_name, PacketHandler* thisEntity)
-	: Scene(friendly_name)
+Client::Client()
+	: Scene("Client")
 	, serverConnection(NULL)
 	, box(NULL)
-	, packetHandler(thisEntity)
+	, packetHandler(NULL)
 	, mazeSize(16)
 	, mazeDensity(1.0f)
+	, lastDensity(1.0f)
 	, start(true)
+	, maze(NULL)
+	, mazeRender(NULL)
 {
+	GLuint whitetex;
+	glGenTextures(1, &whitetex);
+	glBindTexture(GL_TEXTURE_2D, whitetex);
+	unsigned int pixel = 0xFFFFFFFF;
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, &pixel);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	wallmesh = new OBJMesh("../../Data/Meshes/cube.obj");
+	wallmesh->SetTexture(whitetex);
 }
 
 void Client::OnInitializeScene()
@@ -129,8 +142,6 @@ void Client::OnInitializeScene()
 		false,
 		false,
 		Vector4(0.2f, 0.5f, 1.0f, 1.0f)));
-
-	packetHandler->SetServerConnection(serverConnection);
 }
 
 void Client::OnCleanupScene()
@@ -142,7 +153,6 @@ void Client::OnCleanupScene()
 				// - We are not waiting to resend this, so if it fails to arrive
 				//   the server will have to wait until we time out naturally
 	enet_peer_disconnect_now(serverConnection, 0);
-	packetHandler->CleanUp();
 
 	//Release network and all associated data/peer connections
 	network.Release();
@@ -153,7 +163,7 @@ void Client::OnUpdateScene(float dt)
 {
 	Scene::OnUpdateScene(dt);
 
-	if (packetHandler->GetPrintPathState())
+	if (printPath)
 		PrintPath();
 
 	HandleKeyboardInput();
@@ -181,22 +191,24 @@ void Client::OnUpdateScene(float dt)
 	NCLDebug::AddStatusEntry(status_color, "    Incoming: %5.2fKbps", network.m_IncomingKb);
 	NCLDebug::AddStatusEntry(status_color, "    Outgoing: %5.2fKbps", network.m_OutgoingKb);
 	
-	Vector4 controlsColour = Vector4(1.0f, 0.2f, 0.2f, 1.0f);
-	NCLDebug::AddStatusEntry(controlsColour, "");
-	NCLDebug::AddStatusEntry(controlsColour, "Maze Parameters:");
-	NCLDebug::AddStatusEntry(controlsColour, "    Current Maze Size: %d", packetHandler->GetCurrentMazeSize());
-	NCLDebug::AddStatusEntry(controlsColour, "    Current Maze Density: %5.2f", packetHandler->GetCurrentMazeDensity());
-	NCLDebug::AddStatusEntry(controlsColour, "");
-	NCLDebug::AddStatusEntry(controlsColour, "    Next Maze Size: %d [1/2] to change", mazeSize);
-	NCLDebug::AddStatusEntry(controlsColour, "    Next Maze Density: %5.2f [3/4] to change", mazeDensity);
-	NCLDebug::AddStatusEntry(controlsColour, "");
-	NCLDebug::AddStatusEntry(controlsColour, "    Move the %s position with the arrow keys", start ? "start" : "end");
-	NCLDebug::AddStatusEntry(controlsColour, "    Swap to moving the %s position by pressing [CTRL]", start ? "end" : "start");
+	if (maze)
+	{
+		Vector4 controlsColour = Vector4(1.0f, 0.2f, 0.2f, 1.0f);
+		NCLDebug::AddStatusEntry(controlsColour, "");
+		NCLDebug::AddStatusEntry(controlsColour, "Maze Parameters:");
+		NCLDebug::AddStatusEntry(controlsColour, "    Current Maze Size: %d", maze->size);
+		NCLDebug::AddStatusEntry(controlsColour, "    Current Maze Density: %5.2f", lastDensity);
+		NCLDebug::AddStatusEntry(controlsColour, "");
+		NCLDebug::AddStatusEntry(controlsColour, "    Next Maze Size: %d [1/2] to change", mazeSize);
+		NCLDebug::AddStatusEntry(controlsColour, "    Next Maze Density: %5.2f [3/4] to change", mazeDensity);
+		NCLDebug::AddStatusEntry(controlsColour, "");
+		NCLDebug::AddStatusEntry(controlsColour, "    Move the %s position with the arrow keys", start ? "start" : "end");
+		NCLDebug::AddStatusEntry(controlsColour, "    Swap to moving the %s position by pressing [CTRL]", start ? "end" : "start");
+	}
 }
 
 void Client::ProcessNetworkEvent(const ENetEvent& evnt)
 {
-	packetHandler->SetCurrentSender(evnt.peer);
 	switch (evnt.type)
 	{
 		//New connection request or an existing peer accepted our connection request
@@ -261,15 +273,15 @@ void Client::HandleKeyboardInput()
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_4))
 		mazeDensity = min(mazeDensity + 0.1f, 1.0f);
 
-	if (packetHandler->maze)
+	if (maze)
 	{
 		bool moved = false;
-		GraphNode* nodeToMove = start ? packetHandler->maze->start : packetHandler->maze->end;
+		GraphNode* nodeToMove = start ? maze->start : maze->end;
 
 		int index = -1;
-		for (int i = 0; i < (packetHandler->mazeSize * packetHandler->mazeSize); ++i)
+		for (int i = 0; i < (mazeSize * mazeSize); ++i)
 		{
-			if (packetHandler->maze->allNodes[i]._pos == nodeToMove->_pos)
+			if (maze->allNodes[i]._pos == nodeToMove->_pos)
 			{
 				index = i;
 				break;
@@ -304,52 +316,52 @@ void Client::HandleKeyboardInput()
 			// remake MazeRenderer start and end RenderNodes
 			ReconstructPosition(start);
 			// resend destination positions to server
-			packetHandler->SendPositionPacket();
+			packetHandler->SendPositionPacket(serverConnection, maze);
 		}
 	}
 }
 
 void Client::MoveNodeDown(bool start, int index)
 {
-	index = index < (packetHandler->mazeSize) * (packetHandler->mazeSize - 1) ? index + packetHandler->mazeSize : index;
+	index = index < (maze->size) * (maze->size - 1) ? index + maze->size : index;
 	if (start)
-		packetHandler->maze->start = &packetHandler->maze->allNodes[index];
+		maze->start = &maze->allNodes[index];
 	else
-		packetHandler->maze->end = &packetHandler->maze->allNodes[index];
+		maze->end = &maze->allNodes[index];
 }
 
 void Client::MoveNodeUp(bool start, int index)
 {
-	index = index >= packetHandler->mazeSize ? index - packetHandler->mazeSize : index;
+	index = index >= maze->size ? index - maze->size : index;
 	if (start)
-		packetHandler->maze->start = &packetHandler->maze->allNodes[index];
+		maze->start = &maze->allNodes[index];
 	else
-		packetHandler->maze->end = &packetHandler->maze->allNodes[index];
+		maze->end = &maze->allNodes[index];
 }
 
 void Client::MoveNodeLeft(bool start, int index)
 {
-	index = index % (packetHandler->maze->size) > 0 ? index - 1 : index;
+	index = index % (maze->size) > 0 ? index - 1 : index;
 	if (start)
-		packetHandler->maze->start = &packetHandler->maze->allNodes[index];
+		maze->start = &maze->allNodes[index];
 	else
-		packetHandler->maze->end = &packetHandler->maze->allNodes[index];
+		maze->end = &maze->allNodes[index];
 }
 
 void Client::MoveNodeRight(bool start, int index)
 {
-	index = index % (packetHandler->maze->size) < (packetHandler->mazeSize - 1) ? index + 1 : index;
+	index = index % (maze->size) < (maze->size - 1) ? index + 1 : index;
 	if (start)
-		packetHandler->maze->start = &packetHandler->maze->allNodes[index];
+		maze->start = &maze->allNodes[index];
 	else
-		packetHandler->maze->end = &packetHandler->maze->allNodes[index];
+		maze->end = &maze->allNodes[index];
 }
 
 void Client::ReconstructPosition(bool ifStart)
 {
 	RenderNode* cube;
 
-	float scalar = 1.0f / (packetHandler->maze->size * 3 - 1);
+	float scalar = 1.0f / (maze->size * 3 - 1);
 	Vector3 cellsize = Vector3(
 		scalar * 2,
 		1.0f,
@@ -358,7 +370,7 @@ void Client::ReconstructPosition(bool ifStart)
 
 	if (ifStart)
 	{
-		GraphNode* start = packetHandler->maze->start;
+		GraphNode* start = maze->start;
 
 		Vector3 cellpos = Vector3(
 			start->_pos.x * 3,
@@ -366,48 +378,127 @@ void Client::ReconstructPosition(bool ifStart)
 			start->_pos.y * 3
 		) * scalar;
 
-		cube = new RenderNode(packetHandler->wallmesh, Vector4(0.0f, 1.0f, 0.0f, 1.0f));
+		cube = new RenderNode(wallmesh, Vector4(0.0f, 1.0f, 0.0f, 1.0f));
 		cube->SetTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
-		packetHandler->mazeRender->UpdateStartNodeTransform(cube->GetTransform());
+		mazeRender->UpdateStartNodeTransform(cube->GetTransform());
 	}
 	else
 	{
-		GraphNode* end = packetHandler->maze->end;
+		GraphNode* end = maze->end;
 
 		Vector3 cellpos = Vector3(
 			end->_pos.x * 3,
 			0.0f,
 			end->_pos.y * 3
 		) * scalar;
-		cube = new RenderNode(packetHandler->wallmesh, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+		cube = new RenderNode(wallmesh, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
 		cube->SetTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
-		packetHandler->mazeRender->UpdateEndNodeTransform(cube->GetTransform());
+		mazeRender->UpdateEndNodeTransform(cube->GetTransform());
 	}
 }
 
 void Client::PrintPath()
 {
-	if (packetHandler->maze && packetHandler->mazeRender)
+	if (maze && mazeRender)
 	{
-		float grid_scalar = 1.0f / (float)packetHandler->maze->GetSize();
-		float col_factor = 0.2f / (float)packetHandler->pathLength;
+		float grid_scalar = 1.0f / (float)maze->GetSize();
+		float col_factor = 0.2f / (float)pathLength;
 
-		Matrix4 transform = packetHandler->mazeRender->Render()->GetWorldTransform();
+		Matrix4 transform = mazeRender->Render()->GetWorldTransform();
 
-		float index = 0.0f;
-		for (int i = 0; i < packetHandler->pathLength - 1; ++i)
+		for (int i = 0; i < pathLength - 1; ++i)
 		{
 			Vector3 start = transform * Vector3(
-				(packetHandler->maze->allNodes[packetHandler->path[i]]._pos.x + 0.5f) * grid_scalar,
+				(maze->allNodes[path[i]]._pos.x + 0.5f) * grid_scalar,
 				0.1f,
-				(packetHandler->maze->allNodes[packetHandler->path[i]]._pos.y + 0.5f) * grid_scalar);
+				(maze->allNodes[path[i]]._pos.y + 0.5f) * grid_scalar);
 
 			Vector3 end = transform * Vector3(
-				(packetHandler->maze->allNodes[packetHandler->path[i + 1]]._pos.x + 0.5f) * grid_scalar,
+				(maze->allNodes[path[i + 1]]._pos.x + 0.5f) * grid_scalar,
 				0.1f,
-				(packetHandler->maze->allNodes[packetHandler->path[i + 1]]._pos.y + 0.5f) * grid_scalar);
+				(maze->allNodes[path[i + 1]]._pos.y + 0.5f) * grid_scalar);
 
-			NCLDebug::DrawThickLine(start, end, 2.5f / packetHandler->mazeSize, CommonUtils::GenColor(0.8f + i * col_factor));
+			NCLDebug::DrawThickLine(start, end, 2.5f / maze->size, CommonUtils::GenColor(0.8f + i * col_factor));
 		}
 	}
+}
+
+void Client::GenerateEmptyMaze()
+{
+	SAFE_DELETE(maze);
+
+	maze = new MazeGenerator();
+	maze->Generate(mazeSize, 0.0f);
+}
+
+void Client::GenerateWalledMaze(bool* walledEdges, int numEdges)
+{
+	GenerateEmptyMaze();
+	
+	for (int i = 0; i < numEdges; ++i)
+	{
+		if (walledEdges[i])
+			maze->allEdges[i]._iswall = true;
+	}
+}
+
+void Client::RenderNewMaze()
+{
+	if (mazeRender)
+	{
+		RemoveGameObject(mazeRender);
+		delete mazeRender;
+		mazeRender = NULL;
+	}
+
+	mazeRender = new MazeRenderer(maze, wallmesh);
+
+	//The maze is returned in a [0,0,0] - [1,1,1] cube (with edge walls outside) regardless of grid_size,
+	// so we need to scale it to whatever size we want
+	Matrix4 maze_scalar = Matrix4::Scale(Vector3(5.f, 5.0f / float(mazeSize), 5.f)) * Matrix4::Translation(Vector3(-0.5f, 0.f, -0.5f));
+	mazeRender->Render()->SetTransform(maze_scalar);
+	AddGameObject(mazeRender);
+
+	// now send back to the server the start and end positions
+
+	packetHandler->SendPositionPacket(serverConnection, maze);
+}
+
+void Client::PopulatePath(Packet* pathPacket)
+{
+	switch (pathPacket->type)
+	{
+		case (MAZE_PATH8):
+		{
+			MazePathPacket8* packet8 = static_cast<MazePathPacket8*>(pathPacket);
+			pathLength = packet8->length;
+			if (path)
+			{
+				delete[] path;
+				path = NULL;
+			}
+			path = new int[pathLength];
+			for (int i = 0; i < pathLength; ++i)
+				path[i] = packet8->path[i];
+
+			break;
+		}
+		case (MAZE_PATH16):
+		{
+			MazePathPacket16* packet16 = static_cast<MazePathPacket16*>(pathPacket);
+			pathLength = packet16->length;
+			if (path)
+			{
+				delete[] path;
+				path = NULL;
+			}
+			path = new int[pathLength];
+			for (int i = 0; i < pathLength; ++i)
+				path[i] = packet16->path[i];
+
+			break;
+		}
+	}
+
+	printPath = true;
 }
