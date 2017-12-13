@@ -76,11 +76,11 @@ void Quit(bool error, const string &reason)
 	SAFE_DELETE(packetHandler);
 
 	//Release Singletons
+	Client::Release();
 	SceneManager::Release();
 	GraphicsPipeline::Release();
 	PhysicsEngine::Release();
 	Server::Release();
-	Client::Release();
 	enet_deinitialize();  //!!!!!!!!!!!!!!!!!NEW!!!!!!!!!!!!!!
 	Window::Destroy();
 
