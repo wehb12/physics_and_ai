@@ -217,10 +217,14 @@ int main()
 			{
 				switch (evnt.type)
 				{
-				case ENET_EVENT_TYPE_CONNECT:
-					printf("- New Client Connected\n");
-					break;
-
+					case ENET_EVENT_TYPE_CONNECT:
+					{
+						printf("- New Client Connected\n");
+						Packet* mazeData = Server::Instance()->GetMazeDataPacket();
+						if (mazeData)
+							packetHandler->SendPacket(evnt.peer, mazeData);
+						break;
+					}
 					case ENET_EVENT_TYPE_RECEIVE:
 					{
 						Server::Instance()->SetCurrentSender(evnt.peer);
@@ -230,9 +234,11 @@ int main()
 						enet_packet_destroy(evnt.packet);
 						break;
 					}
-				case ENET_EVENT_TYPE_DISCONNECT:
-					printf("- Client %d has disconnected.\n", evnt.peer->incomingPeerID);
-					break;
+					case ENET_EVENT_TYPE_DISCONNECT:
+					{
+						printf("- Client %d has disconnected.\n", evnt.peer->incomingPeerID);
+						break;
+					}
 				}
 			});
 

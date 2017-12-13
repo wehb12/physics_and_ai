@@ -160,7 +160,7 @@ void PacketHandler::HandleMazeRequestPacket(MazeRequestPacket* reqPacket)
 		Server::Instance()->PopulateEdgeList(returnPacket->edgesThatAreWalls);
 
 		BroadcastPacket(returnPacket);
-		delete returnPacket;
+		Server::Instance()->SetMazeDataPacket(returnPacket);
 	}
 	// maxSize of 181 or lower can fit in an enet_uint16
 	else if (possibleWalls <= MAX_VAL_16BIT)
@@ -169,7 +169,7 @@ void PacketHandler::HandleMazeRequestPacket(MazeRequestPacket* reqPacket)
 		Server::Instance()->PopulateEdgeList(returnPacket->edgesThatAreWalls);
 
 		BroadcastPacket(returnPacket);
-		delete returnPacket;
+		Server::Instance()->SetMazeDataPacket(returnPacket);
 	}
 	else
 		NCLERROR("Maze size too large");

@@ -75,6 +75,7 @@ protected:
 
 	int startIndex;
 	int endIndex;
+	Vector3 avatarPosition;
 
 	MazeGenerator* maze;
 	MazeRenderer* mazeRender;

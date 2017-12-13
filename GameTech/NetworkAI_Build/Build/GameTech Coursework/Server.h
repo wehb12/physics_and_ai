@@ -20,6 +20,8 @@ which handles packet transmissions and receipt
 #include "SearchAStar.h"
 #include "MazeGenerator.h"
 
+#include "AllPacketTypes.h"
+
 struct ConnectedClient
 {
 	ENetPeer* address;
@@ -46,7 +48,8 @@ class Server : public TSingleton<Server>
 public:
 	Server() :
 		packetHandler(NULL),
-		currentLink(NULL)
+		currentLink(NULL),
+		mazeData(NULL)
 	{ }
 
 	~Server()
@@ -64,6 +67,7 @@ public:
 		clients.clear();
 
 		SAFE_DELETE(maze);
+		SAFE_DELETE(mazeData);
 	}
 
 	void CreateNewMaze(int size, float density);
@@ -75,12 +79,14 @@ public:
 	inline void SetPacketHandler(PacketHandler* pktHndl)	{ packetHandler = pktHndl; }
 	inline void SetMaze(MazeGenerator* maze)				{ this->maze = maze; }
 	void SetCurrentSender(ENetPeer* address);
+	inline void SetMazeDataPacket(Packet* dataPacket)		{ SAFE_DELETE(mazeData); mazeData = dataPacket; }
 
 //////// GETTERS ////////
 	inline ENetPeer* GetCurrentLinkAddress()				{ if (currentLink) return currentLink->address; }
 	inline int* GetPathIndices()							{ return currentLink->pathIndices; }
 	inline int GetPathLength()								{ return currentLink->pathLength; }
 	inline int GetMazeSize()								{ return maze->size; }
+	inline Packet* GetMazeDataPacket()						{ return mazeData; }
 
 //////// CLIENT HANDLING ////////
 	ConnectedClient* CreateClient(ENetPeer* address);
@@ -99,4 +105,7 @@ private:
 
 	ConnectedClient* currentLink;
 	std::vector<ConnectedClient*> clients;
+
+	// store this ready to send to a new client
+	Packet* mazeData;
 };

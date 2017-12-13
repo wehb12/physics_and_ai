@@ -29,10 +29,15 @@ public:
 
 	void UpdateStartNodeTransform(Matrix4 transform)
 	{
-		(*(renderNode->GetChildIteratorEnd() - 2))->SetTransform(transform);
+		(*(renderNode->GetChildIteratorEnd() - 3))->SetTransform(transform);
 	}
 
 	void UpdateEndNodeTransform(Matrix4 transform)
+	{
+		(*(renderNode->GetChildIteratorEnd() - 2))->SetTransform(transform);
+	}
+
+	void UpdateAvatarTransform(Matrix4 transform)
 	{
 		(*(renderNode->GetChildIteratorEnd() - 1))->SetTransform(transform);
 	}
