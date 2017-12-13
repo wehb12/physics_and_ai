@@ -37,7 +37,8 @@ public:
 		entityType(type),
 		networkHost(host),
 		mazeSize(0),
-		mazeDensity(0.0f)
+		mazeDensity(0.0f),
+		lastInstr(0)
 	{ }
 
 	~PacketHandler()
@@ -67,6 +68,8 @@ private:
 private:
 	enet_uint8 entityType;
 	ENetHost*	networkHost;
+
+	enet_uint8 lastInstr;
 
 	int mazeSize;
 	float mazeDensity;

@@ -97,6 +97,8 @@ Client::Client()
 	, start(true)
 	, maze(NULL)
 	, mazeRender(NULL)
+	, startIndex(0)
+	, endIndex(0)
 {
 	GLuint whitetex;
 	glGenTextures(1, &whitetex);
@@ -193,17 +195,21 @@ void Client::OnUpdateScene(float dt)
 	
 	if (maze)
 	{
-		Vector4 controlsColour = Vector4(1.0f, 0.2f, 0.2f, 1.0f);
+		Vector4 paramsColour = Vector4(1.0f, 0.2f, 0.2f, 1.0f);
+		NCLDebug::AddStatusEntry(paramsColour, "");
+		NCLDebug::AddStatusEntry(paramsColour, "Maze Parameters:");
+		NCLDebug::AddStatusEntry(paramsColour, "    Current Maze Size: %d", maze->size);
+		NCLDebug::AddStatusEntry(paramsColour, "    Current Maze Density: %5.2f", lastDensity);
+		NCLDebug::AddStatusEntry(paramsColour, "");
+		NCLDebug::AddStatusEntry(paramsColour, "    Next Maze Size: %d [1/2] to change", mazeSize);
+		NCLDebug::AddStatusEntry(paramsColour, "    Next Maze Density: %5.2f [3/4] to change", mazeDensity);
+		Vector4 controlsColour = Vector4(0.2f, 1.0f, 0.2f, 1.0f);
 		NCLDebug::AddStatusEntry(controlsColour, "");
-		NCLDebug::AddStatusEntry(controlsColour, "Maze Parameters:");
-		NCLDebug::AddStatusEntry(controlsColour, "    Current Maze Size: %d", maze->size);
-		NCLDebug::AddStatusEntry(controlsColour, "    Current Maze Density: %5.2f", lastDensity);
-		NCLDebug::AddStatusEntry(controlsColour, "");
-		NCLDebug::AddStatusEntry(controlsColour, "    Next Maze Size: %d [1/2] to change", mazeSize);
-		NCLDebug::AddStatusEntry(controlsColour, "    Next Maze Density: %5.2f [3/4] to change", mazeDensity);
-		NCLDebug::AddStatusEntry(controlsColour, "");
+		NCLDebug::AddStatusEntry(controlsColour, "Scene Controls:");
 		NCLDebug::AddStatusEntry(controlsColour, "    Move the %s position with the arrow keys", start ? "start" : "end");
 		NCLDebug::AddStatusEntry(controlsColour, "    Swap to moving the %s position by pressing [CTRL]", start ? "end" : "start");
+		NCLDebug::AddStatusEntry(controlsColour, "");
+		NCLDebug::AddStatusEntry(controlsColour, "    Press [P] to toggle path");
 	}
 }
 
@@ -273,20 +279,13 @@ void Client::HandleKeyboardInput()
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_4))
 		mazeDensity = min(mazeDensity + 0.1f, 1.0f);
 
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_P))
+		printPath = !printPath;
+
 	if (maze)
 	{
 		bool moved = false;
-		GraphNode* nodeToMove = start ? maze->start : maze->end;
-
-		int index = -1;
-		for (int i = 0; i < (mazeSize * mazeSize); ++i)
-		{
-			if (maze->allNodes[i]._pos == nodeToMove->_pos)
-			{
-				index = i;
-				break;
-			}
-		}
+		int index = start ? startIndex : endIndex;
 
 		if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_UP))
 		{
@@ -325,36 +324,61 @@ void Client::MoveNodeDown(bool start, int index)
 {
 	index = index < (maze->size) * (maze->size - 1) ? index + maze->size : index;
 	if (start)
+	{
+		startIndex = index;
 		maze->start = &maze->allNodes[index];
+	}
 	else
+	{
+		endIndex = index;
 		maze->end = &maze->allNodes[index];
+	}
+
 }
 
 void Client::MoveNodeUp(bool start, int index)
 {
 	index = index >= maze->size ? index - maze->size : index;
 	if (start)
+	{
+		startIndex = index;
 		maze->start = &maze->allNodes[index];
+	}
 	else
+	{
+		endIndex = index;
 		maze->end = &maze->allNodes[index];
+	}
 }
 
 void Client::MoveNodeLeft(bool start, int index)
 {
 	index = index % (maze->size) > 0 ? index - 1 : index;
 	if (start)
+	{
+		startIndex = index;
 		maze->start = &maze->allNodes[index];
+	}
 	else
+	{
+		endIndex = index;
 		maze->end = &maze->allNodes[index];
+	}
 }
 
 void Client::MoveNodeRight(bool start, int index)
 {
 	index = index % (maze->size) < (maze->size - 1) ? index + 1 : index;
 	if (start)
+	{
+		startIndex = index;
 		maze->start = &maze->allNodes[index];
+	}
 	else
+	{
+		endIndex = index;
 		maze->end = &maze->allNodes[index];
+	}
 }
 
 void Client::ReconstructPosition(bool ifStart)
@@ -440,6 +464,19 @@ void Client::GenerateWalledMaze(bool* walledEdges, int numEdges)
 		if (walledEdges[i])
 			maze->allEdges[i]._iswall = true;
 	}
+
+	auto GrabIndex = [&](GraphNode* node)
+	{
+		for (int i = 0; i < (mazeSize * mazeSize); ++i)
+		{
+			if (maze->allNodes[i]._pos == node->_pos)
+				return i;
+		}
+		return -1;
+	};
+
+	startIndex = GrabIndex(maze->start);
+	endIndex = GrabIndex(maze->end);
 }
 
 void Client::RenderNewMaze()
@@ -466,17 +503,17 @@ void Client::RenderNewMaze()
 
 void Client::PopulatePath(Packet* pathPacket)
 {
+	if (path)
+	{
+		delete[] path;
+		path = NULL;
+	}
 	switch (pathPacket->type)
 	{
 		case (MAZE_PATH8):
 		{
 			MazePathPacket8* packet8 = static_cast<MazePathPacket8*>(pathPacket);
 			pathLength = packet8->length;
-			if (path)
-			{
-				delete[] path;
-				path = NULL;
-			}
 			path = new int[pathLength];
 			for (int i = 0; i < pathLength; ++i)
 				path[i] = packet8->path[i];
@@ -487,11 +524,6 @@ void Client::PopulatePath(Packet* pathPacket)
 		{
 			MazePathPacket16* packet16 = static_cast<MazePathPacket16*>(pathPacket);
 			pathLength = packet16->length;
-			if (path)
-			{
-				delete[] path;
-				path = NULL;
-			}
 			path = new int[pathLength];
 			for (int i = 0; i < pathLength; ++i)
 				path[i] = packet16->path[i];
@@ -500,5 +532,35 @@ void Client::PopulatePath(Packet* pathPacket)
 		}
 	}
 
-	printPath = true;
+	CreateAvatar();
+
+	InstructionCompletePacket* complete = new InstructionCompletePacket(true);
+	packetHandler->SendPacket(serverConnection, complete);
+	delete complete;
+}
+
+void Client::CreateAvatar()
+{
+	RenderNode* cube;
+
+	float scalar = 1.0f / (maze->size * 3 - 1);
+	Vector3 cellsize = Vector3(
+		scalar * 2,
+		1.0f,
+		scalar * 2
+	);
+
+	GraphNode* start = maze->start;
+
+	Vector3 cellpos = Vector3(
+		start->_pos.x * 3,
+		0.0f,
+		start->_pos.y * 3
+	) * scalar;
+
+	float colourScalar = (float)(rand() % 101) / 100;
+
+	cube = new RenderNode(wallmesh, CommonUtils::GenColor(colourScalar));
+	cube->SetTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
+	mazeRender->UpdateStartNodeTransform(cube->GetTransform());
 }

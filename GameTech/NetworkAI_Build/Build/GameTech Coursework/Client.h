@@ -50,6 +50,7 @@ public:
 
 protected:
 	void GenerateEmptyMaze();
+	void CreateAvatar();
 
 	void HandleKeyboardInput();
 	void PrintPath();
@@ -71,6 +72,9 @@ protected:
 	int mazeSize;
 	float mazeDensity;
 	float lastDensity;
+
+	int startIndex;
+	int endIndex;
 
 	MazeGenerator* maze;
 	MazeRenderer* mazeRender;

@@ -108,6 +108,31 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 			}
 			break;
 		}
+		case INSTR_COMPLETE:
+		{
+			InstructionCompletePacket* instrCompPacket = new InstructionCompletePacket(packet->data);
+			switch (lastInstr)
+			{
+				case MAZE_PATH8:
+				{
+					if (instrCompPacket->type == SUCCESS)
+					{
+						//MoveAvatar();
+					}
+					break;
+				}
+				case MAZE_PATH16:
+				{
+					if (instrCompPacket->type == SUCCESS)
+					{
+						//MoveAvatar();
+					}
+					break;
+				}
+			}
+			delete instrCompPacket;
+			break;
+		}
 		default:
 		{
 			cout << "ERROR - Invalid packet sent" << endl;
@@ -115,6 +140,7 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 		}
 	}
 
+	lastInstr = packetType;
 	return output;
 }
 
