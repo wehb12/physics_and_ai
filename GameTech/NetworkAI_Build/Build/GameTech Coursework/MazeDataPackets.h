@@ -434,39 +434,3 @@ public:
 	enet_uint16 length;
 	enet_uint16* path;
 };
-
-enum PreviousInstructionStatus
-{
-	SUCCESS = 100,
-	FAILURE
-};
-
-class InstructionCompletePacket : public Packet
-{
-public:
-	InstructionCompletePacket(enet_uint8 status) :
-		Packet(INSTR_COMPLETE, 2),
-		status(status)
-	{ }
-
-	InstructionCompletePacket(bool status) :
-		Packet(INSTR_COMPLETE, 2),
-		status(status ? SUCCESS : FAILURE)
-	{ }
-
-	InstructionCompletePacket(enet_uint8* data) :
-		Packet(INSTR_COMPLETE, 2),
-		status(*(data + 1))
-	{ }
-
-	virtual enet_uint8* CreateByteStream()
-	{
-		enet_uint8* data = new enet_uint8[size];
-		data[0] = type;
-		data[1] = status;
-		return data;
-	}
-
-public:
-	enet_uint8 status;
-};

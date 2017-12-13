@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AllPacketTypes.h" />
+    <ClInclude Include="AvatarPackets.h" />
     <ClInclude Include="EmptyScene.h" />
     <ClInclude Include="GenericPackets.h" />
     <ClInclude Include="MazeDataPackets.h" />

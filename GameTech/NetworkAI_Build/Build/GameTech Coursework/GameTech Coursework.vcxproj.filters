@@ -83,5 +83,8 @@
     <ClInclude Include="PacketHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AvatarPackets.h">
+      <Filter>Header Files\PacketTypes</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

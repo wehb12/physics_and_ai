@@ -22,6 +22,9 @@ which handles packet transmissions and receipt
 
 #include "AllPacketTypes.h"
 
+#define TIME_STEP 1.0f / 30.0f
+#define SPEED 2.0f
+
 struct ConnectedClient
 {
 	ENetPeer* address;
@@ -29,6 +32,18 @@ struct ConnectedClient
 	SearchAStar* path;
 	int* pathIndices;
 	int pathLength;
+	bool move;
+	Vector2 avatarPos;
+	Vector2 avatarVel;
+
+	// this is the index into the pathIndices array
+	// not the value in pathIndices array that the avatar
+	// is positioned at
+	int currentAvatarIndex;
+	float timeToNext;
+	float timeStep;
+
+	PhysicsNode* avatarPNode;
 
 	void Init()
 	{
@@ -38,6 +53,14 @@ struct ConnectedClient
 		path = new SearchAStar();
 		pathIndices = NULL;
 		pathLength = 0;
+		move = false;
+		avatarPos = Vector2(0, 0);
+		avatarVel = Vector2(0, 0);
+		currentAvatarIndex = 0;
+		timeToNext = 0.0f;
+		timeStep = 0.0f;
+		
+		avatarPNode = NULL;
 	}
 };
 
@@ -50,7 +73,9 @@ public:
 		packetHandler(NULL),
 		currentLink(NULL),
 		mazeData(NULL),
-		mazeParams(NULL)
+		mazeParams(NULL),
+		timeElapsed(0.0f),
+		avatarSpeed(SPEED)
 	{ }
 
 	~Server()
@@ -72,10 +97,13 @@ public:
 		SAFE_DELETE(mazeParams);
 	}
 
+	void Update(float msec);
+
 	void CreateNewMaze(int size, float density);
 	void PopulateEdgeList(bool* edgeList);
 	void UpdateMazePositions(int indexStart, int indexEnd);
 	void UpdateClientPath();
+	void AvatarBegin();
 
 //////// SETTERS ////////
 	inline void SetPacketHandler(PacketHandler* pktHndl)	{ packetHandler = pktHndl; }
@@ -94,13 +122,16 @@ public:
 
 //////// CLIENT HANDLING ////////
 	ConnectedClient* CreateClient(ENetPeer* address);
-	void AddClientPositons(ENetPeer* address, Vector3 start, Vector3 end);
-	void AddClientPath(ENetPeer* address, SearchAStar* path);
+	void AddClientPositons(Vector3 start, Vector3 end);
+	inline void AddClientPath(SearchAStar* path) { currentLink->path = path; }
 	void RemoveClient(ENetPeer* address);
 private:
 	ConnectedClient* GetClient(ENetPeer* address);
 	inline void AddClient(ConnectedClient* client) { clients.push_back(client); }
 
+	void UpdateAvatarPositions(float msec);
+	void SetAvatarVelocity(ConnectedClient* client = NULL);
+	void TransmitAvatarPosition(ConnectedClient* client);
 
 private:
 	MazeGenerator* maze;
@@ -113,4 +144,8 @@ private:
 	// store this ready to send to a new client
 	Packet* mazeData;
 	Packet* mazeParams;
+
+	float timeElapsed;
+	//the time it takes an avatar to move from one grid square to thge next
+	float avatarSpeed;
 };

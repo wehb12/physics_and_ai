@@ -214,6 +214,8 @@ int main()
 			accum_time += dt;
 			rotation += 0.5f * PI * dt;
 
+			Server::Instance()->Update(dt);
+
 			//Handle All Incoming Packets and Send any enqued packets
 			server.ServiceNetwork(dt, [&](const ENetEvent& evnt)
 			{
@@ -242,6 +244,7 @@ int main()
 					}
 					case ENET_EVENT_TYPE_DISCONNECT:
 					{
+						Server::Instance()->RemoveClient(evnt.peer);
 						printf("- Client %d has disconnected.\n", evnt.peer->incomingPeerID);
 						break;
 					}

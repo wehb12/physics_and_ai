@@ -1,4 +1,48 @@
+#include "PacketHandler.h"
 #include "Server.h"
+
+void Server::Update(float msec)
+{
+	timeElapsed += msec;
+
+	if (timeElapsed > TIME_STEP)
+	{
+		if (clients.size() > 0)
+			UpdateAvatarPositions(msec);
+
+		timeElapsed = 0.0f;
+	}
+}
+
+void Server::UpdateAvatarPositions(float msec)
+{
+	for (auto it = clients.begin(); it != clients.end(); ++it)
+	{
+		if ((*it)->move)
+		{
+			if ((*it)->timeToNext > 0)
+			{
+				(*it)->timeToNext -= timeElapsed;
+				(*it)->avatarPos = (*it)->avatarPos + (*it)->avatarVel;
+			}
+			else
+			{
+				(*it)->timeToNext = (*it)->timeStep;
+				if ((*it)->currentAvatarIndex < (*it)->pathLength - 2)
+				{
+					++(*it)->currentAvatarIndex;
+					SetAvatarVelocity(*it);
+				}
+				else
+				{
+					(*it)->move = false;
+					(*it)->currentAvatarIndex = 0;
+				}
+			}
+			TransmitAvatarPosition(*it);
+		}
+	}
+}
 
 ConnectedClient* Server::GetClient(ENetPeer* address)
 {
@@ -22,19 +66,10 @@ ConnectedClient* Server::CreateClient(ENetPeer* address)
 	return newClient;
 }
 
-void Server::AddClientPositons(ENetPeer* address, Vector3 start, Vector3 end)
+void Server::AddClientPositons(Vector3 start, Vector3 end)
 {
-	ConnectedClient* thisClient = GetClient(address);
-
-	thisClient->start = start;
-	thisClient->end = end;
-}
-
-void Server::AddClientPath(ENetPeer* address, SearchAStar* path)
-{
-	ConnectedClient* thisClient = GetClient(address);
-
-	thisClient->path = path;
+	currentLink->start = start;
+	currentLink->end = end;
 }
 
 void Server::RemoveClient(ENetPeer* address)
@@ -43,9 +78,9 @@ void Server::RemoveClient(ENetPeer* address)
 	{
 		if ((*it)->address == address)
 		{
-			clients.erase(it);
 			SAFE_DELETE((*it)->path);
 			(*it)->path = NULL;
+			clients.erase(it);
 			SAFE_DELETE(*it);
 		}
 	}
@@ -83,12 +118,15 @@ void Server::UpdateMazePositions(int indexStart, int indexEnd)
 {
 	maze->start = &maze->allNodes[indexStart];
 	maze->end = &maze->allNodes[indexEnd];
+
+	AddClientPositons(maze->start->_pos, maze->end->_pos);
 }
 
 void Server::UpdateClientPath()
 {
 	SearchAStar* aStarSearch = currentLink->path;
 	aStarSearch->FindBestPath(maze->start, maze->end);
+	AddClientPath(aStarSearch);
 
 	const std::list<const GraphNode*> path = aStarSearch->GetFinalPath();
 	currentLink->pathLength = path.size();
@@ -119,4 +157,42 @@ void Server::UpdateClientPath()
 		currentLink->pathIndices[i] = FindNode(*it);
 		++i;
 	}
+}
+
+void Server::AvatarBegin()
+{
+	currentLink->move = true;
+	currentLink->avatarPNode = new PhysicsNode();
+	PhysicsEngine::Instance()->AddPhysicsObject(currentLink->avatarPNode);
+
+	currentLink->avatarPos.x = currentLink->start.x;
+	currentLink->avatarPos.y = currentLink->start.y;
+
+	SetAvatarVelocity();
+}
+
+void Server::SetAvatarVelocity(ConnectedClient* client)
+{
+	if (!client)
+		client = currentLink;
+
+	Vector2 nodeA;
+	nodeA.x = maze->allNodes[client->pathIndices[client->currentAvatarIndex]]._pos.x;
+	nodeA.y = maze->allNodes[client->pathIndices[client->currentAvatarIndex]]._pos.y;
+	Vector2 nodeB;
+	nodeB.x = maze->allNodes[client->pathIndices[client->currentAvatarIndex + 1]]._pos.x;
+	nodeB.y = maze->allNodes[client->pathIndices[client->currentAvatarIndex + 1]]._pos.y;
+	float nodeToNodeDist = (nodeA - nodeB).Length();
+	client->timeStep = nodeToNodeDist / avatarSpeed;
+	client->timeToNext = client->timeStep;
+
+	client->avatarVel = (nodeB - nodeA) * (avatarSpeed / TIME_STEP);
+	client->avatarPNode->SetLinearVelocity(Vector3(client->avatarVel.x, 0.0f, client->avatarVel.y));
+}
+
+void Server::TransmitAvatarPosition(ConnectedClient* client)
+{
+	AvatarPositionPacket* posPacket = new AvatarPositionPacket(client->avatarPos);
+	packetHandler->SendPacket(client->address, posPacket);
+	delete posPacket;
 }

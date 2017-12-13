@@ -272,5 +272,3 @@ void MazeGenerator::Generate_Sparse(float density)
 		edges.pop_back();
 	}
 }
-
-

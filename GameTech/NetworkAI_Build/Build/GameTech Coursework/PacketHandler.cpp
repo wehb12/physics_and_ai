@@ -20,7 +20,7 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 		}
 		case MAZE_PARAMS:
 		{
-			if (entityType == SERVER || (entityType == CLIENT && !Client::Instance()->HasMaze()))
+			if (entityType == SERVER || (entityType == CLIENT));// && !Client::Instance()->HasMaze()))
 			{
 				MazeParamsPacket* dataPacket = new MazeParamsPacket(packet->data);
 				HandleMazeRequestPacket(dataPacket);
@@ -114,24 +114,31 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 			InstructionCompletePacket* instrCompPacket = new InstructionCompletePacket(packet->data);
 			switch (lastInstr)
 			{
-				case MAZE_PATH8:
+				case MAZE_POSITIONS8:
 				{
-					if (instrCompPacket->type == SUCCESS)
+					if (instrCompPacket->status == SUCCESS)
 					{
-						//MoveAvatar();
+						Server::Instance()->AvatarBegin();
 					}
 					break;
 				}
-				case MAZE_PATH16:
+				case MAZE_POSITIONS16:
 				{
-					if (instrCompPacket->type == SUCCESS)
+					if (instrCompPacket->status == SUCCESS)
 					{
-						//MoveAvatar();
+						Server::Instance()->AvatarBegin();
 					}
 					break;
 				}
 			}
 			delete instrCompPacket;
+			break;
+		}
+		case AVATAR_POSITION:
+		{
+			AvatarPositionPacket* posPacket = new AvatarPositionPacket(packet->data);
+			Client::Instance()->SetAvatarPosition(Vector2(posPacket->posX, posPacket->posY));
+			delete posPacket;
 			break;
 		}
 		default:
@@ -165,6 +172,7 @@ void PacketHandler::HandleMazeRequestPacket(MazeParamsPacket* reqPacket)
 			MazeDataPacket8* returnPacket = new MazeDataPacket8(possibleWalls);
 			Server::Instance()->PopulateEdgeList(returnPacket->edgesThatAreWalls);
 
+			BroadcastPacket(reqPacket);
 			BroadcastPacket(returnPacket);
 			Server::Instance()->SetMazeDataPacket(returnPacket);
 		}
@@ -174,6 +182,7 @@ void PacketHandler::HandleMazeRequestPacket(MazeParamsPacket* reqPacket)
 			MazeDataPacket16* returnPacket = new MazeDataPacket16(possibleWalls);
 			Server::Instance()->PopulateEdgeList(returnPacket->edgesThatAreWalls);
 
+			BroadcastPacket(reqPacket);
 			BroadcastPacket(returnPacket);
 			Server::Instance()->SetMazeDataPacket(returnPacket);
 		}

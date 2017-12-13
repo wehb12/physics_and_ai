@@ -110,6 +110,10 @@ Client::Client()
 
 	wallmesh = new OBJMesh("../../Data/Meshes/cube.obj");
 	wallmesh->SetTexture(whitetex);
+
+	// seed the start and end node position generation
+	// makes sure each client has a different default start/ end 
+	srand(time(NULL));
 }
 
 void Client::OnInitializeScene()

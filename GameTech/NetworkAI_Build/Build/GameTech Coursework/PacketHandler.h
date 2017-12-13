@@ -68,7 +68,4 @@ private:
 	ENetHost*	networkHost;
 
 	enet_uint8 lastInstr;
-
-	//int mazeSize;
-	//float mazeDensity;
 };

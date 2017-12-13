@@ -45,6 +45,7 @@ public:
 	inline void SetName(string name)						{ m_SceneName = name; }
 	inline void SetPrintPathState(bool set = true)			{ printPath = set; }
 	inline void SetMazeParameters(int size, float density)	{ mazeSize = size; mazeDensity = density; }
+	inline void SetAvatarPosition(Vector2 pos)				{ avatarPosition = pos; UpdateAvatar(); }
 
 //////// GETTERS ////////
 	inline ENetPeer* GetServerConnection()	{ return serverConnection; }
