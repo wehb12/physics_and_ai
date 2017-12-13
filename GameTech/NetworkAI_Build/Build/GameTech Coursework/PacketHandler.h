@@ -36,8 +36,6 @@ public:
 	PacketHandler(enet_uint8 type, ENetHost* host) :
 		entityType(type),
 		networkHost(host),
-		mazeSize(0),
-		mazeDensity(0.0f),
 		lastInstr(0)
 	{ }
 
@@ -56,7 +54,7 @@ public:
 	inline enet_uint8 GetType()				 { return entityType; }
 
 private:
-	void HandleMazeRequestPacket(MazeRequestPacket* reqPacket);
+	void HandleMazeRequestPacket(MazeParamsPacket* reqPacket);
 
 	template <class DataPacket>
 	void HandleMazeDataPacket(DataPacket* dataPacket);
@@ -71,6 +69,6 @@ private:
 
 	enet_uint8 lastInstr;
 
-	int mazeSize;
-	float mazeDensity;
+	//int mazeSize;
+	//float mazeDensity;
 };

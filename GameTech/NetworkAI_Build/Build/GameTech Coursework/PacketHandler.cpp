@@ -18,15 +18,16 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 			output = message->message;
 			break;
 		}
-		case MAZE_REQUEST:
+		case MAZE_PARAMS:
 		{
-			if (entityType == SERVER)
+			if (entityType == SERVER || (entityType == CLIENT && !Client::Instance()->HasMaze()))
 			{
-				MazeRequestPacket* dataPacket = new MazeRequestPacket(packet->data);
+				MazeParamsPacket* dataPacket = new MazeParamsPacket(packet->data);
 				HandleMazeRequestPacket(dataPacket);
 
-				output = "Create a maze of size " + to_string(mazeSize) + " with a density of " + to_string(mazeDensity);
-				delete dataPacket;
+				output = "Create a maze of size " + to_string(dataPacket->mazeSize) + " with a density of " + to_string((float)dataPacket->mazeDensity / 255);
+				if (entityType == CLIENT)
+					delete dataPacket;
 			}
 			break;
 		}
@@ -144,35 +145,41 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 	return output;
 }
 
-void PacketHandler::HandleMazeRequestPacket(MazeRequestPacket* reqPacket)
+void PacketHandler::HandleMazeRequestPacket(MazeParamsPacket* reqPacket)
 {
-	mazeSize = reqPacket->mazeSize;
-	mazeDensity = (float)(reqPacket->mazeDensity) / (float)(MAX_VAL_8BIT);
+	int mazeSize = reqPacket->mazeSize;
+	float mazeDensity = (float)(reqPacket->mazeDensity) / (float)(MAX_VAL_8BIT);
 
-	Server::Instance()->CreateNewMaze(mazeSize, mazeDensity);
-
-	int possibleWalls = 2 * mazeSize * (mazeSize - 1);
-
-	// mazeSize of 11 or lower can fit in an enet_unit8
-	if (possibleWalls <= MAX_VAL_8BIT)
+	if (entityType == CLIENT)
+		Client::Instance()->SetMazeParameters(mazeSize, mazeDensity);
+	else if (entityType == SERVER)
 	{
-		MazeDataPacket8* returnPacket = new MazeDataPacket8(possibleWalls);
-		Server::Instance()->PopulateEdgeList(returnPacket->edgesThatAreWalls);
+		Server::Instance()->CreateNewMaze(mazeSize, mazeDensity);
+		Server::Instance()->SetMazeParamsPacket(reqPacket);
 
-		BroadcastPacket(returnPacket);
-		Server::Instance()->SetMazeDataPacket(returnPacket);
-	}
-	// maxSize of 181 or lower can fit in an enet_uint16
-	else if (possibleWalls <= MAX_VAL_16BIT)
-	{
-		MazeDataPacket16* returnPacket = new MazeDataPacket16(possibleWalls);
-		Server::Instance()->PopulateEdgeList(returnPacket->edgesThatAreWalls);
+		int possibleWalls = 2 * mazeSize * (mazeSize - 1);
 
-		BroadcastPacket(returnPacket);
-		Server::Instance()->SetMazeDataPacket(returnPacket);
+		// mazeSize of 11 or lower can fit in an enet_unit8
+		if (possibleWalls <= MAX_VAL_8BIT)
+		{
+			MazeDataPacket8* returnPacket = new MazeDataPacket8(possibleWalls);
+			Server::Instance()->PopulateEdgeList(returnPacket->edgesThatAreWalls);
+
+			BroadcastPacket(returnPacket);
+			Server::Instance()->SetMazeDataPacket(returnPacket);
+		}
+		// maxSize of 181 or lower can fit in an enet_uint16
+		else if (possibleWalls <= MAX_VAL_16BIT)
+		{
+			MazeDataPacket16* returnPacket = new MazeDataPacket16(possibleWalls);
+			Server::Instance()->PopulateEdgeList(returnPacket->edgesThatAreWalls);
+
+			BroadcastPacket(returnPacket);
+			Server::Instance()->SetMazeDataPacket(returnPacket);
+		}
+		else
+			NCLERROR("Maze size too large");
 	}
-	else
-		NCLERROR("Maze size too large");
 }
 
 template <class DataPacket>
@@ -252,13 +259,6 @@ void PacketHandler::HandlePositionPacket(PositionPacket* posPacket)
 
 void PacketHandler::SendPacket(ENetPeer* destination, Packet* packet)
 {
-	if (packet->type == MAZE_REQUEST)
-	{
-		MazeRequestPacket* requestPacket = dynamic_cast<MazeRequestPacket*>(packet);
-		mazeSize = requestPacket->mazeSize;
-		mazeDensity = (float)(requestPacket->mazeDensity) / MAX_VAL_8BIT;
-	}
-
 	enet_uint8* stream = packet->CreateByteStream();
 
 	//Create the packet and send it (unreliable transport) to server

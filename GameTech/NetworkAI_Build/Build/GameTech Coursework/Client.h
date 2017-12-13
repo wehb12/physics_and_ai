@@ -44,9 +44,11 @@ public:
 	inline void SetPacketHandler(PacketHandler* pktHndl)	{ packetHandler = pktHndl; }
 	inline void SetName(string name)						{ m_SceneName = name; }
 	inline void SetPrintPathState(bool set = true)			{ printPath = set; }
+	inline void SetMazeParameters(int size, float density)	{ mazeSize = size; mazeDensity = density; }
 
 //////// GETTERS ////////
-	inline ENetPeer* GetServerConnection() { return serverConnection; }
+	inline ENetPeer* GetServerConnection()	{ return serverConnection; }
+	inline bool HasMaze()					{ return maze; }
 
 protected:
 	void GenerateEmptyMaze();
@@ -59,7 +61,8 @@ protected:
 	void MoveNodeLeft(bool start, int index);
 	void MoveNodeRight(bool start, int index);
 
-	void ReconstructPosition(bool ifStart);
+	void UpdatePosition(bool ifStart);
+	void UpdateAvatar();
 
 protected:
 	GameObject* box;
@@ -75,7 +78,7 @@ protected:
 
 	int startIndex;
 	int endIndex;
-	Vector3 avatarPosition;
+	Vector2 avatarPosition;
 
 	MazeGenerator* maze;
 	MazeRenderer* mazeRender;

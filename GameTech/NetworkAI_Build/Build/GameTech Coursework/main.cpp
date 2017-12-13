@@ -63,6 +63,8 @@ void Initialize()
 
 	//Initialize Renderer
 	GraphicsPipeline::Instance();
+	GraphicsPipeline::Instance()->GetCamera()->SetPosition(Vector3(0.0f, 10.0f, 0.0f));
+	GraphicsPipeline::Instance()->GetCamera()->SetPitch(-90.0f);
 	SceneManager::Instance();	//Loads CommonMeshes in here (So everything after this can use them globally e.g. our scenes)
 
 								//Enqueue All Scenes
@@ -221,8 +223,12 @@ int main()
 					{
 						printf("- New Client Connected\n");
 						Packet* mazeData = Server::Instance()->GetMazeDataPacket();
-						if (mazeData)
+						Packet* mazeParams = Server::Instance()->GetMazeParamsPacket();
+						if (mazeData && mazeParams)
+						{
+							packetHandler->SendPacket(evnt.peer, mazeParams);
 							packetHandler->SendPacket(evnt.peer, mazeData);
+						}
 						break;
 					}
 					case ENET_EVENT_TYPE_RECEIVE:

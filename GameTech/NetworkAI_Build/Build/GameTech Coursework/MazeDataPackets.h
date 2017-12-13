@@ -16,25 +16,25 @@ method.
 
 #include "Packet.h"
 
-class MazeRequestPacket : public Packet
+class MazeParamsPacket : public Packet
 {
 public:
-	MazeRequestPacket() : Packet(MAZE_REQUEST, 3) { }
-	~MazeRequestPacket() { }
-	MazeRequestPacket(enet_uint8 size, enet_uint8 density) :
-		Packet(MAZE_REQUEST, 3),
+	MazeParamsPacket() : Packet(MAZE_PARAMS, 3) { }
+	~MazeParamsPacket() { }
+	MazeParamsPacket(enet_uint8 size, enet_uint8 density) :
+		Packet(MAZE_PARAMS, 3),
 		mazeSize(size),
 		mazeDensity(density) { }
 
-	MazeRequestPacket(int size, float density) :
-		Packet(MAZE_REQUEST, 3)
+	MazeParamsPacket(int size, float density) :
+		Packet(MAZE_PARAMS, 3)
 	{
 		mazeSize = MIN(size, MAX_VAL_8BIT);
 		mazeDensity = (float)MAX_VAL_8BIT * density;
 	}
 
-	MazeRequestPacket(enet_uint8* data) :
-		Packet(MAZE_DATA8, 3)
+	MazeParamsPacket(enet_uint8* data) :
+		Packet(MAZE_PARAMS, 3)
 	{
 		mazeSize = *(data + 1);
 		mazeDensity = *(data + 2);

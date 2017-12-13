@@ -49,7 +49,8 @@ public:
 	Server() :
 		packetHandler(NULL),
 		currentLink(NULL),
-		mazeData(NULL)
+		mazeData(NULL),
+		mazeParams(NULL)
 	{ }
 
 	~Server()
@@ -68,6 +69,7 @@ public:
 
 		SAFE_DELETE(maze);
 		SAFE_DELETE(mazeData);
+		SAFE_DELETE(mazeParams);
 	}
 
 	void CreateNewMaze(int size, float density);
@@ -79,6 +81,7 @@ public:
 	inline void SetPacketHandler(PacketHandler* pktHndl)	{ packetHandler = pktHndl; }
 	inline void SetMaze(MazeGenerator* maze)				{ this->maze = maze; }
 	void SetCurrentSender(ENetPeer* address);
+	inline void SetMazeParamsPacket(Packet* dataPacket)		{ SAFE_DELETE(mazeParams); mazeParams = dataPacket; }
 	inline void SetMazeDataPacket(Packet* dataPacket)		{ SAFE_DELETE(mazeData); mazeData = dataPacket; }
 
 //////// GETTERS ////////
@@ -86,6 +89,7 @@ public:
 	inline int* GetPathIndices()							{ return currentLink->pathIndices; }
 	inline int GetPathLength()								{ return currentLink->pathLength; }
 	inline int GetMazeSize()								{ return maze->size; }
+	inline Packet* GetMazeParamsPacket()					{ return mazeParams; }
 	inline Packet* GetMazeDataPacket()						{ return mazeData; }
 
 //////// CLIENT HANDLING ////////
@@ -108,4 +112,5 @@ private:
 
 	// store this ready to send to a new client
 	Packet* mazeData;
+	Packet* mazeParams;
 };

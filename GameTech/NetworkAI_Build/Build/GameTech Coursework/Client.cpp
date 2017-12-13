@@ -99,7 +99,7 @@ Client::Client()
 	, mazeRender(NULL)
 	, startIndex(0)
 	, endIndex(0)
-	, avatarPosition(Vector3(0, 0, 0))
+	, avatarPosition(Vector2(0, 0))
 {
 	GLuint whitetex;
 	glGenTextures(1, &whitetex);
@@ -263,8 +263,8 @@ void Client::HandleKeyboardInput()
 {
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_G))
 	{
-		MazeRequestPacket* packet = new MazeRequestPacket(mazeSize, mazeDensity);
-
+		MazeParamsPacket* packet = new MazeParamsPacket(mazeSize, mazeDensity);
+		lastDensity = mazeDensity;
 		packetHandler->SendPacket(serverConnection, packet);
 
 		delete packet;
@@ -319,7 +319,7 @@ void Client::HandleKeyboardInput()
 		if (moved)
 		{
 			// remake MazeRenderer start and end RenderNodes
-			ReconstructPosition(start);
+			UpdatePosition(start);
 		}
 	}
 }
@@ -385,7 +385,7 @@ void Client::MoveNodeRight(bool start, int index)
 	}
 }
 
-void Client::ReconstructPosition(bool ifStart)
+void Client::UpdatePosition(bool ifStart)
 {
 	float scalar = 1.0f / (maze->size * 3 - 1);
 	Vector3 cellsize = Vector3(
@@ -483,7 +483,7 @@ void Client::RenderNewMaze()
 	if (mazeRender)
 	{
 		RemoveGameObject(mazeRender);
-		delete mazeRender;
+		//delete mazeRender;
 		mazeRender = NULL;
 	}
 
@@ -496,7 +496,8 @@ void Client::RenderNewMaze()
 	AddGameObject(mazeRender);
 
 	// now send back to the server the start and end positions
-	avatarPosition = maze->start->_pos;
+	avatarPosition.x = maze->start->_pos.x;
+	avatarPosition.y = maze->start->_pos.y;
 	CreateAvatar();
 
 	packetHandler->SendPositionPacket(serverConnection, maze);
@@ -562,4 +563,24 @@ void Client::CreateAvatar()
 	cube = new RenderNode(wallmesh, CommonUtils::GenColor(colourScalar));
 	cube->SetTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
 	mazeRender->Render()->AddChild(cube);
+}
+
+void Client::UpdateAvatar()
+{
+	float scalar = 1.0f / (maze->size * 3 - 1);
+	Vector3 cellsize = Vector3(
+		scalar * 2,
+		2.0f,
+		scalar * 2
+	);
+
+	GraphNode* start = maze->start;
+
+	Vector3 cellpos = Vector3(
+		avatarPosition.x * 3,
+		0.0f,
+		avatarPosition.y * 3
+	) * scalar;
+
+	mazeRender->UpdateAvatarTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
 }
