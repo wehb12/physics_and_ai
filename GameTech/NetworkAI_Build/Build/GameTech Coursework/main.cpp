@@ -15,7 +15,7 @@
 #pragma comment(lib, "IPHLPAPI.lib")
 
 #include "NetworkEntity.h"
-#include "Net1_Client.h"
+#include "Client.h"
 #include "AllPacketTypes.h"
 #include "MazeGenerator.h"
 #include "MazeRenderer.h"
@@ -66,7 +66,7 @@ void Initialize()
 
 								//Enqueue All Scenes
 								// - Add any new scenes you want here =D
-	SceneManager::Instance()->EnqueueScene(new Net1_Client("Network #1 - Example Client", thisEntity));
+	SceneManager::Instance()->EnqueueScene(new Client("Network #1 - Example Client", thisEntity));
 }
 
 

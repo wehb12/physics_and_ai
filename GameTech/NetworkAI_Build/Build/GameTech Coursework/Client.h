@@ -14,10 +14,10 @@
 
 //Basic Network Example
 
-class Net1_Client : public Scene
+class Client : public Scene
 {
 public:
-	Net1_Client(const std::string& friendly_name, NetworkEntity* thisEntity);
+	Client(const std::string& friendly_name, NetworkEntity* thisEntity);
 
 	virtual void OnInitializeScene() override;
 	virtual void OnCleanupScene() override;

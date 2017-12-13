@@ -137,7 +137,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MazeGenerator.cpp" />
     <ClCompile Include="MazeRenderer.cpp" />
-    <ClCompile Include="Net1_Client.cpp" />
+    <ClCompile Include="Client.cpp" />
     <ClCompile Include="NetworkEntity.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -147,7 +147,7 @@
     <ClInclude Include="MazeDataPackets.h" />
     <ClInclude Include="MazeGenerator.h" />
     <ClInclude Include="MazeRenderer.h" />
-    <ClInclude Include="Net1_Client.h" />
+    <ClInclude Include="Client.h" />
     <ClInclude Include="NetworkEntity.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="SearchAlgorithm.h" />

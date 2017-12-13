@@ -1,5 +1,5 @@
 /******************************************************************************
-Class: Net1_Client
+Class: Client
 Implements:
 Author: Pieran Marris <p.marris@newcastle.ac.uk> and YOU!
 Description:
@@ -80,12 +80,12 @@ the servers game simulation. This methodology is known as "Dead Reckoning".
 
 *//////////////////////////////////////////////////////////////////////////////
 
-#include "Net1_Client.h"
+#include "Client.h"
 
 const Vector3 status_color3 = Vector3(1.0f, 0.6f, 0.6f);
 const Vector4 status_color = Vector4(status_color3.x, status_color3.y, status_color3.z, 1.0f);
 
-Net1_Client::Net1_Client(const std::string& friendly_name, NetworkEntity* thisEntity)
+Client::Client(const std::string& friendly_name, NetworkEntity* thisEntity)
 	: Scene(friendly_name)
 	, serverConnection(NULL)
 	, box(NULL)
@@ -96,7 +96,7 @@ Net1_Client::Net1_Client(const std::string& friendly_name, NetworkEntity* thisEn
 {
 }
 
-void Net1_Client::OnInitializeScene()
+void Client::OnInitializeScene()
 {
 	//Initialize Client Network
 	if (network.Initialize(0))
@@ -133,7 +133,7 @@ void Net1_Client::OnInitializeScene()
 	packetHandler->SetServerConnection(serverConnection);
 }
 
-void Net1_Client::OnCleanupScene()
+void Client::OnCleanupScene()
 {
 	Scene::OnCleanupScene();
 	box = NULL; // Deleted in above function
@@ -149,7 +149,7 @@ void Net1_Client::OnCleanupScene()
 	serverConnection = NULL;
 }
 
-void Net1_Client::OnUpdateScene(float dt)
+void Client::OnUpdateScene(float dt)
 {
 	Scene::OnUpdateScene(dt);
 
@@ -160,7 +160,7 @@ void Net1_Client::OnUpdateScene(float dt)
 
 	//Update Network
 	auto callback = std::bind(
-		&Net1_Client::ProcessNetworkEvent,	// Function to call
+		&Client::ProcessNetworkEvent,	// Function to call
 		this,								// Associated class instance
 		std::placeholders::_1);				// Where to place the first parameter
 	network.ServiceNetwork(dt, callback);
@@ -194,7 +194,7 @@ void Net1_Client::OnUpdateScene(float dt)
 	NCLDebug::AddStatusEntry(controlsColour, "    Swap to moving the %s position by pressing [CTRL]", start ? "end" : "start");
 }
 
-void Net1_Client::ProcessNetworkEvent(const ENetEvent& evnt)
+void Client::ProcessNetworkEvent(const ENetEvent& evnt)
 {
 	packetHandler->SetCurrentSender(evnt.peer);
 	switch (evnt.type)
@@ -239,7 +239,7 @@ void Net1_Client::ProcessNetworkEvent(const ENetEvent& evnt)
 	}
 }
 
-void Net1_Client::HandleKeyboardInput()
+void Client::HandleKeyboardInput()
 {
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_G))
 	{
@@ -309,7 +309,7 @@ void Net1_Client::HandleKeyboardInput()
 	}
 }
 
-void Net1_Client::MoveNodeDown(bool start, int index)
+void Client::MoveNodeDown(bool start, int index)
 {
 	index = index < (packetHandler->mazeSize) * (packetHandler->mazeSize - 1) ? index + packetHandler->mazeSize : index;
 	if (start)
@@ -318,7 +318,7 @@ void Net1_Client::MoveNodeDown(bool start, int index)
 		packetHandler->maze->end = &packetHandler->maze->allNodes[index];
 }
 
-void Net1_Client::MoveNodeUp(bool start, int index)
+void Client::MoveNodeUp(bool start, int index)
 {
 	index = index >= packetHandler->mazeSize ? index - packetHandler->mazeSize : index;
 	if (start)
@@ -327,7 +327,7 @@ void Net1_Client::MoveNodeUp(bool start, int index)
 		packetHandler->maze->end = &packetHandler->maze->allNodes[index];
 }
 
-void Net1_Client::MoveNodeLeft(bool start, int index)
+void Client::MoveNodeLeft(bool start, int index)
 {
 	index = index % (packetHandler->maze->size) > 0 ? index - 1 : index;
 	if (start)
@@ -336,7 +336,7 @@ void Net1_Client::MoveNodeLeft(bool start, int index)
 		packetHandler->maze->end = &packetHandler->maze->allNodes[index];
 }
 
-void Net1_Client::MoveNodeRight(bool start, int index)
+void Client::MoveNodeRight(bool start, int index)
 {
 	index = index % (packetHandler->maze->size) < (packetHandler->mazeSize - 1) ? index + 1 : index;
 	if (start)
@@ -345,7 +345,7 @@ void Net1_Client::MoveNodeRight(bool start, int index)
 		packetHandler->maze->end = &packetHandler->maze->allNodes[index];
 }
 
-void Net1_Client::ReconstructPosition(bool ifStart)
+void Client::ReconstructPosition(bool ifStart)
 {
 	RenderNode* cube;
 
@@ -385,7 +385,7 @@ void Net1_Client::ReconstructPosition(bool ifStart)
 	}
 }
 
-void Net1_Client::PrintPath()
+void Client::PrintPath()
 {
 	if (packetHandler->maze && packetHandler->mazeRender)
 	{

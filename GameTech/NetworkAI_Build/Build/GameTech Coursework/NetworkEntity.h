@@ -1,3 +1,15 @@
+/******************************************************************************
+Class: NetworkEntity
+Implements:
+Author:
+Will Hinds      <w.hinds2@newcastle.ac.uk>
+Description:
+
+Every entity connected to the network has an instantiation of the NetworkEntity
+which handles packet transmissions and receipt
+
+*//////////////////////////////////////////////////////////////////////////////
+
 #pragma once
 
 #include <ncltech\NetworkBase.h>
@@ -18,7 +30,7 @@ enum NetworkEntityType
 
 class NetworkEntity
 {
-	friend class Net1_Client;
+	friend class Client;
 public:
 	NetworkEntity(enet_uint8 type, ENetHost* host) :
 		type(type),
