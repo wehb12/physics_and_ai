@@ -23,7 +23,9 @@ void Server::UpdateAvatarPositions(float msec)
 			if ((*it)->timeToNext > 0)
 			{
 				(*it)->timeToNext -= timeElapsed;
-				(*it)->avatarPos = (*it)->avatarPos + (*it)->avatarVel;
+				//(*it)->avatarPos = (*it)->avatarPos + (*it)->avatarVel;
+				(*it)->avatarPos.x = (*it)->avatarPNode->GetPosition().x;
+				(*it)->avatarPos.y = (*it)->avatarPNode->GetPosition().y;
 			}
 			else
 			{
@@ -44,6 +46,13 @@ void Server::UpdateAvatarPositions(float msec)
 	}
 }
 
+void Server::InitClient(ENetPeer* address)
+{
+	ConnectedClient* newClient = CreateClient(address);
+
+
+}
+
 ConnectedClient* Server::GetClient(ENetPeer* address)
 {
 	for (auto it = clients.begin(); it != clients.end(); ++it)
@@ -58,6 +67,8 @@ ConnectedClient* Server::CreateClient(ENetPeer* address)
 {
 	ConnectedClient* newClient = new ConnectedClient;
 	newClient->Init();
+	++numClients;
+	newClient->clientID = numClients;
 
 	newClient->address = address;
 
@@ -74,15 +85,24 @@ void Server::AddClientPositons(Vector3 start, Vector3 end)
 
 void Server::RemoveClient(ENetPeer* address)
 {
-	for (auto it = clients.begin(); it != clients.end(); ++it)
+	if (clients.size() > 0)
 	{
-		if ((*it)->address == address)
+		int i = 0;
+		for (auto it = clients.begin(); it != clients.end(); ++it)
 		{
-			SAFE_DELETE((*it)->path);
-			(*it)->path = NULL;
-			clients.erase(it);
-			SAFE_DELETE(*it);
+			if ((*it)->address == address)
+			{
+				ConnectedClient* temp = (*it);
+				clients.erase(it);
+				SAFE_DELETE(temp);
+				--numClients;
+				break;
+			}
+			++i;
 		}
+		if (i < clients.size())
+			for (; i < clients.size(); ++i)
+				clients[i]->clientID = clients[i]->clientID - 1;
 	}
 }
 
@@ -124,11 +144,12 @@ void Server::UpdateMazePositions(int indexStart, int indexEnd)
 
 void Server::UpdateClientPath()
 {
-	SearchAStar* aStarSearch = currentLink->path;
+	SearchAStar* aStarSearch = new SearchAStar;
 	aStarSearch->FindBestPath(maze->start, maze->end);
-	AddClientPath(aStarSearch);
 
 	const std::list<const GraphNode*> path = aStarSearch->GetFinalPath();
+	delete aStarSearch;
+
 	currentLink->pathLength = path.size();
 
 	if (currentLink->pathIndices)
@@ -195,4 +216,11 @@ void Server::TransmitAvatarPosition(ConnectedClient* client)
 	AvatarPositionPacket* posPacket = new AvatarPositionPacket(client->avatarPos);
 	packetHandler->SendPacket(client->address, posPacket);
 	delete posPacket;
+}
+
+void Server::BroadcastAvatar()
+{
+	NewAvatarPacket* newAvatar = new NewAvatarPacket(currentLink->avatarPos, currentLink->colour, currentLink->clientID);
+	packetHandler->BroadcastPacket(newAvatar);
+	delete newAvatar;
 }

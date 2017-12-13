@@ -39,6 +39,8 @@ public:
 	void GenerateWalledMaze(bool* walledEdges, int numEdges);
 	void RenderNewMaze();
 	void PopulatePath(Packet* pathPacket);
+	void AddAvatar(Vector2 pos, float colour);
+	inline void RemoveAvatar(int index) { mazeRender->RemoveAvatar(index); }
 
 //////// SETTERS ////////
 	inline void SetPacketHandler(PacketHandler* pktHndl)	{ packetHandler = pktHndl; }
@@ -46,10 +48,12 @@ public:
 	inline void SetPrintPathState(bool set = true)			{ printPath = set; }
 	inline void SetMazeParameters(int size, float density)	{ mazeSize = size; mazeDensity = density; }
 	inline void SetAvatarPosition(Vector2 pos)				{ avatarPosition = pos; UpdateAvatar(); }
+	inline void SetID(enet_uint8 iD)						{ clientID = iD; }
 
 //////// GETTERS ////////
 	inline ENetPeer* GetServerConnection()	{ return serverConnection; }
 	inline bool HasMaze()					{ return maze; }
+	inline enet_uint8 GetID()				{ return clientID; }
 
 protected:
 	void GenerateEmptyMaze();
@@ -66,6 +70,8 @@ protected:
 	void UpdateAvatar();
 
 protected:
+	enet_uint8 clientID;
+
 	GameObject* box;
 
 	NetworkBase network;
@@ -80,6 +86,7 @@ protected:
 	int startIndex;
 	int endIndex;
 	Vector2 avatarPosition;
+	float avatarColour;
 
 	MazeGenerator* maze;
 	MazeRenderer* mazeRender;

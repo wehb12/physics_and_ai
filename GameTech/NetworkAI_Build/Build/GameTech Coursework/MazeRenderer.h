@@ -29,17 +29,28 @@ public:
 
 	void UpdateStartNodeTransform(Matrix4 transform)
 	{
-		(*(renderNode->GetChildIteratorEnd() - 3))->SetTransform(transform);
+		(*(Render()->GetChildIteratorEnd() - 2 - numAvatars))->SetTransform(transform);
 	}
 
 	void UpdateEndNodeTransform(Matrix4 transform)
 	{
-		(*(renderNode->GetChildIteratorEnd() - 2))->SetTransform(transform);
+		(*(Render()->GetChildIteratorEnd() - 1 - numAvatars))->SetTransform(transform);
 	}
 
-	void UpdateAvatarTransform(Matrix4 transform)
+	void UpdateAvatarTransform(Matrix4 transform , int index = 0)
 	{
-		(*(renderNode->GetChildIteratorEnd() - 1))->SetTransform(transform);
+		if (index < numAvatars)
+			(*(Render()->GetChildIteratorEnd() - numAvatars + index))->SetTransform(transform);
+	}
+
+	inline void AddAvatar(RenderNode* avatar)		{ ++numAvatars; Render()->AddChild(avatar); }
+	inline void RemoveAvatar(int index)
+	{
+		RenderNode* toRemove = NULL;
+		if (index < numAvatars)
+			toRemove = *(Render()->GetChildIteratorEnd() - numAvatars + index);
+		SAFE_DELETE(toRemove);
+		--numAvatars;
 	}
 
 
@@ -65,4 +76,6 @@ protected:
 	uint	flat_maze_size;
 
 	WallDescriptorVec	wall_descriptors;
+
+	int numAvatars;
 };

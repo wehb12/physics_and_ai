@@ -100,6 +100,8 @@ Client::Client()
 	, startIndex(0)
 	, endIndex(0)
 	, avatarPosition(Vector2(0, 0))
+	, avatarColour(0.0f)
+	, clientID(0)
 {
 	GLuint whitetex;
 	glGenTextures(1, &whitetex);
@@ -164,6 +166,9 @@ void Client::OnCleanupScene()
 	//Release network and all associated data/peer connections
 	network.Release();
 	serverConnection = NULL;
+
+	mazeRender = NULL;
+	maze = NULL;
 }
 
 void Client::OnUpdateScene(float dt)
@@ -290,7 +295,7 @@ void Client::HandleKeyboardInput()
 
 	// resend destination positions to server
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_L))
-		packetHandler->SendPositionPacket(serverConnection, maze);
+		packetHandler->SendPositionPacket(serverConnection, maze, avatarColour);
 
 	if (maze)
 	{
@@ -504,7 +509,7 @@ void Client::RenderNewMaze()
 	avatarPosition.y = maze->start->_pos.y;
 	CreateAvatar();
 
-	packetHandler->SendPositionPacket(serverConnection, maze);
+	packetHandler->SendPositionPacket(serverConnection, maze, avatarColour);
 }
 
 void Client::PopulatePath(Packet* pathPacket)
@@ -545,28 +550,9 @@ void Client::PopulatePath(Packet* pathPacket)
 
 void Client::CreateAvatar()
 {
-	RenderNode* cube;
+	avatarColour = (float)(rand() % 101) / 100;
 
-	float scalar = 1.0f / (maze->size * 3 - 1);
-	Vector3 cellsize = Vector3(
-		scalar * 2,
-		2.0f,
-		scalar * 2
-	);
-
-	GraphNode* start = maze->start;
-
-	Vector3 cellpos = Vector3(
-		avatarPosition.x * 3,
-		0.0f,
-		avatarPosition.y * 3
-	) * scalar;
-
-	float colourScalar = (float)(rand() % 101) / 100;
-
-	cube = new RenderNode(wallmesh, CommonUtils::GenColor(colourScalar));
-	cube->SetTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
-	mazeRender->Render()->AddChild(cube);
+	AddAvatar(avatarPosition, avatarColour);
 }
 
 void Client::UpdateAvatar()
@@ -587,4 +573,26 @@ void Client::UpdateAvatar()
 	) * scalar;
 
 	mazeRender->UpdateAvatarTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
+}
+
+void Client::AddAvatar(Vector2 pos, float colour)
+{
+	RenderNode* avatar;
+
+	float scalar = 1.0f / (maze->size * 3 - 1);
+	Vector3 cellsize = Vector3(
+		scalar * 2,
+		2.0f,
+		scalar * 2
+	);
+
+	Vector3 cellpos = Vector3(
+		pos.x * 3,
+		0.0f,
+		pos.y * 3
+	) * scalar;
+
+	avatar = new RenderNode(wallmesh, CommonUtils::GenColor(colour));
+	avatar->SetTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
+	mazeRender->AddAvatar(avatar);
 }

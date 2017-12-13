@@ -8,6 +8,7 @@ MazeRenderer::MazeRenderer(MazeGenerator* gen, Mesh* wallmesh)
 	, mesh(wallmesh)
 	, maze(gen)
 	, flat_maze(NULL)
+	, numAvatars(0)
 {
 	this->SetRender(new RenderNode());
 

@@ -27,14 +27,18 @@ which handles packet transmissions and receipt
 
 struct ConnectedClient
 {
+	int clientID;
+
 	ENetPeer* address;
 	Vector3 start, end;
-	SearchAStar* path;
 	int* pathIndices;
 	int pathLength;
 	bool move;
 	Vector2 avatarPos;
 	Vector2 avatarVel;
+
+	// this is the scalar input to CommonUtils::GenColor
+	float colour;
 
 	// this is the index into the pathIndices array
 	// not the value in pathIndices array that the avatar
@@ -47,15 +51,16 @@ struct ConnectedClient
 
 	void Init()
 	{
+		clientID = 0;
 		address = NULL;
 		start = Vector3(0, 0, 0);
 		end = Vector3(0, 0, 0);
-		path = new SearchAStar();
 		pathIndices = NULL;
 		pathLength = 0;
 		move = false;
 		avatarPos = Vector2(0, 0);
 		avatarVel = Vector2(0, 0);
+		colour = 0.0f;
 		currentAvatarIndex = 0;
 		timeToNext = 0.0f;
 		timeStep = 0.0f;
@@ -75,7 +80,8 @@ public:
 		mazeData(NULL),
 		mazeParams(NULL),
 		timeElapsed(0.0f),
-		avatarSpeed(SPEED)
+		avatarSpeed(SPEED),
+		numClients(0)
 	{ }
 
 	~Server()
@@ -83,8 +89,6 @@ public:
 		int size = clients.size();
 		for (int i = 0; i < size; ++i)
 		{
-			SAFE_DELETE(clients[i]->path);
-			clients[i]->path = NULL;
 			if (clients[i]->pathIndices)
 				delete[] clients[i]->pathIndices;
 			clients[i]->pathIndices = NULL;
@@ -99,11 +103,15 @@ public:
 
 	void Update(float msec);
 
+	void InitClient(ENetPeer* address);
+
 	void CreateNewMaze(int size, float density);
 	void PopulateEdgeList(bool* edgeList);
 	void UpdateMazePositions(int indexStart, int indexEnd);
 	void UpdateClientPath();
+
 	void AvatarBegin();
+	void BroadcastAvatar();
 
 //////// SETTERS ////////
 	inline void SetPacketHandler(PacketHandler* pktHndl)	{ packetHandler = pktHndl; }
@@ -111,6 +119,8 @@ public:
 	void SetCurrentSender(ENetPeer* address);
 	inline void SetMazeParamsPacket(Packet* dataPacket)		{ SAFE_DELETE(mazeParams); mazeParams = dataPacket; }
 	inline void SetMazeDataPacket(Packet* dataPacket)		{ SAFE_DELETE(mazeData); mazeData = dataPacket; }
+
+	inline void SetAvatarColour(float colour)				{ currentLink->colour = colour; }
 
 //////// GETTERS ////////
 	inline ENetPeer* GetCurrentLinkAddress()				{ if (currentLink) return currentLink->address; }
@@ -123,7 +133,6 @@ public:
 //////// CLIENT HANDLING ////////
 	ConnectedClient* CreateClient(ENetPeer* address);
 	void AddClientPositons(Vector3 start, Vector3 end);
-	inline void AddClientPath(SearchAStar* path) { currentLink->path = path; }
 	void RemoveClient(ENetPeer* address);
 private:
 	ConnectedClient* GetClient(ENetPeer* address);
@@ -148,4 +157,6 @@ private:
 	float timeElapsed;
 	//the time it takes an avatar to move from one grid square to thge next
 	float avatarSpeed;
+
+	int numClients;
 };

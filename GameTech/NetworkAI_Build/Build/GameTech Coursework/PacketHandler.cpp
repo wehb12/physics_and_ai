@@ -20,7 +20,7 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 		}
 		case MAZE_PARAMS:
 		{
-			if (entityType == SERVER || (entityType == CLIENT));// && !Client::Instance()->HasMaze()))
+			if (entityType == SERVER || entityType == CLIENT)
 			{
 				MazeParamsPacket* dataPacket = new MazeParamsPacket(packet->data);
 				HandleMazeRequestPacket(dataPacket);
@@ -141,6 +141,27 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 			delete posPacket;
 			break;
 		}
+		case AVATAR_NEW:
+		{
+			if (entityType == CLIENT)
+			{
+				NewAvatarPacket* newAvatar = new NewAvatarPacket(packet->data);
+				if (newAvatar->iD - 48 != Client::Instance()->GetID())
+					Client::Instance()->AddAvatar(Vector2(newAvatar->posX, newAvatar->posY), newAvatar->avatarColour);
+				delete newAvatar;
+			}
+			break;
+		}
+		case CONFIRM_CONNECTION:
+		{
+			if (entityType == CLIENT)
+			{
+				ConfirmConnectionPacket* confPacket = new ConfirmConnectionPacket(packet->data);
+				Client::Instance()->SetID(confPacket->clientID);
+				delete confPacket;
+			}
+			break;
+		}
 		default:
 		{
 			cout << "ERROR - Invalid packet sent" << endl;
@@ -199,7 +220,7 @@ void PacketHandler::HandleMazeDataPacket(DataPacket* dataPacket)
 	Client::Instance()->RenderNewMaze();
 }
 
-void PacketHandler::SendPositionPacket(ENetPeer* dest, MazeGenerator* maze)
+void PacketHandler::SendPositionPacket(ENetPeer* dest, MazeGenerator* maze, float avatarColour)
 {
 	int numNodes = maze->size * maze->size;
 
@@ -226,14 +247,14 @@ void PacketHandler::SendPositionPacket(ENetPeer* dest, MazeGenerator* maze)
 	// mazeSize of 16 or lower has fewer than MAX_VAL_8BIT nodes
 	if (numNodes <= MAX_VAL_8BIT)
 	{
-		MazePositionsPacket8* posPacket = new MazePositionsPacket8(startIndex, endIndex);
+		MazePositionsPacket8* posPacket = new MazePositionsPacket8(startIndex, endIndex, avatarColour);
 		SendPacket(Client::Instance()->GetServerConnection(), posPacket);
 		delete posPacket;
 	}
 	// mazeSize of 256 or lower has fewer than MAX_VAL_16BIT nodes
 	else if (numNodes <= MAX_VAL_16BIT)
 	{
-		MazePositionsPacket16* posPacket = new MazePositionsPacket16(startIndex, endIndex);
+		MazePositionsPacket16* posPacket = new MazePositionsPacket16(startIndex, endIndex, avatarColour);
 		SendPacket(Client::Instance()->GetServerConnection(), posPacket);
 		delete posPacket;
 	}
@@ -243,7 +264,6 @@ template <class PositionPacket>
 void PacketHandler::HandlePositionPacket(PositionPacket* posPacket)
 {
 	Server::Instance()->UpdateMazePositions(posPacket->start, posPacket->end);
-
 	Server::Instance()->UpdateClientPath();
 
 	int* pathIndices = Server::Instance()->GetPathIndices();
@@ -254,12 +274,18 @@ void PacketHandler::HandlePositionPacket(PositionPacket* posPacket)
 
 	if ((mazeSizeSquared < MAX_VAL_8BIT) && (pathLength < MAX_VAL_8BIT))
 	{
+		Server::Instance()->SetAvatarColour((float)(posPacket->avatarColour) / MAX_VAL_8BIT);
+		//Server::Instance()->BroadcastAvatar();
+
 		MazePathPacket8* pathPacket = new MazePathPacket8(pathIndices, pathLength);
 		SendPacket(Server::Instance()->GetCurrentLinkAddress(), pathPacket);
 		delete pathPacket;
 	}
 	else if ((mazeSizeSquared < MAX_VAL_16BIT) && (pathLength < MAX_VAL_16BIT))
 	{
+		Server::Instance()->SetAvatarColour((float)(posPacket->avatarColour) / MAX_VAL_16BIT);
+		//Server::Instance()->BroadcastAvatar();
+
 		MazePathPacket16* pathPacket = new MazePathPacket16(pathIndices, pathLength);
 		SendPacket(Server::Instance()->GetCurrentLinkAddress(), pathPacket);
 		delete pathPacket;

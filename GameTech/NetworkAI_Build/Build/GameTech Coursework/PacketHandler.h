@@ -58,7 +58,7 @@ private:
 
 	template <class DataPacket>
 	void HandleMazeDataPacket(DataPacket* dataPacket);
-	void SendPositionPacket(ENetPeer* dest, MazeGenerator* maze);
+	void SendPositionPacket(ENetPeer* dest, MazeGenerator* maze, float avatarColour);
 
 	template <class PositionPacket>
 	void HandlePositionPacket(PositionPacket* posPacket);

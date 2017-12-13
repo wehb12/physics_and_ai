@@ -73,3 +73,35 @@ public:
 public:
 	enet_uint8 status;
 };
+
+class ConfirmConnectionPacket : public Packet
+{
+public:
+	ConfirmConnectionPacket(enet_uint8 iD) :
+		Packet(CONFIRM_CONNECTION, 2),
+		clientID(iD)
+	{ }
+
+	ConfirmConnectionPacket(int iD) :
+		Packet(CONFIRM_CONNECTION, 2),
+		clientID(iD)
+	{ }
+
+	ConfirmConnectionPacket(enet_uint8* data) :
+		Packet(CONFIRM_CONNECTION, 2),
+		clientID(*(data + 1))
+	{ }
+
+	virtual enet_uint8* CreateByteStream() override
+	{
+		enet_uint8* data = new enet_uint8[size];
+		
+		data[0] = type;
+		data[1] = clientID;
+
+		return data;
+	}
+
+public:
+	enet_uint8 clientID;
+};
