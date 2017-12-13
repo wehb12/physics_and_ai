@@ -211,6 +211,7 @@ void Client::OnUpdateScene(float dt)
 		NCLDebug::AddStatusEntry(controlsColour, "    Swap to moving the %s position by pressing [CTRL]", start ? "end" : "start");
 		NCLDebug::AddStatusEntry(controlsColour, "");
 		NCLDebug::AddStatusEntry(controlsColour, "    Press [P] to toggle path");
+		NCLDebug::AddStatusEntry(controlsColour, "    Press [L] to send start/ end data");
 	}
 }
 
@@ -283,6 +284,10 @@ void Client::HandleKeyboardInput()
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_P))
 		printPath = !printPath;
 
+	// resend destination positions to server
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_L))
+		packetHandler->SendPositionPacket(serverConnection, maze);
+
 	if (maze)
 	{
 		bool moved = false;
@@ -315,8 +320,6 @@ void Client::HandleKeyboardInput()
 		{
 			// remake MazeRenderer start and end RenderNodes
 			ReconstructPosition(start);
-			// resend destination positions to server
-			packetHandler->SendPositionPacket(serverConnection, maze);
 		}
 	}
 }
