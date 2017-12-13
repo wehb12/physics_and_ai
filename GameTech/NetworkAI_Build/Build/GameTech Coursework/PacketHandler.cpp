@@ -32,12 +32,12 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 		}
 		case MAZE_DATA8:
 		{
-			if (mazeSize && entityType == CLIENT)
+			if (entityType == CLIENT)
 			{
 				MazeDataPacket8* dataPacket = new MazeDataPacket8(packet->data);
 				output = "Construct a maze";
 
-				printPath = false;
+				Client::Instance()->SetPrintPathState(false);
 				HandleMazeDataPacket(dataPacket);
 				delete dataPacket;
 			}
@@ -47,12 +47,12 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 		}
 		case MAZE_DATA16:
 		{
-			if (mazeSize && entityType == CLIENT)
+			if (entityType == CLIENT)
 			{
 				MazeDataPacket16* dataPacket = new MazeDataPacket16(packet->data);
 				output = "Construct a maze";
 
-				printPath = false;
+				Client::Instance()->SetPrintPathState(false);
 				HandleMazeDataPacket(dataPacket);
 				delete dataPacket; 
 			}

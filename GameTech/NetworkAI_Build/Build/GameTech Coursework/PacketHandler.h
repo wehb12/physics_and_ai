@@ -36,21 +36,13 @@ public:
 	PacketHandler(enet_uint8 type, ENetHost* host) :
 		entityType(type),
 		networkHost(host),
-		serverConnection(NULL),
 		mazeSize(0),
-		mazeDensity(0.0f),
-		maze(NULL),
-		mazeRender(NULL),
-		wallmesh(NULL),
-		aStarSearch(new SearchAStar())
+		mazeDensity(0.0f)
 	{ }
 
 	~PacketHandler()
 	{
-		mazeRender = NULL;	// should be deleted by Scene->RemoveAllGameObjects (??)
-		SAFE_DELETE(maze);
-		SAFE_DELETE(wallmesh);
-		SAFE_DELETE(aStarSearch);
+
 	}
 
 	string HandlePacket(const ENetPacket* packet);
@@ -59,31 +51,8 @@ public:
 	void BroadcastPacket(Packet* packet);
 	void SendPacket(ENetPeer* destination, Packet* packet);
 
-
-//////// SETTERS ////////
-	inline void SetServerConnection(ENetPeer* server) { serverConnection = server; }
-	inline void SetCurrentSender(ENetPeer* sender) { currentPacketSender = sender; }
-
 //////// GETTERS ////////
 	inline enet_uint8 GetType()				 { return entityType; }
-	inline int GetCurrentMazeSize()			 { return mazeSize; }
-	inline float GetCurrentMazeDensity()	 { return mazeDensity; }
-	inline MazeGenerator* GetMaze()			 { return maze; }
-
-protected:
-	inline bool GetPrintPathState()			{ return printPath; }
-
-protected:
-	int mazeSize;
-	float mazeDensity;
-	MazeGenerator* maze;
-	MazeRenderer* mazeRender;
-	SearchAStar* aStarSearch;
-	Mesh* wallmesh;
-
-	bool printPath;
-	int* path;
-	int pathLength;
 
 private:
 	void HandleMazeRequestPacket(MazeRequestPacket* reqPacket);
@@ -97,8 +66,8 @@ private:
 
 private:
 	enet_uint8 entityType;
-
 	ENetHost*	networkHost;
-	ENetPeer*	serverConnection;
-	ENetPeer*	currentPacketSender;
+
+	int mazeSize;
+	float mazeDensity;
 };

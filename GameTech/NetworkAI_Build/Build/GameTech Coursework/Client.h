@@ -43,6 +43,7 @@ public:
 //////// SETTERS ////////
 	inline void SetPacketHandler(PacketHandler* pktHndl)	{ packetHandler = pktHndl; }
 	inline void SetName(string name)						{ m_SceneName = name; }
+	inline void SetPrintPathState(bool set = true)			{ printPath = set; }
 
 //////// GETTERS ////////
 	inline ENetPeer* GetServerConnection() { return serverConnection; }
