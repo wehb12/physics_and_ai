@@ -182,6 +182,7 @@ void PacketHandler::HandleMazeRequestPacket(MazeParamsPacket* reqPacket)
 		Client::Instance()->SetMazeParameters(mazeSize, mazeDensity);
 	else if (entityType == SERVER)
 	{
+		Server::Instance()->StopAvatars();
 		Server::Instance()->CreateNewMaze(mazeSize, mazeDensity);
 		Server::Instance()->SetMazeParamsPacket(reqPacket);
 

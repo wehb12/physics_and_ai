@@ -214,6 +214,9 @@ int main()
 			accum_time += dt;
 			rotation += 0.5f * PI * dt;
 
+			//Update Physics
+			PhysicsEngine::Instance()->Update(dt);
+
 			Server::Instance()->Update(dt);
 
 			//Handle All Incoming Packets and Send any enqued packets

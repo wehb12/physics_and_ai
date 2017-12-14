@@ -47,6 +47,17 @@ public:
 		return o;
 	}
 
+	inline const Vector2& Normalise()
+	{
+		float length = this->Length();
+		if (length > 0.0f)
+			length = 1 / length;
+		x = x * length;
+		y = y * length;
+
+		return *this;
+	}
+
 	inline Vector2  operator-(const Vector2  &a) const{
 		return Vector2(x - a.x,y - a.y);
 	}

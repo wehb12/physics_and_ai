@@ -25,7 +25,7 @@ void Server::UpdateAvatarPositions(float msec)
 				(*it)->timeToNext -= timeElapsed;
 				//(*it)->avatarPos = (*it)->avatarPos + (*it)->avatarVel;
 				(*it)->avatarPos.x = (*it)->avatarPNode->GetPosition().x;
-				(*it)->avatarPos.y = (*it)->avatarPNode->GetPosition().y;
+				(*it)->avatarPos.y = (*it)->avatarPNode->GetPosition().z;
 			}
 			else
 			{
@@ -188,8 +188,15 @@ void Server::AvatarBegin()
 
 	currentLink->avatarPos.x = currentLink->start.x;
 	currentLink->avatarPos.y = currentLink->start.y;
+	currentLink->avatarPNode->SetPosition(Vector3(currentLink->avatarPos.x, 0.0f, currentLink->avatarPos.y));
 
 	SetAvatarVelocity();
+}
+
+void Server::StopAvatars()
+{
+	for (auto it = clients.begin(); it != clients.end(); ++it)
+		(*it)->Init();
 }
 
 void Server::SetAvatarVelocity(ConnectedClient* client)
@@ -203,11 +210,12 @@ void Server::SetAvatarVelocity(ConnectedClient* client)
 	Vector2 nodeB;
 	nodeB.x = maze->allNodes[client->pathIndices[client->currentAvatarIndex + 1]]._pos.x;
 	nodeB.y = maze->allNodes[client->pathIndices[client->currentAvatarIndex + 1]]._pos.y;
-	float nodeToNodeDist = (nodeA - nodeB).Length();
+	Vector2 nodeToNode = nodeB - nodeA;
+	float nodeToNodeDist = nodeToNode.Length();
 	client->timeStep = nodeToNodeDist / avatarSpeed;
 	client->timeToNext = client->timeStep;
 
-	client->avatarVel = (nodeB - nodeA) * (avatarSpeed / TIME_STEP);
+	client->avatarVel = nodeToNode.Normalise() * (MAGIC_SCALAR * avatarSpeed * nodeToNodeDist);
 	client->avatarPNode->SetLinearVelocity(Vector3(client->avatarVel.x, 0.0f, client->avatarVel.y));
 }
 

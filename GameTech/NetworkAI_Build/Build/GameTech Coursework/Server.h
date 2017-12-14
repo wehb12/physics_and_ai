@@ -24,6 +24,7 @@ which handles packet transmissions and receipt
 
 #define TIME_STEP 1.0f / 30.0f
 #define SPEED 2.0f
+#define MAGIC_SCALAR 0.9567f
 
 struct ConnectedClient
 {
@@ -112,6 +113,7 @@ public:
 
 	void AvatarBegin();
 	void BroadcastAvatar();
+	void StopAvatars();
 
 //////// SETTERS ////////
 	inline void SetPacketHandler(PacketHandler* pktHndl)	{ packetHandler = pktHndl; }
