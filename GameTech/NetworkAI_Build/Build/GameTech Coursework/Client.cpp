@@ -102,6 +102,7 @@ Client::Client()
 	, currentIndex(0)
 	, clientID(0)
 	, usePhysics(false)
+	, stringPulling(false)
 {
 	GLuint whitetex;
 	glGenTextures(1, &whitetex);
@@ -200,6 +201,8 @@ void Client::OnUpdateScene(float dt)
 		NCLDebug::AddStatusEntry(paramsColour, "    Next Maze Size: %d [1/2] to change", mazeSize);
 		NCLDebug::AddStatusEntry(paramsColour, "    Next Maze Density: %5.2f [3/4] to change", mazeDensity);
 		NCLDebug::AddStatusEntry(paramsColour, "    Use PhysicsEngine: %s [U] to toggle", usePhysics ? "YES" : "NO");
+		NCLDebug::AddStatusEntry(paramsColour, "");
+		NCLDebug::AddStatusEntry(paramsColour, "    Path Length: %d", pathLength);
 		Vector4 controlsColour = Vector4(0.2f, 1.0f, 0.2f, 1.0f);
 		NCLDebug::AddStatusEntry(controlsColour, "");
 		NCLDebug::AddStatusEntry(controlsColour, "Scene Controls:");
@@ -208,6 +211,7 @@ void Client::OnUpdateScene(float dt)
 		NCLDebug::AddStatusEntry(controlsColour, "");
 		NCLDebug::AddStatusEntry(controlsColour, "    Press [P] to toggle path");
 		NCLDebug::AddStatusEntry(controlsColour, "    Press [L] to send start/ end data");
+		NCLDebug::AddStatusEntry(controlsColour, "    String pulling %s: Press [K] to toggle", stringPulling ? "ENABLED" : "DISABLED");
 	}
 }
 
@@ -278,9 +282,20 @@ void Client::HandleKeyboardInput()
 		if (maze)
 		{
 			usePhysics = !usePhysics;
-			TogglePhysicsPacket* physPacket = new TogglePhysicsPacket(usePhysics);
+			ToggleBooleanPacket* physPacket = new ToggleBooleanPacket(TOGGLE_PHYSICS, usePhysics);
 			packetHandler->SendPacket(serverConnection, physPacket);
 			delete physPacket;
+		}
+	}
+
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_K))
+	{
+		if (maze)
+		{
+			stringPulling = !stringPulling;
+			ToggleBooleanPacket* stringPacket = new ToggleBooleanPacket(TOGGLE_STRING_PULLING, stringPulling);
+			packetHandler->SendPacket(serverConnection, stringPacket);
+			delete stringPacket;
 		}
 	}
 

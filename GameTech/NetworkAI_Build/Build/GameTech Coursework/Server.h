@@ -35,6 +35,7 @@ struct ConnectedClient
 	Vector3 start, end;
 	int* pathIndices;
 	int pathLength;
+	bool stringPulling;
 	bool move;
 	Vector2 avatarPos;
 	Vector2 avatarVel;
@@ -64,6 +65,7 @@ struct ConnectedClient
 		end = Vector3(0, 0, 0);
 		pathIndices = NULL;
 		pathLength = 0;
+		stringPulling = false;
 		move = false;
 		avatarPos = Vector2(0, 0);
 		avatarVel = Vector2(0, 0);
@@ -144,6 +146,7 @@ public:
 	inline void SetMazeParamsPacket(Packet* dataPacket)		{ SAFE_DELETE(mazeParams); mazeParams = dataPacket; }
 	inline void SetMazeDataPacket(Packet* dataPacket)		{ SAFE_DELETE(mazeData); mazeData = dataPacket; }
 	inline void TogglePhysics(bool usePhysics)				{ currentLink->usePhysics = usePhysics; }
+	inline void ToggleStringPulling(bool strPull)			{ currentLink->stringPulling = strPull; }
 
 //////// GETTERS ////////
 	inline ENetPeer* GetCurrentPeerAddress()				{ return currentPeer; }

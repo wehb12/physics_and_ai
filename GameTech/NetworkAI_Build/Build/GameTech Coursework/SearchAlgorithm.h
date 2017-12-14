@@ -60,6 +60,45 @@ public:
 	const SearchHistory&			   GetSearchHistory()	const { return searchHistory; }
 	const std::list<const GraphNode*>& GetFinalPath()		const { return finalPath; }
 
+	void StringPulling()
+	{
+		if (finalPath.size() > 2)
+		{
+			std::vector<const GraphNode*> tempPath;// { finalPath.begin(), finalPath.end() };
+			tempPath.push_back(*(finalPath.begin()));
+			auto prev = finalPath.begin();
+			++prev;
+			auto next = prev;
+			++next;
+
+			for (auto it = finalPath.begin(); it != finalPath.end() && next != finalPath.end();)
+			{
+				Vector3 posI = (*it)->_pos;
+				Vector3 posNext = (*next)->_pos;
+				Vector3 dir = posI - posNext;
+				if (!IsOrthogonal(dir))
+				{
+					tempPath.push_back(*prev);
+					it = prev;
+				}
+				else
+				{
+					++prev;
+					++next;
+				}
+			}
+			finalPath.clear();
+			finalPath.assign(tempPath.begin(), tempPath.end());
+		}
+	}
+
+	bool IsOrthogonal(Vector3 dir)
+	{
+		float dot = Vector3::Dot(dir.Normalise(), Vector3(1, 0, 0));
+
+		return dot == 1 || dot == 0 || dot == -1;
+	}
+
 protected:
 	void BuildPathFromParentMap(const GraphNode* start, const GraphNode* goal, const ParentMap& map)
 	{

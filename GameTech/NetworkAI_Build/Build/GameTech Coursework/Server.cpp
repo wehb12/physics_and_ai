@@ -182,6 +182,8 @@ void Server::UpdateClientPath()
 {
 	SearchAStar* aStarSearch = new SearchAStar;
 	aStarSearch->FindBestPath(maze->start, maze->end);
+	if (currentLink->stringPulling)
+		aStarSearch->StringPulling();
 
 	const std::list<const GraphNode*> path = aStarSearch->GetFinalPath();
 	delete aStarSearch;

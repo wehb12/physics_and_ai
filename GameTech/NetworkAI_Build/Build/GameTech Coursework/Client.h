@@ -112,6 +112,7 @@ protected:
 	int* path;
 	int pathLength;
 	bool printPath;
+	bool stringPulling;
 
 	// bool that controls which position (start/ end) the user is moving
 	bool start;

@@ -177,9 +177,19 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 		{
 			if (entityType == SERVER)
 			{
-				TogglePhysicsPacket* physPacket = new TogglePhysicsPacket(packet->data);
-				Server::Instance()->TogglePhysics(physPacket->usePhysics);
+				ToggleBooleanPacket* physPacket = new ToggleBooleanPacket(packet->data);
+				Server::Instance()->TogglePhysics(physPacket->value);
 				delete physPacket;
+			}
+			break;
+		}
+		case TOGGLE_STRING_PULLING:
+		{
+			if (entityType == SERVER)
+			{
+				ToggleBooleanPacket* stringPacket = new ToggleBooleanPacket(packet->data);
+				Server::Instance()->ToggleStringPulling(stringPacket->value);
+				delete stringPacket;
 			}
 			break;
 		}

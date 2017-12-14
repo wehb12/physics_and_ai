@@ -123,3 +123,30 @@ public:
 	// this is the client's avatar colour
 	float colour;
 };
+
+class ToggleBooleanPacket : public Packet
+{
+public:
+	ToggleBooleanPacket(enet_uint8 type, bool value) :
+		Packet(type, 2),
+		value(value)
+	{ }
+
+	ToggleBooleanPacket(enet_uint8* data) :
+		Packet(*data, 2),
+		value(*(data + 1) == SUCCESS)
+	{ }
+
+	virtual enet_uint8* CreateByteStream()
+	{
+		enet_uint8* data = new enet_uint8[size];
+
+		data[0] = type;
+		data[1] = value ? SUCCESS : FAILURE;
+
+		return data;
+	}
+
+public:
+	bool value;
+};

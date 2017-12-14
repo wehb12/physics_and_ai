@@ -133,30 +133,3 @@ public:
 	float avatarColour;
 	enet_uint8 iD;
 };
-
-class TogglePhysicsPacket : public Packet
-{
-public:
-	TogglePhysicsPacket(bool usePhysics) : 
-		Packet(TOGGLE_PHYSICS, 2),
-		usePhysics(usePhysics)
-	{ }
-
-	TogglePhysicsPacket(enet_uint8* data) :
-		Packet(TOGGLE_PHYSICS, 2),
-		usePhysics(*(data +1) == SUCCESS)
-	{ }
-
-	virtual enet_uint8* CreateByteStream()
-	{
-		enet_uint8* data = new enet_uint8[size];
-
-		data[0] = type;
-		data[1] = usePhysics ? SUCCESS : FAILURE;
-		
-		return data;
-	}
-
-public:
-	bool usePhysics;
-};
