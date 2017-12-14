@@ -179,6 +179,7 @@ void HandleKeyboardInputs()
 		Matrix4 view = GraphicsPipeline::Instance()->GetCamera()->BuildViewMatrix();
 		Vector3 dir = Vector3(30 * view[2], 30 * view[6], 30 * view[10]);
 		sphere->Physics()->SetLinearVelocity(-dir);
+
 		SceneManager::Instance()->GetCurrentScene()->AddGameObject(sphere);
 	}
 
@@ -197,6 +198,7 @@ void HandleKeyboardInputs()
 		Matrix4 view = GraphicsPipeline::Instance()->GetCamera()->BuildViewMatrix();
 		Vector3 dir = Vector3(30 * view[2], 30 * view[6], 30 * view[10]);
 		cuboid->Physics()->SetLinearVelocity(-dir);
+
 		SceneManager::Instance()->GetCurrentScene()->AddGameObject(cuboid);
 	}
 

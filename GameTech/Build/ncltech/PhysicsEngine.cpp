@@ -7,9 +7,7 @@
 #include <algorithm>
 
 extern "C" int CUDA_run(Vector3* cu_pos, float* cu_radius,
-	Vector3* cu_globalOnA, Vector3* cu_globalOnB,
-	Vector3* cu_normal, float* cu_penetration, int* cuda_nodeAIndex,
-	int* cuda_nodeBIndex, int entities);
+	Vector3* cu_velIn, Vector3* cu_velOut, int entities);
 extern "C" bool CUDA_init(int arrSize);
 extern "C" bool CUDA_free();
 
@@ -775,12 +773,6 @@ void PhysicsEngine::ToggleGPUAcceleration()
 		if (!CUDA_init(physicsNodes.size() - 5))
 			cout << "Error initialising GPU memory" << endl;
 		InitCPUMemory();
-
-		// (??)
-		//for (int i = 0; i < physicsNodes.size(); ++i)
-		//{
-
-		//}
 	}
 	else
 	{
@@ -797,24 +789,16 @@ void PhysicsEngine::InitCPUMemory()
 	radii = new float[arrSize];
 
 	int maxNumColPairs = arrSize * arrSize * 0.5;
-	globalOnA = new Vector3[maxNumColPairs];
-	globalOnB = new Vector3[maxNumColPairs];
-	normal = new Vector3[maxNumColPairs];
-	penetration = new float[maxNumColPairs];
-	indexA = new int[maxNumColPairs];
-	indexB = new int[maxNumColPairs];
+	velocityIn = new Vector3[maxNumColPairs];
+	velocityOut = new Vector3[maxNumColPairs];
 }
 
 void PhysicsEngine::FreeCPUMemory()
 {
 	delete[] positions;
 	delete[] radii;
-	delete[] globalOnA;
-	delete[] globalOnB;
-	delete[] normal;
-	delete[] penetration;
-	delete[] indexA;
-	delete[] indexB;
+	delete[] velocityIn;
+	delete[] velocityOut;
 }
 
 void PhysicsEngine::GPUCollisionCheck()
@@ -899,7 +883,7 @@ void PhysicsEngine::GPUCollisionCheck()
 		++index;
 	}
 	
-	CUDA_run(positions, radii, globalOnA, globalOnB, normal, penetration, indexA, indexB, arrSize);
+	CUDA_run(positions, radii, velocityIn, velocityOut, arrSize);
 
 	int maxNumColPairs = arrSize * arrSize * 0.5;
 

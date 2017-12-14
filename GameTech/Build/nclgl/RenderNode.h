@@ -36,6 +36,7 @@ public:
 
 	virtual void DrawOpenGL(bool isShadowPass)
 	{
+
 		if (this->mesh)
 			this->mesh->Draw();
 	}
@@ -66,6 +67,9 @@ public:
 	void			SetMesh(Mesh*m) { mesh = m; }
 	Mesh*			GetMesh() { return mesh; }
 
+	void SetCullFace(bool state = true)		{ cullFace = state; }
+	bool GetCullFace()						{ return cullFace; }
+
 	bool	IsAwake() { return awake; }
 	void	Wake() { awake = true; }
 	void	Sleep() { awake = false; }
@@ -87,5 +91,7 @@ protected:
 	Mesh*		mesh;
 	bool		awake;
 	std::vector<RenderNode*>		children;
+
+	bool cullFace;
 };
 

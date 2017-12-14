@@ -395,6 +395,10 @@ void GraphicsPipeline::RenderAllObjects(bool isShadowPass, std::function<void(Re
 {
 	for (RenderNode* node : renderlistOpaque)
 	{
+		if (node->GetCullFace())
+			glEnable(GL_CULL_FACE);
+		else
+			glDisable(GL_CULL_FACE);
 		perObjectFunc(node);
 		node->DrawOpenGL(isShadowPass);
 	}

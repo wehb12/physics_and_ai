@@ -7,6 +7,7 @@ RenderNode::RenderNode(Mesh*mesh, Vector4 colour) {
 	parent = NULL;
 	boundingRadius = 100.0f;
 	distanceFromCamera = 0.0f;
+	cullFace = false;
 
 	modelScale = Vector3(1, 1, 1);
 }

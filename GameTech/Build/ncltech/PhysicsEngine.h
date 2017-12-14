@@ -189,12 +189,8 @@ protected:
 	Vector3* positions;
 	float* radii;
 
-	Vector3* globalOnA;
-	Vector3* globalOnB;
-	Vector3* normal;
-	float* penetration;
-	int* indexA;
-	int* indexB;
+	Vector3* velocityIn;
+	Vector3* velocityOut;
 
 	std::vector<PhysicsNode*>	physicsNodes;
 

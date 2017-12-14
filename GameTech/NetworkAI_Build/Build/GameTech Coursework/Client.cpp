@@ -455,7 +455,7 @@ void Client::PrintPath()
 	if (maze && mazeRender)
 	{
 		float grid_scalar = 1.0f / (float)maze->GetSize();
-		float col_factor = 0.2f / (float)pathLength;
+		float col_factor = 1 / (float)pathLength;
 
 		Matrix4 transform = mazeRender->Render()->GetWorldTransform();
 
@@ -471,7 +471,7 @@ void Client::PrintPath()
 				0.1f,
 				(maze->allNodes[path[i + 1]]._pos.y + 0.5f) * grid_scalar);
 
-			NCLDebug::DrawThickLine(start, end, 2.5f / maze->size, CommonUtils::GenColor(0.8f + i * col_factor));
+			NCLDebug::DrawThickLine(start, end, 2.5f / maze->size, CommonUtils::GenColor(i * col_factor));
 		}
 	}
 }

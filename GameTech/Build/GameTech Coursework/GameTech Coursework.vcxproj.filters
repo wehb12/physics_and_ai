@@ -39,9 +39,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CUDA_SphereSphereCheck.cuh" />
-    <ClInclude Include="SoftBodySegment.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CUDA_SphereSphereCheck.cu" />

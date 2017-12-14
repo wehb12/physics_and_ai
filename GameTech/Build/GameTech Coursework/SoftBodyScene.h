@@ -12,6 +12,7 @@
 #include "../ncltech/SpringConstraint.h"
 #include "../ncltech/DistanceConstraint.h"
 #include "../ncltech/SphereCollisionShape.h"
+#include "../ncltech/ScreenPicker.h"
 
 #ifndef GRAVITY
 #define GRAVITY 9.81f
@@ -64,6 +65,7 @@ public:
 				pointPhys->SetElasticity(0.2f);
 
 				GameObject* pointObj = new GameObject("cloth_point" + to_string(i * CLOTH_SIZE_Y + j));
+				gameObjs[index] = pointObj;
 				pointObj->SetPhysics(pointPhys);
 				pointObj->SetBoundingRadius(SEPARATION / 2);
 
@@ -148,25 +150,23 @@ public:
 				triangle[0] = m_vpObjects[index]->Physics()->GetPosition();
 				triangle[1] = m_vpObjects[index + 1]->Physics()->GetPosition();
 				triangle[2] = m_vpObjects[index + CLOTH_SIZE_Y]->Physics()->GetPosition();
-				if (renderObjs[renderIndex])
-				{
-					Mesh* m = renderObjs[renderIndex]->GetMesh();
-					SAFE_DELETE(m);
-					SAFE_DELETE(renderObjs[renderIndex]);
-				}
+
 				renderObjs[renderIndex] = new RenderNode(GenerateTriangle(triangle), Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+				renderObjs[renderIndex]->SetCullFace(false);
 				GraphicsPipeline::Instance()->AddRenderNode(renderObjs[renderIndex]);
+				//gameObjs[index - 1]->SetRender(renderObjs[renderIndex]);
+
+				ScreenPicker::Instance()->RegisterNodeForMouseCallback(
+					renderObjs[renderIndex],
+					std::bind(&CommonUtils::DragableObjectCallback, gameObjs[index - 1], std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)
+				);
 
 				triangle[0] = m_vpObjects[index + 1]->Physics()->GetPosition();
 				triangle[1] = m_vpObjects[index + CLOTH_SIZE_Y + 1]->Physics()->GetPosition();
 				triangle[2] = m_vpObjects[index + CLOTH_SIZE_Y]->Physics()->GetPosition();
-				if (renderObjs[renderIndex + 1])
-				{
-					Mesh* m = renderObjs[renderIndex + 1]->GetMesh();
-					SAFE_DELETE(m);
-					SAFE_DELETE(renderObjs[renderIndex + 1]);
-				}
+
 				renderObjs[renderIndex + 1] = new RenderNode(GenerateTriangle(triangle), Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+				renderObjs[renderIndex + 1]->SetCullFace(false);
 
 				GraphicsPipeline::Instance()->AddRenderNode(renderObjs[renderIndex + 1]);
 			}
@@ -183,6 +183,7 @@ public:
 private:
 	// two triangles per square, (CLOTH_SIZE_X - 1) * (CLOTH_SIZE_Y - 1) squares
 	RenderNode* renderObjs[2 * (CLOTH_SIZE_X - 1) * (CLOTH_SIZE_Y - 1)];
+	GameObject* gameObjs[CLOTH_SIZE_X * CLOTH_SIZE_Y];
 	GLuint tex;
 
 	void BuildMesh()

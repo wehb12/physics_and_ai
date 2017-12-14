@@ -19,7 +19,7 @@ class CUDA_BallPool : public Scene
 {
 public:
 	CUDA_BallPool(const std::string& friendly_name)
-		: Scene(friendly_name)
+		: Scene(friendly_name), firedEntities(0)
 	{ }
 
 	virtual void OnInitializeScene() override
@@ -108,10 +108,16 @@ public:
 		if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_U))
 			PhysicsEngine::Instance()->ToggleGPUAcceleration();
 
-		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "There are %d balls in the ball pool", BALL_NUMBER);
+		if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_J) || Window::GetKeyboard()->KeyTriggered(KEYBOARD_J))
+			++firedEntities;
+
+		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "There are %d balls in the ball pool", BALL_NUMBER + firedEntities);
 		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "");
 		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "--- Controls ---");
 		NCLDebug::AddStatusEntry(Vector4(1.0f, 0.9f, 0.8f, 1.0f), "    GPU Acceleration : %s ([U] to toggle)",
 			PhysicsEngine::Instance()->GetGPUAccelerationState() ? "Enabled" : "Disabled");
 	}
+
+private:
+	int firedEntities;
 };
