@@ -42,9 +42,14 @@ public:
 	inline void CreateAvatar(float colour)
 	{
 		avatarColour.push_back(colour);
-		AddAvatar(colour);
+		if(maze)
+			AddAvatar(colour);
 	}
-	inline void RemoveAvatar(int index) { mazeRender->RemoveAvatar(index); avatarPosition.erase(avatarPosition.begin() + index); }
+	inline void RemoveAvatar(int index)
+	{
+		mazeRender->RemoveAvatar(index);
+		avatarPosition.erase(avatarPosition.begin() + index);
+	}
 
 //////// SETTERS ////////
 	inline void SetPacketHandler(PacketHandler* pktHndl)	{ packetHandler = pktHndl; }

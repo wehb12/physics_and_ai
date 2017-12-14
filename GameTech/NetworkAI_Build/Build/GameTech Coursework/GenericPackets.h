@@ -8,6 +8,9 @@ using namespace std;
 class MessagePacket : public Packet
 {
 public:
+	string message;
+
+public:
 	MessagePacket(string msg) :
 		Packet(MESSAGE, 2 + msg.size()),
 		message(msg)
@@ -33,9 +36,6 @@ public:
 
 		return data;
 	}
-
-public:
-	string message;
 };
 
 enum PreviousInstructionStatus
@@ -46,6 +46,9 @@ enum PreviousInstructionStatus
 
 class InstructionCompletePacket : public Packet
 {
+public:
+	enet_uint8 status;
+
 public:
 	InstructionCompletePacket(enet_uint8 status) :
 		Packet(INSTR_COMPLETE, 2),
@@ -69,14 +72,16 @@ public:
 		data[1] = status;
 		return data;
 	}
-
-public:
-	enet_uint8 status;
 };
 
 // used to tell client they are connected and the server knows abou them
 class ConfirmConnectionPacket : public Packet
 {
+public:
+	enet_uint8 clientID;
+	// this is the client's avatar colour
+	float colour;
+
 public:
 	ConfirmConnectionPacket(enet_uint8 iD, float colour) :
 		Packet(CONFIRM_CONNECTION, 3 + to_string(colour).size()),
@@ -117,15 +122,13 @@ public:
 
 		return data;
 	}
-
-public:
-	enet_uint8 clientID;
-	// this is the client's avatar colour
-	float colour;
 };
 
 class ToggleBooleanPacket : public Packet
 {
+public:
+	bool value;
+
 public:
 	ToggleBooleanPacket(enet_uint8 type, bool value) :
 		Packet(type, 2),
@@ -146,7 +149,4 @@ public:
 
 		return data;
 	}
-
-public:
-	bool value;
 };

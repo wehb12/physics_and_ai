@@ -148,6 +148,7 @@
     <ClInclude Include="CUDA_BallPool.h" />
     <ClInclude Include="CUDA_SphereSphereCheck.cuh" />
     <ClInclude Include="EmptyScene.h" />
+    <ClInclude Include="SoftBodySegment.h" />
     <ClInclude Include="SoftBodyScene.h" />
     <ClInclude Include="TargetPractise.h" />
     <ClInclude Include="TestScene.h" />

@@ -163,6 +163,17 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 			}
 			break;
 		}
+		case AVATAR_REMOVE:
+		{
+			if (entityType == CLIENT)
+			{
+				NewAvatarPacket* removeAvatar = new NewAvatarPacket(packet->data);
+				if (removeAvatar->iD != Client::Instance()->GetID())
+					Client::Instance()->RemoveAvatar(removeAvatar->iD);
+				delete removeAvatar;
+			}
+			break;
+		}
 		case CONFIRM_CONNECTION:
 		{
 			if (entityType == CLIENT)

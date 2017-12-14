@@ -9,6 +9,12 @@
 class AvatarPositionPacket : public Packet
 {
 public:
+	float posX;
+	float posY;
+	enet_uint16 currentIndex;
+	enet_uint8 iD;	//iD of client who this avatar belongs to
+
+public:
 	AvatarPositionPacket(float posX, float posY, int index, int iD) :
 		Packet(AVATAR_POSITION, 6 + to_string(posX).size() + to_string(posY).size()),
 		posX(posX),
@@ -80,25 +86,23 @@ public:
 
 		return data;
 	}
-
-public:
-	float posX;
-	float posY;
-	enet_uint16 currentIndex;
-	enet_uint8 iD;	//iD of client who this avatar belongs to
 };
 
 class NewAvatarPacket : public Packet
 {
 public:
-	NewAvatarPacket(float colour, int iD) :
-		Packet(AVATAR_NEW, 3 + to_string(colour).size()),
+	float avatarColour;
+	enet_uint8 iD;
+
+public:
+	NewAvatarPacket(int type, float colour, int iD) :
+		Packet(type, 3 + to_string(colour).size()),
 		avatarColour(colour),
 		iD(iD)
 	{ }
 
 	NewAvatarPacket(enet_uint8* data) :
-		Packet(AVATAR_NEW, *(data + 1)),
+		Packet(*data, *(data + 1)),
 		iD(*(data + 2))
 	{
 		string colString = "";
@@ -124,12 +128,6 @@ public:
 		for (int i = 0; i < colString.size(); ++i)
 			*(data + 3 + i) = colString[i];
 
-		//data[size - 1] = '\0';
-
 		return data;
 	}
-
-public:
-	float avatarColour;
-	enet_uint8 iD;
 };

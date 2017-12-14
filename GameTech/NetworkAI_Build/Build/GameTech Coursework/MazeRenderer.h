@@ -51,6 +51,7 @@ public:
 		RenderNode* toRemove = NULL;
 		if (index < numAvatars)
 			toRemove = *(Render()->GetChildIteratorEnd() - numAvatars + index);
+		renderNode->RemoveChild(toRemove);
 		SAFE_DELETE(toRemove);
 		--numAvatars;
 	}

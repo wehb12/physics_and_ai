@@ -64,7 +64,7 @@ public:
 	{
 		if (finalPath.size() > 2)
 		{
-			std::vector<const GraphNode*> tempPath;// { finalPath.begin(), finalPath.end() };
+			std::vector<const GraphNode*> tempPath;
 			tempPath.push_back(*(finalPath.begin()));
 			auto prev = finalPath.begin();
 			++prev;

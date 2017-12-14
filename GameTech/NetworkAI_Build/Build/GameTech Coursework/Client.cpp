@@ -596,7 +596,8 @@ void Client::UpdateAvatar(int iD)
 
 	if (iD == 0 && !ifMoved)
 	{
-		startNode = maze->allNodes[path[currentIndex]];
+		if (currentIndex < pathLength)
+			startNode = maze->allNodes[path[currentIndex]];
 	}
 }
 

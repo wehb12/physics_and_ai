@@ -96,7 +96,7 @@ void Server::InformClient(ENetPeer* peer)
 {
 	for (auto it = clients.begin(); it != clients.end(); ++it)
 	{
-		NewAvatarPacket* avatar = new NewAvatarPacket((*it)->colour, (*it)->clientID);
+		NewAvatarPacket* avatar = new NewAvatarPacket(AVATAR_NEW, (*it)->colour, (*it)->clientID);
 		packetHandler->SendPacket(peer, avatar);
 		delete avatar;
 	}
@@ -115,12 +115,17 @@ void Server::RemoveClient(ENetPeer* address)
 		int i = 0;
 		for (auto it = clients.begin(); it != clients.end(); ++it)
 		{
-			if (AddressesEqual(currentLink->peer, address))
+			if (AddressesEqual((*it)->peer, address))
 			{
+				NewAvatarPacket* removeAvatarPacket = new NewAvatarPacket(AVATAR_REMOVE, (*it)->colour, (*it)->clientID);
+				packetHandler->BroadcastPacket(removeAvatarPacket);
+				delete removeAvatarPacket;
+
 				ConnectedClient* temp = (*it);
 				clients.erase(it);
 				SAFE_DELETE(temp);
 				--numClients;
+
 				break;
 			}
 			++i;
@@ -279,7 +284,7 @@ void Server::BroadcastAvatarPosition(ConnectedClient* client)
 
 void Server::BroadcastAvatar()
 {
-	NewAvatarPacket* newAvatar = new NewAvatarPacket(currentLink->colour, currentLink->clientID);
+	NewAvatarPacket* newAvatar = new NewAvatarPacket(AVATAR_NEW, currentLink->colour, currentLink->clientID);
 	packetHandler->BroadcastPacket(newAvatar);
 	delete newAvatar;
 }

@@ -19,7 +19,7 @@
 
 #define CLOTH_SIZE_X 10
 #define CLOTH_SIZE_Y 5
-#define SEPARATION 1.0f
+#define SEPARATION 0.5f
 #define MAX_X CLOTH_SIZE_X / 2
 #define MIN_X - CLOTH_SIZE_X / 2
 #define MIN_Y 5
@@ -37,7 +37,6 @@ public:
 		Scene::OnInitializeScene();
 
 		uint drawFlags = PhysicsEngine::Instance()->GetDebugDrawFlags();
-		drawFlags ^= DEBUGDRAW_FLAGS_CONSTRAINT;
 		PhysicsEngine::Instance()->SetDebugDrawFlags(drawFlags);
 
 		this->AddGameObject(CommonUtils::BuildCuboidObject(
@@ -55,20 +54,18 @@ public:
 		{
 			for (int j = 0; j < CLOTH_SIZE_Y; ++j)
 			{
+				int index = i * CLOTH_SIZE_Y + j;
 				PhysicsNode* pointPhys = new PhysicsNode();
-				SphereCollisionShape* sphere = new SphereCollisionShape(0.5f);
+				SphereCollisionShape* sphere = new SphereCollisionShape(SEPARATION / 2);
 				pointPhys->SetCollisionShape(sphere);
-				pointPhys->SetPosition(Vector3(i + MIN_X, j + MIN_Y, 0));
+				pointPhys->SetPosition(Vector3(i * SEPARATION + MIN_X, j * SEPARATION + MIN_Y, 0));
 				pointPhys->SetInverseMass(invMass);
 				pointPhys->SetInverseInertia(sphere->BuildInverseInertia(invMass));
 				pointPhys->SetElasticity(0.2f);
 
-				//RenderNode* pointRen = new RenderNode();
-
 				GameObject* pointObj = new GameObject("cloth_point" + to_string(i * CLOTH_SIZE_Y + j));
-
 				pointObj->SetPhysics(pointPhys);
-				pointObj->SetBoundingRadius(0.5f);
+				pointObj->SetBoundingRadius(SEPARATION / 2);
 
 				this->AddGameObject(pointObj);
 			}
@@ -151,12 +148,24 @@ public:
 				triangle[0] = m_vpObjects[index]->Physics()->GetPosition();
 				triangle[1] = m_vpObjects[index + 1]->Physics()->GetPosition();
 				triangle[2] = m_vpObjects[index + CLOTH_SIZE_Y]->Physics()->GetPosition();
+				if (renderObjs[renderIndex])
+				{
+					Mesh* m = renderObjs[renderIndex]->GetMesh();
+					SAFE_DELETE(m);
+					SAFE_DELETE(renderObjs[renderIndex]);
+				}
 				renderObjs[renderIndex] = new RenderNode(GenerateTriangle(triangle), Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 				GraphicsPipeline::Instance()->AddRenderNode(renderObjs[renderIndex]);
 
 				triangle[0] = m_vpObjects[index + 1]->Physics()->GetPosition();
 				triangle[1] = m_vpObjects[index + CLOTH_SIZE_Y + 1]->Physics()->GetPosition();
 				triangle[2] = m_vpObjects[index + CLOTH_SIZE_Y]->Physics()->GetPosition();
+				if (renderObjs[renderIndex + 1])
+				{
+					Mesh* m = renderObjs[renderIndex + 1]->GetMesh();
+					SAFE_DELETE(m);
+					SAFE_DELETE(renderObjs[renderIndex + 1]);
+				}
 				renderObjs[renderIndex + 1] = new RenderNode(GenerateTriangle(triangle), Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 
 				GraphicsPipeline::Instance()->AddRenderNode(renderObjs[renderIndex + 1]);
@@ -200,7 +209,7 @@ private:
 
 	Mesh* GenerateTriangle(Vector3 *points)
 	{
-		Mesh*m = new Mesh();
+		Mesh* m = new Mesh();
 		m->numVertices = 3;
 
 		m->vertices = new Vector3[m->numVertices];
@@ -209,9 +218,9 @@ private:
 		m->vertices[2] = points[2];
 
 		m->textureCoords = new Vector2[m->numVertices];
-		m->textureCoords[0] = Vector2(points[0].x / (MAX_X - MIN_X), points[0].y / (MAX_Y - MIN_Y));
-		m->textureCoords[1] = Vector2(points[1].x / (MAX_X - MIN_X), points[1].y / (MAX_Y - MIN_Y));
-		m->textureCoords[2] = Vector2(points[2].x / (MAX_X - MIN_X), points[2].y / (MAX_Y - MIN_Y));
+		m->textureCoords[0] = Vector2(points[0].x / (-(MAX_X - MIN_X) * SEPARATION), points[0].y / ((MAX_X - MIN_X) * SEPARATION* SEPARATION));
+		m->textureCoords[1] = Vector2(points[1].x / (-(MAX_X - MIN_X) * SEPARATION), points[1].y / ((MAX_X - MIN_X) * SEPARATION* SEPARATION));
+		m->textureCoords[2] = Vector2(points[2].x / (-(MAX_X - MIN_X) * SEPARATION), points[2].y / ((MAX_X - MIN_X) * SEPARATION* SEPARATION));
 
 		m->colours = new Vector4[m->numVertices];
 		m->colours[0] = Vector4(1.0f, 1.0f, 1.0f, 0.0f);
@@ -234,6 +243,31 @@ private:
 
 		m->GenerateNormals();
 		m->GenerateTangents();
+		UnBufferData(m);
 		m->BufferData();
+	}
+
+	void UnBufferData(Mesh* m)
+	{
+		glBindVertexArray(m->arrayObject);
+
+		glDeleteBuffers(1, &m->bufferObject[VERTEX_BUFFER]);
+
+		if (m->textureCoords)
+			glDeleteBuffers(1, &m->bufferObject[TEXTURE_BUFFER]);
+
+		if (m->colours)
+			glDeleteBuffers(1, &m->bufferObject[COLOUR_BUFFER]);
+
+		if (m->normals)
+			glDeleteBuffers(1, &m->bufferObject[NORMAL_BUFFER]);
+
+		if (m->tangents)
+			glDeleteBuffers(1, &m->bufferObject[TANGENT_BUFFER]);
+
+		if (m->indices)
+			glDeleteBuffers(1, &m->bufferObject[INDEX_BUFFER]);
+
+		glBindVertexArray(0);
 	}
 };
