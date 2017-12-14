@@ -102,6 +102,7 @@ Client::Client()
 	, avatarPosition(Vector2(0, 0))
 	, avatarColour(0.0f)
 	, clientID(0)
+	, usePhysics(false)
 {
 	GLuint whitetex;
 	glGenTextures(1, &whitetex);
@@ -213,6 +214,7 @@ void Client::OnUpdateScene(float dt)
 		NCLDebug::AddStatusEntry(paramsColour, "");
 		NCLDebug::AddStatusEntry(paramsColour, "    Next Maze Size: %d [1/2] to change", mazeSize);
 		NCLDebug::AddStatusEntry(paramsColour, "    Next Maze Density: %5.2f [3/4] to change", mazeDensity);
+		NCLDebug::AddStatusEntry(paramsColour, "    Use PhysicsEngine: %s [U] to toggle", usePhysics ? "YES" : "NO");
 		Vector4 controlsColour = Vector4(0.2f, 1.0f, 0.2f, 1.0f);
 		NCLDebug::AddStatusEntry(controlsColour, "");
 		NCLDebug::AddStatusEntry(controlsColour, "Scene Controls:");
@@ -275,6 +277,7 @@ void Client::HandleKeyboardInput()
 		MazeParamsPacket* packet = new MazeParamsPacket(mazeSize, mazeDensity);
 		lastDensity = mazeDensity;
 		packetHandler->SendPacket(serverConnection, packet);
+		usePhysics = false;
 
 		delete packet;
 	}
@@ -292,6 +295,14 @@ void Client::HandleKeyboardInput()
 
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_P))
 		printPath = !printPath;
+
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_U))
+	{
+		usePhysics = !usePhysics;
+		TogglePhysicsPacket* physPacket = new TogglePhysicsPacket(usePhysics);
+		packetHandler->SendPacket(serverConnection, physPacket);
+		delete physPacket;
+	}
 
 	// resend destination positions to server
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_L))

@@ -1,20 +1,20 @@
 #include "PacketHandler.h"
 #include "Server.h"
 
-void Server::Update(float msec)
+void Server::Update(float sec)
 {
-	timeElapsed += msec;
+	timeElapsed += sec;
 
 	if (timeElapsed > TIME_STEP)
 	{
 		if (clients.size() > 0)
-			UpdateAvatarPositions(msec);
+			UpdateAvatarPositions(sec);
 
 		timeElapsed = 0.0f;
 	}
 }
 
-void Server::UpdateAvatarPositions(float msec)
+void Server::UpdateAvatarPositions(float sec)
 {
 	for (auto it = clients.begin(); it != clients.end(); ++it)
 	{
@@ -22,14 +22,22 @@ void Server::UpdateAvatarPositions(float msec)
 		{
 			if ((*it)->timeToNext > 0)
 			{
+				// update velocity every go to combat physics engine damping
+				(*it)->avatarPNode->SetLinearVelocity(Vector3((*it)->avatarVel.x, 0.0f, (*it)->avatarVel.y));
+
 				(*it)->timeToNext -= timeElapsed;
-				//(*it)->avatarPos = (*it)->avatarPos + (*it)->avatarVel;
-				(*it)->avatarPos.x = (*it)->avatarPNode->GetPosition().x;
-				(*it)->avatarPos.y = (*it)->avatarPNode->GetPosition().z;
+				if (!(*it)->usePhysics)
+					(*it)->avatarPos = (*it)->avatarPos + (*it)->avatarVel * timeElapsed;
+				else
+				{
+					(*it)->avatarPos.x = (*it)->avatarPNode->GetPosition().x;
+					(*it)->avatarPos.y = (*it)->avatarPNode->GetPosition().z;
+				}
 			}
 			else
 			{
 				(*it)->timeToNext = (*it)->timeStep;
+
 				if ((*it)->currentAvatarIndex < (*it)->pathLength - 2)
 				{
 					++(*it)->currentAvatarIndex;
@@ -46,19 +54,25 @@ void Server::UpdateAvatarPositions(float msec)
 	}
 }
 
-void Server::InitClient(ENetPeer* address)
-{
-	ConnectedClient* newClient = CreateClient(address);
-
-
-}
+//bool Server::JourneyCompleted(ConnectedClient* client)
+//{
+//	Vector3 dest3 = maze->allNodes[client->pathIndices[client->currentAvatarIndex]]._pos;
+//	Vector2 dest = Vector2(dest3.x, dest3.y);
+//
+//	int xDir = client->avatarVel.x > 0 ? 1 : -1;
+//	int yDir = client->avatarVel.y > 0 ? 1 : -1;
+//
+//	bool completed = false;
+//	if (client->avatarPos.x - xDir * dest.x > 0)
+//		return completed;
+//}
 
 ConnectedClient* Server::GetClient(ENetPeer* address)
 {
 	for (auto it = clients.begin(); it != clients.end(); ++it)
 	{
-		if ((*it)->address == address)
-			return *it;
+		if (AddressesEqual((*it)->peer, address))
+				return *it;
 	}
 	return NULL;
 }
@@ -70,7 +84,8 @@ ConnectedClient* Server::CreateClient(ENetPeer* address)
 	++numClients;
 	newClient->clientID = numClients;
 
-	newClient->address = address;
+	newClient->address = address->address;
+	newClient->peer = address;
 
 	AddClient(newClient);
 
@@ -90,7 +105,7 @@ void Server::RemoveClient(ENetPeer* address)
 		int i = 0;
 		for (auto it = clients.begin(); it != clients.end(); ++it)
 		{
-			if ((*it)->address == address)
+			if (AddressesEqual(currentLink->peer, address))
 			{
 				ConnectedClient* temp = (*it);
 				clients.erase(it);
@@ -127,6 +142,7 @@ void Server::PopulateEdgeList(bool* edgeList)
 
 void Server::SetCurrentSender(ENetPeer* address)
 {
+	currentPeer = address;
 	ConnectedClient* clientFound = GetClient(address);
 	if (!clientFound)
 		clientFound = CreateClient(address);
@@ -183,8 +199,12 @@ void Server::UpdateClientPath()
 void Server::AvatarBegin()
 {
 	currentLink->move = true;
-	currentLink->avatarPNode = new PhysicsNode();
-	PhysicsEngine::Instance()->AddPhysicsObject(currentLink->avatarPNode);
+
+	if (!currentLink->avatarPNode)
+	{
+		currentLink->avatarPNode = new PhysicsNode();
+		PhysicsEngine::Instance()->AddPhysicsObject(currentLink->avatarPNode);
+	}
 
 	currentLink->avatarPos.x = currentLink->start.x;
 	currentLink->avatarPos.y = currentLink->start.y;
@@ -196,7 +216,7 @@ void Server::AvatarBegin()
 void Server::StopAvatars()
 {
 	for (auto it = clients.begin(); it != clients.end(); ++it)
-		(*it)->Init();
+		(*it)->Clear();
 }
 
 void Server::SetAvatarVelocity(ConnectedClient* client)
@@ -215,14 +235,15 @@ void Server::SetAvatarVelocity(ConnectedClient* client)
 	client->timeStep = nodeToNodeDist / avatarSpeed;
 	client->timeToNext = client->timeStep;
 
-	client->avatarVel = nodeToNode.Normalise() * (MAGIC_SCALAR * avatarSpeed * nodeToNodeDist);
+	//client->avatarVel = nodeToNode.Normalise() * (MAGIC_SCALAR * avatarSpeed * nodeToNodeDist);
+	client->avatarVel = nodeToNode * (avatarSpeed / nodeToNodeDist);
 	client->avatarPNode->SetLinearVelocity(Vector3(client->avatarVel.x, 0.0f, client->avatarVel.y));
 }
 
 void Server::TransmitAvatarPosition(ConnectedClient* client)
 {
 	AvatarPositionPacket* posPacket = new AvatarPositionPacket(client->avatarPos);
-	packetHandler->SendPacket(client->address, posPacket);
+	packetHandler->SendPacket(client->peer, posPacket);
 	delete posPacket;
 }
 

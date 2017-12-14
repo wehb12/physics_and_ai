@@ -23,14 +23,15 @@ which handles packet transmissions and receipt
 #include "AllPacketTypes.h"
 
 #define TIME_STEP 1.0f / 30.0f
-#define SPEED 2.0f
-#define MAGIC_SCALAR 0.9567f
+#define SPEED 1.0f
+//#define MAGIC_SCALAR 0.9567f
 
 struct ConnectedClient
 {
 	int clientID;
 
-	ENetPeer* address;
+	ENetPeer* peer;
+	ENetAddress address;
 	Vector3 start, end;
 	int* pathIndices;
 	int pathLength;
@@ -48,12 +49,15 @@ struct ConnectedClient
 	float timeToNext;
 	float timeStep;
 
+	bool usePhysics;
 	PhysicsNode* avatarPNode;
 
 	void Init()
 	{
 		clientID = 0;
-		address = NULL;
+		peer = NULL;
+		address.host = NULL;
+		address.port = NULL;
 		start = Vector3(0, 0, 0);
 		end = Vector3(0, 0, 0);
 		pathIndices = NULL;
@@ -67,6 +71,23 @@ struct ConnectedClient
 		timeStep = 0.0f;
 		
 		avatarPNode = NULL;
+		usePhysics = false;
+	}
+	void Clear()
+	{
+		start = Vector3(0, 0, 0);
+		end = Vector3(0, 0, 0);
+		pathIndices = NULL;
+		pathLength = 0;
+		move = false;
+		avatarPos = Vector2(0, 0);
+		avatarVel = Vector2(0, 0);
+		colour = 0.0f;
+		currentAvatarIndex = 0;
+		timeToNext = 0.0f;
+		timeStep = 0.0f;
+
+		usePhysics = false;
 	}
 };
 
@@ -104,8 +125,6 @@ public:
 
 	void Update(float msec);
 
-	void InitClient(ENetPeer* address);
-
 	void CreateNewMaze(int size, float density);
 	void PopulateEdgeList(bool* edgeList);
 	void UpdateMazePositions(int indexStart, int indexEnd);
@@ -121,11 +140,12 @@ public:
 	void SetCurrentSender(ENetPeer* address);
 	inline void SetMazeParamsPacket(Packet* dataPacket)		{ SAFE_DELETE(mazeParams); mazeParams = dataPacket; }
 	inline void SetMazeDataPacket(Packet* dataPacket)		{ SAFE_DELETE(mazeData); mazeData = dataPacket; }
+	inline void TogglePhysics(bool usePhysics)				{ currentLink->usePhysics = usePhysics; }
 
 	inline void SetAvatarColour(float colour)				{ currentLink->colour = colour; }
 
 //////// GETTERS ////////
-	inline ENetPeer* GetCurrentLinkAddress()				{ if (currentLink) return currentLink->address; }
+	inline ENetPeer* GetCurrentPeerAddress()				{ return currentPeer; }
 	inline int* GetPathIndices()							{ return currentLink->pathIndices; }
 	inline int GetPathLength()								{ return currentLink->pathLength; }
 	inline int GetMazeSize()								{ return maze->size; }
@@ -133,13 +153,16 @@ public:
 	inline Packet* GetMazeDataPacket()						{ return mazeData; }
 
 //////// CLIENT HANDLING ////////
-	ConnectedClient* CreateClient(ENetPeer* address);
 	void AddClientPositons(Vector3 start, Vector3 end);
 	void RemoveClient(ENetPeer* address);
 private:
+	ConnectedClient* CreateClient(ENetPeer* address);
 	ConnectedClient* GetClient(ENetPeer* address);
 	inline void AddClient(ConnectedClient* client) { clients.push_back(client); }
+	inline bool AddressesEqual(ENetPeer* ad1, ENetPeer* ad2)
+		{ return (ad1->address.host == ad2->address.host && ad1->address.port == ad2->address.port); }
 
+	//bool JourneyCompleted(ConnectedClient* client);
 	void UpdateAvatarPositions(float msec);
 	void SetAvatarVelocity(ConnectedClient* client = NULL);
 	void TransmitAvatarPosition(ConnectedClient* client);
@@ -150,6 +173,7 @@ private:
 	PacketHandler* packetHandler;
 
 	ConnectedClient* currentLink;
+	ENetPeer* currentPeer;
 	std::vector<ConnectedClient*> clients;
 
 	// store this ready to send to a new client

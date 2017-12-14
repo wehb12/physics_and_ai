@@ -227,7 +227,7 @@ int main()
 					case ENET_EVENT_TYPE_CONNECT:
 					{
 						printf("- New Client Connected\n");
-						Server::Instance()->InitClient(evnt.peer);
+						//Server::Instance()->InitClient(evnt.peer);
 						Packet* mazeData = Server::Instance()->GetMazeDataPacket();
 						Packet* mazeParams = Server::Instance()->GetMazeParamsPacket();
 						if (mazeData && mazeParams)

@@ -13,7 +13,7 @@ void PhysicsNode::IntegrateForVelocity(float dt)
 	linVelocity += force * invMass * dt;
 	angVelocity += invInertia * torque * dt;
 	*/
-
+	
 	//RK2 method
 	Vector3 linVelocity_p1 = linVelocity + force * invMass * dt;
 	linVelocity = (linVelocity + linVelocity_p1) * 0.5;
@@ -22,9 +22,6 @@ void PhysicsNode::IntegrateForVelocity(float dt)
 
 	linVelocity = linVelocity * PhysicsEngine::Instance()->GetDampingFactor();
 	angVelocity = angVelocity * PhysicsEngine::Instance()->GetDampingFactor();
-
-	//if (linVelocity != Vector3(0, 0, 0))
-	//	PhysicsEngine::Instance()->UpdateNodePosition(this);
 }
 
 /* Between these two functions the physics engine will solve for velocity

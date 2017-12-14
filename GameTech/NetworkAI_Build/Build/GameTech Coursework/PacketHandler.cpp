@@ -162,6 +162,16 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 			}
 			break;
 		}
+		case TOGGLE_PHYSICS:
+		{
+			if (entityType == SERVER)
+			{
+				TogglePhysicsPacket* physPacket = new TogglePhysicsPacket(packet->data);
+				Server::Instance()->TogglePhysics(physPacket->usePhysics);
+				delete physPacket;
+			}
+			break;
+		}
 		default:
 		{
 			cout << "ERROR - Invalid packet sent" << endl;
@@ -182,7 +192,6 @@ void PacketHandler::HandleMazeRequestPacket(MazeParamsPacket* reqPacket)
 		Client::Instance()->SetMazeParameters(mazeSize, mazeDensity);
 	else if (entityType == SERVER)
 	{
-		Server::Instance()->StopAvatars();
 		Server::Instance()->CreateNewMaze(mazeSize, mazeDensity);
 		Server::Instance()->SetMazeParamsPacket(reqPacket);
 
@@ -264,6 +273,7 @@ void PacketHandler::SendPositionPacket(ENetPeer* dest, MazeGenerator* maze, floa
 template <class PositionPacket>
 void PacketHandler::HandlePositionPacket(PositionPacket* posPacket)
 {
+	Server::Instance()->StopAvatars();
 	Server::Instance()->UpdateMazePositions(posPacket->start, posPacket->end);
 	Server::Instance()->UpdateClientPath();
 
@@ -279,7 +289,7 @@ void PacketHandler::HandlePositionPacket(PositionPacket* posPacket)
 		//Server::Instance()->BroadcastAvatar();
 
 		MazePathPacket8* pathPacket = new MazePathPacket8(pathIndices, pathLength);
-		SendPacket(Server::Instance()->GetCurrentLinkAddress(), pathPacket);
+		SendPacket(Server::Instance()->GetCurrentPeerAddress(), pathPacket);
 		delete pathPacket;
 	}
 	else if ((mazeSizeSquared < MAX_VAL_16BIT) && (pathLength < MAX_VAL_16BIT))
@@ -288,7 +298,7 @@ void PacketHandler::HandlePositionPacket(PositionPacket* posPacket)
 		//Server::Instance()->BroadcastAvatar();
 
 		MazePathPacket16* pathPacket = new MazePathPacket16(pathIndices, pathLength);
-		SendPacket(Server::Instance()->GetCurrentLinkAddress(), pathPacket);
+		SendPacket(Server::Instance()->GetCurrentPeerAddress(), pathPacket);
 		delete pathPacket;
 	}
 }

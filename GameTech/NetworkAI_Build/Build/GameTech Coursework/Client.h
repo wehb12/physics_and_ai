@@ -87,6 +87,8 @@ protected:
 	int endIndex;
 	Vector2 avatarPosition;
 	float avatarColour;
+	// bool that controls whether client avatar position is updated by physics engine or Server
+	bool usePhysics;
 
 	MazeGenerator* maze;
 	MazeRenderer* mazeRender;
