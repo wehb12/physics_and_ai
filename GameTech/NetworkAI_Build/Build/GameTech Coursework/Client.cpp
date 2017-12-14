@@ -546,7 +546,7 @@ void Client::RenderNewMaze()
 	// now send back to the server the start and end positions
 	avatarPosition[0].x = maze->start->_pos.x;
 	avatarPosition[0].y = maze->start->_pos.y;
-	CreateAvatar();
+	AddAvatar(avatarColour);
 }
 
 void Client::PopulatePath(Packet* pathPacket)
@@ -585,13 +585,6 @@ void Client::PopulatePath(Packet* pathPacket)
 	delete complete;
 }
 
-void Client::CreateAvatar()
-{
-	avatarColour = (float)(rand() % 101) / 100;
-
-	AddAvatar(avatarPosition[0], avatarColour);
-}
-
 void Client::UpdateAvatar(int iD)
 {
 	float scalar = 1.0f / (maze->size * 3 - 1);
@@ -617,9 +610,9 @@ void Client::UpdateAvatar(int iD)
 	}
 }
 
-void Client::AddAvatar(Vector2 pos, float colour)
+void Client::AddAvatar(float colour)
 {
-	avatarPosition.push_back(pos);
+	avatarPosition.push_back(Vector2(-1 - avatarPosition.size(), 0));
 	RenderNode* avatar;
 
 	float scalar = 1.0f / (maze->size * 3 - 1);
@@ -630,9 +623,9 @@ void Client::AddAvatar(Vector2 pos, float colour)
 	);
 
 	Vector3 cellpos = Vector3(
-		pos.x * 3,
+		(-1 - avatarPosition.size()) * 3,
 		0.0f,
-		pos.y * 3
+		0.0f
 	) * scalar;
 
 	avatar = new RenderNode(wallmesh, CommonUtils::GenColor(colour));

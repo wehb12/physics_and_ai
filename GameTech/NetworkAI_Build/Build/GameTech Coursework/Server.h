@@ -108,7 +108,8 @@ public:
 		timeElapsed(0.0f),
 		avatarSpeed(SPEED),
 		numClients(0)
-	{ }
+	{
+	}
 
 	~Server()
 	{
@@ -134,7 +135,6 @@ public:
 	void UpdateMazePositions(int indexStart, int indexEnd);
 
 	void AvatarBegin();
-	void BroadcastAvatar();
 	void StopAvatars();
 	void StopAvatar();
 
@@ -145,8 +145,6 @@ public:
 	inline void SetMazeParamsPacket(Packet* dataPacket)		{ SAFE_DELETE(mazeParams); mazeParams = dataPacket; }
 	inline void SetMazeDataPacket(Packet* dataPacket)		{ SAFE_DELETE(mazeData); mazeData = dataPacket; }
 	inline void TogglePhysics(bool usePhysics)				{ currentLink->usePhysics = usePhysics; }
-
-	inline void SetAvatarColour(float colour)				{ currentLink->colour = colour; }
 
 //////// GETTERS ////////
 	inline ENetPeer* GetCurrentPeerAddress()				{ return currentPeer; }
@@ -166,9 +164,11 @@ private:
 	inline bool AddressesEqual(ENetPeer* ad1, ENetPeer* ad2)
 		{ return (ad1->address.host == ad2->address.host && ad1->address.port == ad2->address.port); }
 	void UpdateClientPath();
+	void InformClient(ENetPeer* peer);
 
 	void UpdateAvatarPositions(float msec);
 	void SetAvatarVelocity(ConnectedClient* client = NULL);
+	void BroadcastAvatar();
 	void BroadcastAvatarPosition(ConnectedClient* client);
 
 private:

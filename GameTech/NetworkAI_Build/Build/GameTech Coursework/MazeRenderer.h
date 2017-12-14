@@ -41,6 +41,8 @@ public:
 	{
 		if (index < numAvatars)
 			(*(Render()->GetChildIteratorEnd() - numAvatars + index))->SetTransform(transform);
+		else
+			NCLERROR("There are not that many avatars");
 	}
 
 	inline void AddAvatar(RenderNode* avatar)		{ ++numAvatars; Render()->AddChild(avatar); }

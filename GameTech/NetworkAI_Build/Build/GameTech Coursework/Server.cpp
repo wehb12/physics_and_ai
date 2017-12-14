@@ -73,14 +73,33 @@ ConnectedClient* Server::CreateClient(ENetPeer* address)
 
 	newClient->address = address->address;
 	newClient->peer = address;
+	srand(time(NULL));
+	newClient->colour = (float)(rand() % 101) / 100;
 
-	AddClient(newClient);
-
-	ConfirmConnectionPacket* packet = new ConfirmConnectionPacket(newClient->clientID);
+	ConfirmConnectionPacket* packet = new ConfirmConnectionPacket(newClient->clientID, newClient->colour);
 	packetHandler->SendPacket(newClient->peer, packet);
 	delete packet;
 
+	currentLink = newClient;
+	BroadcastAvatar();
+
+	if (clients.size() > 0)
+		InformClient(address);
+
+	AddClient(newClient);
+
+
 	return newClient;
+}
+
+void Server::InformClient(ENetPeer* peer)
+{
+	for (auto it = clients.begin(); it != clients.end(); ++it)
+	{
+		NewAvatarPacket* avatar = new NewAvatarPacket((*it)->colour, (*it)->clientID);
+		packetHandler->SendPacket(peer, avatar);
+		delete avatar;
+	}
 }
 
 void Server::AddClientPositons(Vector3 start, Vector3 end)
@@ -258,7 +277,7 @@ void Server::BroadcastAvatarPosition(ConnectedClient* client)
 
 void Server::BroadcastAvatar()
 {
-	NewAvatarPacket* newAvatar = new NewAvatarPacket(currentLink->avatarPos, currentLink->colour, currentLink->clientID);
+	NewAvatarPacket* newAvatar = new NewAvatarPacket(currentLink->colour, currentLink->clientID);
 	packetHandler->BroadcastPacket(newAvatar);
 	delete newAvatar;
 }

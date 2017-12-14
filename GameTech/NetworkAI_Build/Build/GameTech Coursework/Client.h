@@ -39,7 +39,7 @@ public:
 	void GenerateWalledMaze(bool* walledEdges, int numEdges);
 	void RenderNewMaze();
 	void PopulatePath(Packet* pathPacket);
-	void AddAvatar(Vector2 pos, float colour);
+	void AddAvatar(float colour);
 	inline void RemoveAvatar(int index) { mazeRender->RemoveAvatar(index); avatarPosition.erase(avatarPosition.begin() + index); }
 
 //////// SETTERS ////////
@@ -47,9 +47,17 @@ public:
 	inline void SetName(string name)						{ m_SceneName = name; }
 	inline void SetPrintPathState(bool set = true)			{ printPath = set; }
 	inline void SetMazeParameters(int size, float density)	{ mazeSize = size; mazeDensity = density; }
-	inline void SetAvatarPosition(Vector2 pos, int iD)		{ avatarPosition[iD] = pos; UpdateAvatar(iD); }
+	inline void SetAvatarPosition(Vector2 pos, int iD)
+	{
+		if (path)
+		{
+			avatarPosition[iD] = pos;
+			UpdateAvatar(iD);
+		}
+	}
 	inline void SetID(enet_uint8 iD)						{ clientID = iD; }
 	inline void SetCurrentAvatarIndex(enet_uint16 index)	{ currentIndex = index; }
+	inline void SetAvatarColour(float col)					{ avatarColour = col; }
 
 //////// GETTERS ////////
 	inline ENetPeer* GetServerConnection()	{ return serverConnection; }
@@ -58,7 +66,6 @@ public:
 
 protected:
 	void GenerateEmptyMaze();
-	void CreateAvatar();
 
 	void HandleKeyboardInput();
 	void PrintPath();

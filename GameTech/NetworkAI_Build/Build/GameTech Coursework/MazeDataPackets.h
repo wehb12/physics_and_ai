@@ -221,30 +221,24 @@ public:
 class MazePositionsPacket8 : public Packet
 {
 public:
-	MazePositionsPacket8() : Packet(MAZE_POSITIONS8, 3) { }
-	~MazePositionsPacket8() { }
-
-	MazePositionsPacket8(enet_uint8 start, enet_uint8 end, enet_uint8 colour) :
-		Packet(MAZE_POSITIONS8, 4),
+	MazePositionsPacket8(enet_uint8 start, enet_uint8 end) :
+		Packet(MAZE_POSITIONS8, 3),
 		start(start),
-		end(end),
-		avatarColour(colour)
+		end(end)
 	{ }
 
-	MazePositionsPacket8(int strt, int End, float colour) :
-		Packet(MAZE_POSITIONS8, 4)
+	MazePositionsPacket8(int strt, int End) :
+		Packet(MAZE_POSITIONS8, 3)
 	{
 		this->start = MIN(strt, MAX_VAL_8BIT);
 		this->end = MIN(End, MAX_VAL_8BIT);
-		avatarColour = colour * MAX_VAL_8BIT;
 	}
 
 	MazePositionsPacket8(enet_uint8* data) :
-		Packet(MAZE_POSITIONS8, 4)
+		Packet(MAZE_POSITIONS8, 3)
 	{
 		start = *(data + 1);
 		end = *(data + 2);
-		avatarColour = *(data + 3);
 	}
 
 	virtual enet_uint8* CreateByteStream() override
@@ -254,7 +248,6 @@ public:
 		data[0] = type;
 		data[1] = start;
 		data[2] = end;
-		data[3] = avatarColour;
 
 		return data;
 	}
@@ -262,34 +255,30 @@ public:
 public:
 	enet_uint8 start;
 	enet_uint8 end;
-	enet_uint8 avatarColour;
 };
 
 // maze start and end position data packet for 16 bit node number
 class MazePositionsPacket16 : public Packet
 {
 public:
-	MazePositionsPacket16(enet_uint16 start, enet_uint16 end, enet_uint16 colour) :
-		Packet(MAZE_POSITIONS16, 7),
+	MazePositionsPacket16(enet_uint16 start, enet_uint16 end) :
+		Packet(MAZE_POSITIONS16, 5),
 		start(start),
-		end(end),
-		avatarColour(colour)
+		end(end)
 	{ }
 
-	MazePositionsPacket16(int strt, int End, float colour) :
-		Packet(MAZE_POSITIONS16, 7)
+	MazePositionsPacket16(int strt, int End) :
+		Packet(MAZE_POSITIONS16, 5)
 	{
 		start = MIN(strt, MAX_VAL_16BIT);
 		end = MIN(End, MAX_VAL_16BIT);
-		avatarColour = colour * MAX_VAL_16BIT;
 	}
 
 	MazePositionsPacket16(enet_uint8* data) :
-		Packet(MAZE_POSITIONS16, 7)
+		Packet(MAZE_POSITIONS16, 5)
 	{
 		start = *(data + 1) | (*(data + 2) << 8);
 		end = *(data + 3) | (*(data + 4) << 8);
-		avatarColour = *(data + 5) | (*(data + 6) << 8);
 	}
 
 	virtual enet_uint8* CreateByteStream() override
@@ -305,10 +294,6 @@ public:
 		data[4] = 0;
 		data[3] ^= end;
 		data[4] ^= end >> 8;
-		data[5] = 0;
-		data[6] = 0;
-		data[5] ^= avatarColour;
-		data[6] ^= avatarColour >> 8;
 
 		return data;
 	}
@@ -316,7 +301,6 @@ public:
 public:
 	enet_uint16 start;
 	enet_uint16 end;
-	enet_uint16 avatarColour;
 };
 
 class MazePathPacket8 : public Packet

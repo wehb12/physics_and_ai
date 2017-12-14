@@ -74,34 +74,52 @@ public:
 	enet_uint8 status;
 };
 
+// used to tell client they are connected and the server knows abou them
 class ConfirmConnectionPacket : public Packet
 {
 public:
-	ConfirmConnectionPacket(enet_uint8 iD) :
-		Packet(CONFIRM_CONNECTION, 2),
-		clientID(iD)
+	ConfirmConnectionPacket(enet_uint8 iD, float colour) :
+		Packet(CONFIRM_CONNECTION, 3 + to_string(colour).size()),
+		clientID(iD),
+		colour(colour)
 	{ }
 
-	ConfirmConnectionPacket(int iD) :
-		Packet(CONFIRM_CONNECTION, 2),
-		clientID(iD)
+	ConfirmConnectionPacket(int iD, float colour) :
+		Packet(CONFIRM_CONNECTION, 3 + to_string(colour).size()),
+		clientID(iD),
+		colour(colour)
 	{ }
 
 	ConfirmConnectionPacket(enet_uint8* data) :
-		Packet(CONFIRM_CONNECTION, 2),
+		Packet(CONFIRM_CONNECTION, *(data + 1)),
 		clientID(*(data + 1))
-	{ }
+	{
+		clientID = *(data + 2);
+		string colString = "";
+		for (int i = 3; i < size; ++i)
+			colString += *(data + i);
+
+		colour = stof(colString);
+	}
 
 	virtual enet_uint8* CreateByteStream() override
 	{
 		enet_uint8* data = new enet_uint8[size];
 		
 		data[0] = type;
-		data[1] = clientID;
+		data[1] = size;
+		data[2] = clientID;
+
+		string colString = to_string(colour);
+
+		for (int i = 0; i < colString.size(); ++i)
+			*(data + 3 + i) = colString[i];
 
 		return data;
 	}
 
 public:
 	enet_uint8 clientID;
+	// this is the client's avatar colour
+	float colour;
 };
