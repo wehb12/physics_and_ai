@@ -89,7 +89,6 @@ const Vector4 status_color = Vector4(status_color3.x, status_color3.y, status_co
 Client::Client()
 	: Scene("Client")
 	, serverConnection(NULL)
-	, box(NULL)
 	, packetHandler(NULL)
 	, mazeSize(16)
 	, mazeDensity(1.0f)
@@ -101,7 +100,6 @@ Client::Client()
 	, startIndex(0)
 	, endIndex(0)
 	, currentIndex(0)
-	, avatarColour(0.0f)
 	, clientID(0)
 	, usePhysics(false)
 {
@@ -120,6 +118,7 @@ Client::Client()
 	srand(time(NULL));
 
 	avatarPosition.push_back(Vector2(0, 0));
+	avatarColour.push_back(0.67f);
 }
 
 void Client::OnInitializeScene()
@@ -133,18 +132,6 @@ void Client::OnInitializeScene()
 		serverConnection = network.ConnectPeer(127, 0, 0, 1, 1234);
 		NCLDebug::Log("Network: Attempting to connect to server.");
 	}
-
-	//Generate Simple Scene with a box that can be updated upon recieving server packets
-	box = CommonUtils::BuildCuboidObject(
-		"Server",
-		Vector3(0.0f, 1.0f, 0.0f),
-		Vector3(0.5f, 0.5f, 0.5f),
-		true,									//Physics Enabled here Purely to make setting position easier via Physics()->SetPosition()
-		0.0f,
-		false,
-		false,
-		Vector4(0.2f, 0.5f, 1.0f, 1.0f));
-	this->AddGameObject(box);
 
 	this->AddGameObject(CommonUtils::BuildCuboidObject(
 		"Ground",
@@ -160,7 +147,6 @@ void Client::OnInitializeScene()
 void Client::OnCleanupScene()
 {
 	Scene::OnCleanupScene();
-	box = NULL; // Deleted in above function
 
 				//Send one final packet telling the server we are disconnecting
 				// - We are not waiting to resend this, so if it fails to arrive
@@ -198,10 +184,6 @@ void Client::OnUpdateScene(float dt)
 	uint8_t ip2 = (serverConnection->address.host >> 8) & 0xFF;
 	uint8_t ip3 = (serverConnection->address.host >> 16) & 0xFF;
 	uint8_t ip4 = (serverConnection->address.host >> 24) & 0xFF;
-
-	NCLDebug::DrawTextWs(box->Physics()->GetPosition() + Vector3(0.f, 0.6f, 0.f), STATUS_TEXT_SIZE, TEXTALIGN_CENTRE, Vector4(0.f, 0.f, 0.f, 1.f),
-		"Peer: %u.%u.%u.%u:%u", ip1, ip2, ip3, ip4, serverConnection->address.port);
-
 
 	NCLDebug::AddStatusEntry(status_color, "Network Traffic");
 	NCLDebug::AddStatusEntry(status_color, "    Incoming: %5.2fKbps", network.m_IncomingKb);
@@ -251,16 +233,7 @@ void Client::ProcessNetworkEvent(const ENetEvent& evnt)
 	//Server has sent us a new packet
 	case ENET_EVENT_TYPE_RECEIVE:
 	{
-		if (evnt.packet->dataLength == sizeof(Vector3))
-		{
-			Vector3 pos;
-			memcpy(&pos, evnt.packet->data, sizeof(Vector3));
-			box->Physics()->SetPosition(pos);
-		}
-		else
-		{
-			packetHandler->HandlePacket(evnt.packet);
-		}
+		packetHandler->HandlePacket(evnt.packet);
 	}
 	break;
 
@@ -318,7 +291,7 @@ void Client::HandleKeyboardInput()
 		{
 			maze->start = &startNode;
 			maze->end = &endNode;
-			packetHandler->SendPositionPacket(serverConnection, maze, avatarColour);
+			packetHandler->SendPositionPacket(serverConnection, maze, avatarColour[0]);
 			if (!ifMoved)
 			{
 				UpdatePosition(true);
@@ -546,7 +519,9 @@ void Client::RenderNewMaze()
 	// now send back to the server the start and end positions
 	avatarPosition[0].x = maze->start->_pos.x;
 	avatarPosition[0].y = maze->start->_pos.y;
-	AddAvatar(avatarColour);
+
+	for (int i = 0; i < avatarColour.size(); ++i)
+		AddAvatar(avatarColour[i]);
 }
 
 void Client::PopulatePath(Packet* pathPacket)
@@ -612,7 +587,8 @@ void Client::UpdateAvatar(int iD)
 
 void Client::AddAvatar(float colour)
 {
-	avatarPosition.push_back(Vector2(-1 - avatarPosition.size(), 0));
+	float startPos = -1 - avatarPosition.size() * 0.2;
+	avatarPosition.push_back(Vector2(startPos, 0));
 	RenderNode* avatar;
 
 	float scalar = 1.0f / (maze->size * 3 - 1);
@@ -623,7 +599,7 @@ void Client::AddAvatar(float colour)
 	);
 
 	Vector3 cellpos = Vector3(
-		(-1 - avatarPosition.size()) * 3,
+		startPos * 3,
 		0.0f,
 		0.0f
 	) * scalar;

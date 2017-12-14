@@ -39,7 +39,11 @@ public:
 	void GenerateWalledMaze(bool* walledEdges, int numEdges);
 	void RenderNewMaze();
 	void PopulatePath(Packet* pathPacket);
-	void AddAvatar(float colour);
+	inline void CreateAvatar(float colour)
+	{
+		avatarColour.push_back(colour);
+		AddAvatar(colour);
+	}
 	inline void RemoveAvatar(int index) { mazeRender->RemoveAvatar(index); avatarPosition.erase(avatarPosition.begin() + index); }
 
 //////// SETTERS ////////
@@ -57,7 +61,6 @@ public:
 	}
 	inline void SetID(enet_uint8 iD)						{ clientID = iD; }
 	inline void SetCurrentAvatarIndex(enet_uint16 index)	{ currentIndex = index; }
-	inline void SetAvatarColour(float col)					{ avatarColour = col; }
 
 //////// GETTERS ////////
 	inline ENetPeer* GetServerConnection()	{ return serverConnection; }
@@ -76,11 +79,10 @@ protected:
 
 	void UpdatePosition(bool ifStart);
 	void UpdateAvatar(int iD);
+	void AddAvatar(float colour);
 
 protected:
 	enet_uint8 clientID;
-
-	GameObject* box;
 
 	NetworkBase network;
 	ENetPeer*	serverConnection;
@@ -95,7 +97,7 @@ protected:
 	int endIndex;
 	int currentIndex;
 	vector<Vector2> avatarPosition;
-	float avatarColour;
+	vector<float> avatarColour;
 	// bool that controls whether client avatar position is updated by physics engine or Server
 	bool usePhysics;
 

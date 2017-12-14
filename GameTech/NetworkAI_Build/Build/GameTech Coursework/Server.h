@@ -86,7 +86,6 @@ struct ConnectedClient
 		avatarPos = Vector2(0, 0);
 		avatarVel = Vector2(0, 0);
 		update = false;
-		colour = 0.0f;
 		currentAvatarIndex = 0;
 		timeToNext = 0.0f;
 		timeStep = 0.0f;

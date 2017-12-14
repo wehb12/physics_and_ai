@@ -158,7 +158,7 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 			{
 				NewAvatarPacket* newAvatar = new NewAvatarPacket(packet->data);
 				if (newAvatar->iD != Client::Instance()->GetID())
-					Client::Instance()->AddAvatar(newAvatar->avatarColour);
+					Client::Instance()->CreateAvatar(newAvatar->avatarColour);
 				delete newAvatar;
 			}
 			break;
