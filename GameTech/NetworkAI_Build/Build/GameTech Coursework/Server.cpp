@@ -54,19 +54,6 @@ void Server::UpdateAvatarPositions(float sec)
 	}
 }
 
-//bool Server::JourneyCompleted(ConnectedClient* client)
-//{
-//	Vector3 dest3 = maze->allNodes[client->pathIndices[client->currentAvatarIndex]]._pos;
-//	Vector2 dest = Vector2(dest3.x, dest3.y);
-//
-//	int xDir = client->avatarVel.x > 0 ? 1 : -1;
-//	int yDir = client->avatarVel.y > 0 ? 1 : -1;
-//
-//	bool completed = false;
-//	if (client->avatarPos.x - xDir * dest.x > 0)
-//		return completed;
-//}
-
 ConnectedClient* Server::GetClient(ENetPeer* address)
 {
 	for (auto it = clients.begin(); it != clients.end(); ++it)
@@ -155,7 +142,17 @@ void Server::UpdateMazePositions(int indexStart, int indexEnd)
 	maze->start = &maze->allNodes[indexStart];
 	maze->end = &maze->allNodes[indexEnd];
 
-	AddClientPositons(maze->start->_pos, maze->end->_pos);
+	currentLink->update = true;
+	// if the end position has NOT been changed, don't update the path
+	if (currentLink->pathLength > 0)
+		currentLink->update = indexEnd != currentLink->pathIndices[currentLink->pathLength - 1];
+
+	if (currentLink->update)
+	{
+		//currentLink->ChangeStart(indexStart);
+		AddClientPositons(maze->start->_pos, maze->end->_pos);
+		UpdateClientPath();
+	}
 }
 
 void Server::UpdateClientPath()
@@ -206,17 +203,25 @@ void Server::AvatarBegin()
 		PhysicsEngine::Instance()->AddPhysicsObject(currentLink->avatarPNode);
 	}
 
-	currentLink->avatarPos.x = currentLink->start.x;
-	currentLink->avatarPos.y = currentLink->start.y;
-	currentLink->avatarPNode->SetPosition(Vector3(currentLink->avatarPos.x, 0.0f, currentLink->avatarPos.y));
+	if (currentLink->update)
+	{
+		currentLink->avatarPos.x = currentLink->start.x;
+		currentLink->avatarPos.y = currentLink->start.y;
+		currentLink->avatarPNode->SetPosition(Vector3(currentLink->avatarPos.x, 0.0f, currentLink->avatarPos.y));
 
-	SetAvatarVelocity();
+		SetAvatarVelocity();
+	}
 }
 
 void Server::StopAvatars()
 {
 	for (auto it = clients.begin(); it != clients.end(); ++it)
 		(*it)->Clear();
+}
+
+void Server::StopAvatar()
+{
+	currentLink->Clear();
 }
 
 void Server::SetAvatarVelocity(ConnectedClient* client)

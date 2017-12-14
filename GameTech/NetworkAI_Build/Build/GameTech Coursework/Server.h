@@ -38,6 +38,8 @@ struct ConnectedClient
 	bool move;
 	Vector2 avatarPos;
 	Vector2 avatarVel;
+	// bool to indicate if the avatr's path needs to change
+	bool update;
 
 	// this is the scalar input to CommonUtils::GenColor
 	float colour;
@@ -65,6 +67,7 @@ struct ConnectedClient
 		move = false;
 		avatarPos = Vector2(0, 0);
 		avatarVel = Vector2(0, 0);
+		update = false;
 		colour = 0.0f;
 		currentAvatarIndex = 0;
 		timeToNext = 0.0f;
@@ -82,6 +85,7 @@ struct ConnectedClient
 		move = false;
 		avatarPos = Vector2(0, 0);
 		avatarVel = Vector2(0, 0);
+		update = false;
 		colour = 0.0f;
 		currentAvatarIndex = 0;
 		timeToNext = 0.0f;
@@ -128,11 +132,11 @@ public:
 	void CreateNewMaze(int size, float density);
 	void PopulateEdgeList(bool* edgeList);
 	void UpdateMazePositions(int indexStart, int indexEnd);
-	void UpdateClientPath();
 
 	void AvatarBegin();
 	void BroadcastAvatar();
 	void StopAvatars();
+	void StopAvatar();
 
 //////// SETTERS ////////
 	inline void SetPacketHandler(PacketHandler* pktHndl)	{ packetHandler = pktHndl; }
@@ -161,8 +165,8 @@ private:
 	inline void AddClient(ConnectedClient* client) { clients.push_back(client); }
 	inline bool AddressesEqual(ENetPeer* ad1, ENetPeer* ad2)
 		{ return (ad1->address.host == ad2->address.host && ad1->address.port == ad2->address.port); }
+	void UpdateClientPath();
 
-	//bool JourneyCompleted(ConnectedClient* client);
 	void UpdateAvatarPositions(float msec);
 	void SetAvatarVelocity(ConnectedClient* client = NULL);
 	void TransmitAvatarPosition(ConnectedClient* client);

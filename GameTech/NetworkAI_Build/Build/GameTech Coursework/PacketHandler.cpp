@@ -273,9 +273,7 @@ void PacketHandler::SendPositionPacket(ENetPeer* dest, MazeGenerator* maze, floa
 template <class PositionPacket>
 void PacketHandler::HandlePositionPacket(PositionPacket* posPacket)
 {
-	Server::Instance()->StopAvatars();
 	Server::Instance()->UpdateMazePositions(posPacket->start, posPacket->end);
-	Server::Instance()->UpdateClientPath();
 
 	int* pathIndices = Server::Instance()->GetPathIndices();
 	int pathLength = Server::Instance()->GetPathLength();

@@ -1,5 +1,1 @@
-[12:46:41] Physics too slow to run in real time!
-[12:46:47] Physics too slow to run in real time!
-[12:47:00] Physics too slow to run in real time!
-[12:47:08] Physics too slow to run in real time!
-[12:47:17] Physics too slow to run in real time!
+[13:09:28] Physics too slow to run in real time!
