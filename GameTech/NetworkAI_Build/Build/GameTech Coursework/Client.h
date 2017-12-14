@@ -40,15 +40,16 @@ public:
 	void RenderNewMaze();
 	void PopulatePath(Packet* pathPacket);
 	void AddAvatar(Vector2 pos, float colour);
-	inline void RemoveAvatar(int index) { mazeRender->RemoveAvatar(index); }
+	inline void RemoveAvatar(int index) { mazeRender->RemoveAvatar(index); avatarPosition.erase(avatarPosition.begin() + index); }
 
 //////// SETTERS ////////
 	inline void SetPacketHandler(PacketHandler* pktHndl)	{ packetHandler = pktHndl; }
 	inline void SetName(string name)						{ m_SceneName = name; }
 	inline void SetPrintPathState(bool set = true)			{ printPath = set; }
 	inline void SetMazeParameters(int size, float density)	{ mazeSize = size; mazeDensity = density; }
-	inline void SetAvatarPosition(Vector2 pos)				{ avatarPosition = pos; UpdateAvatar(); }
+	inline void SetAvatarPosition(Vector2 pos, int iD)		{ avatarPosition[iD] = pos; UpdateAvatar(iD); }
 	inline void SetID(enet_uint8 iD)						{ clientID = iD; }
+	inline void SetCurrentAvatarIndex(enet_uint16 index)	{ currentIndex = index; }
 
 //////// GETTERS ////////
 	inline ENetPeer* GetServerConnection()	{ return serverConnection; }
@@ -67,7 +68,7 @@ protected:
 	void MoveNodeRight(bool start, int index);
 
 	void UpdatePosition(bool ifStart);
-	void UpdateAvatar();
+	void UpdateAvatar(int iD);
 
 protected:
 	enet_uint8 clientID;
@@ -85,12 +86,17 @@ protected:
 
 	int startIndex;
 	int endIndex;
-	Vector2 avatarPosition;
+	int currentIndex;
+	vector<Vector2> avatarPosition;
 	float avatarColour;
 	// bool that controls whether client avatar position is updated by physics engine or Server
 	bool usePhysics;
 
 	MazeGenerator* maze;
+	// this tells you if the start node has been moved or not
+	bool ifMoved;
+	GraphNode startNode;
+	GraphNode endNode;
 	MazeRenderer* mazeRender;
 	Mesh* wallmesh;
 

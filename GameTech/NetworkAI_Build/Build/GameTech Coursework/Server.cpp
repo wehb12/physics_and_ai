@@ -49,7 +49,7 @@ void Server::UpdateAvatarPositions(float sec)
 					(*it)->currentAvatarIndex = 0;
 				}
 			}
-			TransmitAvatarPosition(*it);
+			BroadcastAvatarPosition(*it);
 		}
 	}
 }
@@ -75,6 +75,10 @@ ConnectedClient* Server::CreateClient(ENetPeer* address)
 	newClient->peer = address;
 
 	AddClient(newClient);
+
+	ConfirmConnectionPacket* packet = new ConfirmConnectionPacket(newClient->clientID);
+	packetHandler->SendPacket(newClient->peer, packet);
+	delete packet;
 
 	return newClient;
 }
@@ -245,10 +249,10 @@ void Server::SetAvatarVelocity(ConnectedClient* client)
 	client->avatarPNode->SetLinearVelocity(Vector3(client->avatarVel.x, 0.0f, client->avatarVel.y));
 }
 
-void Server::TransmitAvatarPosition(ConnectedClient* client)
+void Server::BroadcastAvatarPosition(ConnectedClient* client)
 {
-	AvatarPositionPacket* posPacket = new AvatarPositionPacket(client->avatarPos);
-	packetHandler->SendPacket(client->peer, posPacket);
+	AvatarPositionPacket* posPacket = new AvatarPositionPacket(client->avatarPos, client->currentAvatarIndex, client->clientID);
+	packetHandler->BroadcastPacket(posPacket);
 	delete posPacket;
 }
 

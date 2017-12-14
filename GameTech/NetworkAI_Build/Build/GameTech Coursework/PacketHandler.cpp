@@ -137,7 +137,16 @@ string PacketHandler::HandlePacket(const ENetPacket* packet)
 		case AVATAR_POSITION:
 		{
 			AvatarPositionPacket* posPacket = new AvatarPositionPacket(packet->data);
-			Client::Instance()->SetAvatarPosition(Vector2(posPacket->posX, posPacket->posY));
+
+			int thisID = posPacket->iD;
+			int clientID = Client::Instance()->GetID();
+			if (thisID == clientID)
+				thisID = 0;
+			else if (thisID > clientID)
+				--thisID;
+			
+			Client::Instance()->SetCurrentAvatarIndex(posPacket->currentIndex);
+			Client::Instance()->SetAvatarPosition(Vector2(posPacket->posX, posPacket->posY), thisID);
 			delete posPacket;
 			break;
 		}
@@ -192,6 +201,7 @@ void PacketHandler::HandleMazeRequestPacket(MazeParamsPacket* reqPacket)
 		Client::Instance()->SetMazeParameters(mazeSize, mazeDensity);
 	else if (entityType == SERVER)
 	{
+		Server::Instance()->StopAvatars();
 		Server::Instance()->CreateNewMaze(mazeSize, mazeDensity);
 		Server::Instance()->SetMazeParamsPacket(reqPacket);
 
@@ -273,6 +283,7 @@ void PacketHandler::SendPositionPacket(ENetPeer* dest, MazeGenerator* maze, floa
 template <class PositionPacket>
 void PacketHandler::HandlePositionPacket(PositionPacket* posPacket)
 {
+	Server::Instance()->StopAvatar();
 	Server::Instance()->UpdateMazePositions(posPacket->start, posPacket->end);
 
 	int* pathIndices = Server::Instance()->GetPathIndices();
@@ -319,6 +330,7 @@ void PacketHandler::BroadcastPacket(Packet* packet)
 	//Create the packet and broadcast it (unreliable transport) to all entitites
 	ENetPacket* enetPacket = enet_packet_create(stream, packet->size, 0);
 	enet_host_broadcast(networkHost, 0, enetPacket);
+	enet_host_flush(networkHost);
 
 	delete[] stream;
 }

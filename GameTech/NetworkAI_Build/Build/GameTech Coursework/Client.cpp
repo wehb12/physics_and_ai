@@ -97,9 +97,10 @@ Client::Client()
 	, start(true)
 	, maze(NULL)
 	, mazeRender(NULL)
+	, ifMoved(false)
 	, startIndex(0)
 	, endIndex(0)
-	, avatarPosition(Vector2(0, 0))
+	, currentIndex(0)
 	, avatarColour(0.0f)
 	, clientID(0)
 	, usePhysics(false)
@@ -117,6 +118,8 @@ Client::Client()
 	// seed the start and end node position generation
 	// makes sure each client has a different default start/ end 
 	srand(time(NULL));
+
+	avatarPosition.push_back(Vector2(0, 0));
 }
 
 void Client::OnInitializeScene()
@@ -278,9 +281,10 @@ void Client::HandleKeyboardInput()
 		lastDensity = mazeDensity;
 		packetHandler->SendPacket(serverConnection, packet);
 		usePhysics = false;
-
+		ifMoved = false;
 		delete packet;
 	}
+
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_1))
 		mazeSize = max(mazeSize - 1, MIN_MAZE_SIZE);
 		
@@ -298,15 +302,32 @@ void Client::HandleKeyboardInput()
 
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_U))
 	{
-		usePhysics = !usePhysics;
-		TogglePhysicsPacket* physPacket = new TogglePhysicsPacket(usePhysics);
-		packetHandler->SendPacket(serverConnection, physPacket);
-		delete physPacket;
+		if (maze)
+		{
+			usePhysics = !usePhysics;
+			TogglePhysicsPacket* physPacket = new TogglePhysicsPacket(usePhysics);
+			packetHandler->SendPacket(serverConnection, physPacket);
+			delete physPacket;
+		}
 	}
 
 	// resend destination positions to server
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_L))
-		packetHandler->SendPositionPacket(serverConnection, maze, avatarColour);
+	{
+		if (maze)
+		{
+			maze->start = &startNode;
+			maze->end = &endNode;
+			packetHandler->SendPositionPacket(serverConnection, maze, avatarColour);
+			if (!ifMoved)
+			{
+				UpdatePosition(true);
+				if (pathLength > 0)
+					startIndex = path[currentIndex];
+			}
+			ifMoved = false;
+		}
+	}
 
 	if (maze)
 	{
@@ -338,8 +359,11 @@ void Client::HandleKeyboardInput()
 
 		if (moved)
 		{
+			startNode = *maze->start;
+			endNode = *maze->end;
 			// remake MazeRenderer start and end RenderNodes
 			UpdatePosition(start);
+			ifMoved = start;
 		}
 	}
 }
@@ -416,12 +440,10 @@ void Client::UpdatePosition(bool ifStart)
 
 	if (ifStart)
 	{
-		GraphNode* start = maze->start;
-
 		Vector3 cellpos = Vector3(
-			start->_pos.x * 3,
+			startNode._pos.x * 3,
 			0.0f,
-			start->_pos.y * 3
+			startNode._pos.y * 3
 		) * scalar;
 
 		mazeRender->UpdateStartNodeTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
@@ -431,9 +453,9 @@ void Client::UpdatePosition(bool ifStart)
 		GraphNode* end = maze->end;
 
 		Vector3 cellpos = Vector3(
-			end->_pos.x * 3,
+			endNode._pos.x * 3,
 			0.0f,
-			end->_pos.y * 3
+			endNode._pos.y * 3
 		) * scalar;
 		
 		mazeRender->UpdateEndNodeTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
@@ -496,6 +518,12 @@ void Client::GenerateWalledMaze(bool* walledEdges, int numEdges)
 
 	startIndex = GrabIndex(maze->start);
 	endIndex = GrabIndex(maze->end);
+
+	startNode = *maze->start;
+	endNode = *maze->end;
+
+	avatarPosition[0].x = maze->start->_pos.x;
+	avatarPosition[0].y = maze->start->_pos.y;
 }
 
 void Client::RenderNewMaze()
@@ -516,11 +544,9 @@ void Client::RenderNewMaze()
 	AddGameObject(mazeRender);
 
 	// now send back to the server the start and end positions
-	avatarPosition.x = maze->start->_pos.x;
-	avatarPosition.y = maze->start->_pos.y;
+	avatarPosition[0].x = maze->start->_pos.x;
+	avatarPosition[0].y = maze->start->_pos.y;
 	CreateAvatar();
-
-	packetHandler->SendPositionPacket(serverConnection, maze, avatarColour);
 }
 
 void Client::PopulatePath(Packet* pathPacket)
@@ -563,10 +589,10 @@ void Client::CreateAvatar()
 {
 	avatarColour = (float)(rand() % 101) / 100;
 
-	AddAvatar(avatarPosition, avatarColour);
+	AddAvatar(avatarPosition[0], avatarColour);
 }
 
-void Client::UpdateAvatar()
+void Client::UpdateAvatar(int iD)
 {
 	float scalar = 1.0f / (maze->size * 3 - 1);
 	Vector3 cellsize = Vector3(
@@ -578,16 +604,22 @@ void Client::UpdateAvatar()
 	GraphNode* start = maze->start;
 
 	Vector3 cellpos = Vector3(
-		avatarPosition.x * 3,
+		avatarPosition[iD].x * 3,
 		0.0f,
-		avatarPosition.y * 3
+		avatarPosition[iD].y * 3
 	) * scalar;
 
-	mazeRender->UpdateAvatarTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f));
+	mazeRender->UpdateAvatarTransform(Matrix4::Translation(cellpos + cellsize * 0.5f) * Matrix4::Scale(cellsize * 0.5f), iD);
+
+	if (iD == 0 && !ifMoved)
+	{
+		startNode = maze->allNodes[path[currentIndex]];
+	}
 }
 
 void Client::AddAvatar(Vector2 pos, float colour)
 {
+	avatarPosition.push_back(pos);
 	RenderNode* avatar;
 
 	float scalar = 1.0f / (maze->size * 3 - 1);

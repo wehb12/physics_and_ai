@@ -169,7 +169,7 @@ private:
 
 	void UpdateAvatarPositions(float msec);
 	void SetAvatarVelocity(ConnectedClient* client = NULL);
-	void TransmitAvatarPosition(ConnectedClient* client);
+	void BroadcastAvatarPosition(ConnectedClient* client);
 
 private:
 	MazeGenerator* maze;
