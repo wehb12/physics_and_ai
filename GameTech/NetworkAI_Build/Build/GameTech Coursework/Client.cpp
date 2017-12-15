@@ -512,6 +512,9 @@ void Client::GenerateWalledMaze(bool* walledEdges, int numEdges)
 
 	avatarPosition[0].x = maze->start->_pos.x;
 	avatarPosition[0].y = maze->start->_pos.y;
+
+	SAFE_DELETE(path);
+	pathLength = 0;
 }
 
 void Client::RenderNewMaze()

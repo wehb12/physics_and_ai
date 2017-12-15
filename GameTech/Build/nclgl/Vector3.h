@@ -73,7 +73,7 @@ public:
 		return Vector3(-x,-y,-z);
 	}
 
-	static float	Dot(const Vector3 &a, const Vector3 &b) {
+	CUDA_CALLABLE_MEMBER static float	Dot(const Vector3 &a, const Vector3 &b) {
 		return (a.x*b.x)+(a.y*b.y)+(a.z*b.z);
 	}
 
@@ -98,13 +98,13 @@ public:
 		return Vector3(-x,-y,-z);
 	}
 
-	inline void operator+=(const Vector3  &a){
+	CUDA_CALLABLE_MEMBER inline void operator+=(const Vector3  &a){
 		x += a.x;
 		y += a.y;
 		z += a.z;
 	}
 
-	inline void operator-=(const Vector3  &a){
+	CUDA_CALLABLE_MEMBER inline void operator-=(const Vector3  &a){
 		x -= a.x;
 		y -= a.y;
 		z -= a.z;
@@ -118,11 +118,11 @@ public:
 		return Vector3(x * a.x,y * a.y, z * a.z);
 	}
 
-	inline Vector3  operator/(const Vector3  &a) const{
+	CUDA_CALLABLE_MEMBER inline Vector3  operator/(const Vector3  &a) const{
 		return Vector3(x / a.x,y / a.y, z / a.z);
 	};
 
-	inline Vector3  operator/(const float v) const{
+	CUDA_CALLABLE_MEMBER inline Vector3  operator/(const float v) const{
 		return Vector3(x / v,y / v, z / v);
 	};
 

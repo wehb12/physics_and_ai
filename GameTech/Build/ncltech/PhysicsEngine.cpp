@@ -7,7 +7,9 @@
 #include <algorithm>
 
 extern "C" int CUDA_run(Vector3* cu_pos, float* cu_radius,
-	Vector3* cu_velIn, Vector3* cu_velOut, int entities);
+	Vector3* cu_globalOnA, Vector3* cu_globalOnB,
+	Vector3* cu_normal, float* cu_penetration, int* cuda_nodeAIndex,
+	int* cuda_nodeBIndex, int entities);
 extern "C" bool CUDA_init(int arrSize);
 extern "C" bool CUDA_free();
 
@@ -40,10 +42,7 @@ PhysicsEngine::PhysicsEngine()
 PhysicsEngine::~PhysicsEngine()
 {
 	if (gpuAccel)
-	{
 		CUDA_free();
-		FreeCPUMemory();
-	}
 
 	RemoveAllPhysicsObjects();
 	TerminateOctree(root);
@@ -57,10 +56,7 @@ void PhysicsEngine::AddPhysicsObject(PhysicsNode* obj)
 		AddToOctree(root, obj);
 
 	if (gpuAccel)
-	{
 		CUDA_init(physicsNodes.size());
-		InitCPUMemory();
-	}
 }
 
 void PhysicsEngine::RemovePhysicsObject(PhysicsNode* obj)
@@ -158,17 +154,20 @@ void PhysicsEngine::UpdatePhysics()
 	perfSolver.UpdateRealElapsedTime(updateTimestep);
 
 	//A whole physics engine in 6 simple steps =D
-	
+
 	//-- Using positions from last frame --
-//1. Broadphase Collision Detection (Fast and dirty)
+	//1. Broadphase Collision Detection (Fast and dirty)
 	numSphereChecks = 0;
 	perfBroadphase.BeginTimingSection();
+#ifdef USE_CUDA
 	if (!gpuAccel)
 		BroadPhaseCollisions();
+#elif _WIN32
 	BroadPhaseCollisions();
+#endif
 	perfBroadphase.EndTimingSection();
 
-//2. Narrowphase Collision Detection (Accurate but slow)
+	//2. Narrowphase Collision Detection (Accurate but slow)
 	perfNarrowphase.BeginTimingSection();
 
 	if (gpuAccel)
@@ -180,19 +179,19 @@ void PhysicsEngine::UpdatePhysics()
 	std::random_shuffle(manifolds.begin(), manifolds.end());
 	std::random_shuffle(constraints.begin(), constraints.end());
 
-//3. Initialize Constraint Params (precompute elasticity/baumgarte factor etc)
+	//3. Initialize Constraint Params (precompute elasticity/baumgarte factor etc)
 	//Optional step to allow constraints to 
 	// precompute values based off current velocities 
 	// before they are updated loop below.
 	for (Manifold* m : manifolds) m->PreSolverStep(updateTimestep);
 	for (Constraint* c : constraints) c->PreSolverStep(updateTimestep);
 
-//4. Update Velocities
+	//4. Update Velocities
 	perfUpdate.BeginTimingSection();
 	for (PhysicsNode* obj : physicsNodes) obj->IntegrateForVelocity(updateTimestep);
 	perfUpdate.EndTimingSection();
 
-//5. Constraint Solver
+	//5. Constraint Solver
 	perfSolver.BeginTimingSection();
 	for (size_t i = 0; i < SOLVER_ITERATIONS; ++i)
 	{
@@ -201,7 +200,7 @@ void PhysicsEngine::UpdatePhysics()
 	}
 	perfSolver.EndTimingSection();
 
-//6. Update Positions (with final 'real' velocities)
+	//6. Update Positions (with final 'real' velocities)
 	perfUpdate.BeginTimingSection();
 	for (PhysicsNode* obj : physicsNodes) obj->IntegrateForPosition(updateTimestep);
 	perfUpdate.EndTimingSection();
@@ -243,7 +242,7 @@ void PhysicsEngine::BroadPhaseCollisions()
 						CollisionPair cp;
 						cp.pObjectA = pnodeA;
 						cp.pObjectB = pnodeB;
-						
+
 						bool spherePass = true;
 						if (sphereSphere)
 						{
@@ -435,7 +434,7 @@ void PhysicsEngine::AddToOctree(Octree* tree, PhysicsNode* pnode)
 		int num = -1;
 		for (int i = 0; i < 8; ++i)
 			if (zones[i]) num = i;
-		
+
 		Octree* leaf = tree->children[num];
 		if (!leaf)
 		{
@@ -514,7 +513,7 @@ void PhysicsEngine::UpdateNodePosition(PhysicsNode* pnode)
 		if (destroy) TerminateOctree(tree);
 		MoveUp(parent, pnode);
 	}
-	else 
+	else
 		AddToOctree(tree, pnode);
 }
 
@@ -607,7 +606,7 @@ bool PhysicsEngine::InOctree(Octree* tree, PhysicsNode* pnode)
 	// if the tree is the root, we want to check to see
 	// if ANY of the node is in the tree
 	if (tree == root)
-		radius = - radius;
+		radius = -radius;
 
 	float xBounds[2] = { pos.x - dims.x, pos.x + dims.x };
 	float yBounds[2] = { pos.y - dims.y, pos.y + dims.y };
@@ -688,7 +687,7 @@ void PhysicsEngine::NarrowPhaseCollisions()
 	if (broadphaseColPairs.size() > 0)
 	{
 		//Collision data to pass between detection and manifold generation stages.
-		CollisionData colData;				
+		CollisionData colData;
 
 		//Collision Detection Algorithm to use
 		CollisionDetectionSAT colDetect;
@@ -771,40 +770,27 @@ void PhysicsEngine::ToggleGPUAcceleration()
 	if (gpuAccel)
 	{
 		if (!CUDA_init(physicsNodes.size() - 5))
-			cout << "Error initialising GPU memory" << endl;
-		InitCPUMemory();
+			cout << "Error initialising CUDA memory" << endl;
+
+		for (int i = 0; i < physicsNodes.size(); ++i)
+		{
+
+		}
 	}
 	else
 	{
 		if (!CUDA_free())
-			cout << "Error freeing GPU memory" << endl;
-		FreeCPUMemory();
+			cout << "Error freeing CUDA memory" << endl;
 	}
-}
-
-void PhysicsEngine::InitCPUMemory()
-{
-	int arrSize = physicsNodes.size() - 5;   //5 is the number of walls and floors and ceilings
-	positions = new Vector3[arrSize];
-	radii = new float[arrSize];
-
-	int maxNumColPairs = arrSize * arrSize * 0.5;
-	velocityIn = new Vector3[maxNumColPairs];
-	velocityOut = new Vector3[maxNumColPairs];
-}
-
-void PhysicsEngine::FreeCPUMemory()
-{
-	delete[] positions;
-	delete[] radii;
-	delete[] velocityIn;
-	delete[] velocityOut;
 }
 
 void PhysicsEngine::GPUCollisionCheck()
 {
 	broadphaseColPairs.clear();
+
 	int arrSize = physicsNodes.size() - 5;   //5 is the number of walls and floors and ceilings
+	Vector3* positions = new Vector3[arrSize];
+	float* radii = new float[arrSize];
 
 	int index = 0;
 	for (int i = 0; i < physicsNodes.size(); ++i)
@@ -882,10 +868,16 @@ void PhysicsEngine::GPUCollisionCheck()
 
 		++index;
 	}
-	
-	CUDA_run(positions, radii, velocityIn, velocityOut, arrSize);
 
 	int maxNumColPairs = arrSize * arrSize * 0.5;
+	Vector3* globalOnA = new Vector3[maxNumColPairs];
+	Vector3* globalOnB = new Vector3[maxNumColPairs];
+	Vector3* normal = new Vector3[maxNumColPairs];
+	float* penetration = new float[maxNumColPairs];
+	int* indexA = new int[maxNumColPairs];
+	int* indexB = new int[maxNumColPairs];
+
+	CUDA_run(positions, radii, globalOnA, globalOnB, normal, penetration, indexA, indexB, arrSize);
 
 	for (int i = 0; i < maxNumColPairs; ++i)
 	{
@@ -908,6 +900,15 @@ void PhysicsEngine::GPUCollisionCheck()
 			}
 		}
 	}
+
+	delete[] positions;
+	delete[] radii;
+	delete[] globalOnA;
+	delete[] globalOnB;
+	delete[] normal;
+	delete[] penetration;
+	delete[] indexA;
+	delete[] indexB;
 }
 
 void PhysicsEngine::DebugRender()

@@ -87,6 +87,7 @@ public:
 					++next;
 				}
 			}
+			tempPath.push_back(*(prev));
 			finalPath.clear();
 			finalPath.assign(tempPath.begin(), tempPath.end());
 		}

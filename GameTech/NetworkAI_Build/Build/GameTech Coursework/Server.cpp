@@ -46,7 +46,7 @@ void Server::UpdateAvatarPositions(float sec)
 				else
 				{
 					(*it)->move = false;
-					(*it)->currentAvatarIndex = 0;
+					(*it)->currentAvatarIndex = (*it)->pathLength - 1;
 				}
 			}
 			BroadcastAvatarPosition(*it);

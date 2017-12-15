@@ -9,3 +9,13 @@ extern "C" void CUDA_run(Vector3* positions, float* radii,
 
 extern "C" bool CUDA_init(int arrSize);
 extern "C" bool CUDA_free();
+
+//#pragma once
+//
+//#include "../nclgl/Vector3.h"
+//
+//extern "C" void CUDA_run(Vector3* positions, float* radii,
+//	Vector3* velocityIn, Vector3* veolcityOut, int arrSize);
+//
+//extern "C" bool CUDA_init(int arrSize);
+//extern "C" bool CUDA_free();

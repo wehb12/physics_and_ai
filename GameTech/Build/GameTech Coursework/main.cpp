@@ -211,7 +211,7 @@ int main()
 {
 	//Initialize our Window, Physics, Scenes etc
 	Initialize();
-	GraphicsPipeline::Instance()->SetVsyncEnabled(false);
+	GraphicsPipeline::Instance()->SetVsyncEnabled(true);
 
 	Window::GetWindow().GetTimer()->GetTimedMS();
 
