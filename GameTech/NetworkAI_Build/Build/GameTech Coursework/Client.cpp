@@ -190,16 +190,17 @@ void Client::OnUpdateScene(float dt)
 	NCLDebug::AddStatusEntry(status_color, "    Incoming: %5.2fKbps", network.m_IncomingKb);
 	NCLDebug::AddStatusEntry(status_color, "    Outgoing: %5.2fKbps", network.m_OutgoingKb);
 	
+	Vector4 paramsColour = Vector4(1.0f, 0.2f, 0.2f, 1.0f);
+	NCLDebug::AddStatusEntry(paramsColour, "");
+	NCLDebug::AddStatusEntry(paramsColour, "Maze Parameters:");
+	NCLDebug::AddStatusEntry(paramsColour, "    Next Maze Size: %d [1/2] to change", mazeSize);
+		NCLDebug::AddStatusEntry(paramsColour, "    Next Maze Density: %5.2f [3/4] to change", mazeDensity);
 	if (maze)
 	{
-		Vector4 paramsColour = Vector4(1.0f, 0.2f, 0.2f, 1.0f);
 		NCLDebug::AddStatusEntry(paramsColour, "");
-		NCLDebug::AddStatusEntry(paramsColour, "Maze Parameters:");
+
 		NCLDebug::AddStatusEntry(paramsColour, "    Current Maze Size: %d", maze->size);
 		NCLDebug::AddStatusEntry(paramsColour, "    Current Maze Density: %5.2f", lastDensity);
-		NCLDebug::AddStatusEntry(paramsColour, "");
-		NCLDebug::AddStatusEntry(paramsColour, "    Next Maze Size: %d [1/2] to change", mazeSize);
-		NCLDebug::AddStatusEntry(paramsColour, "    Next Maze Density: %5.2f [3/4] to change", mazeDensity);
 		NCLDebug::AddStatusEntry(paramsColour, "    Use PhysicsEngine: %s [U] to toggle", usePhysics ? "YES" : "NO");
 		NCLDebug::AddStatusEntry(paramsColour, "");
 		NCLDebug::AddStatusEntry(paramsColour, "    Path Length: %d", pathLength);

@@ -13,7 +13,7 @@
 #define POOL_X 7
 #define POOL_Y 2.5f
 #define POOL_Z 7
-#define BALL_NUMBER 500
+#define BALL_NUMBER 450
 
 class CUDA_BallPool : public Scene
 {
@@ -76,6 +76,8 @@ public:
 		//create some balls
 		for (int i = 0; i < BALL_NUMBER; ++i)
 		{
+			float radius = (float)(rand() % 101) / (float)(100) * 0.4f + 0.3f;
+
 			Vector4 color = Vector4((float)(rand() % 101) / (float)(100), (float)(rand() % 101) / (float)(100), (float)(rand() % 101) / (float)(100), 1.0f);
 			float x = (float)(rand() % 101) / (float)(100) * ((POOL_X - 3) * 2) - (POOL_X - 3);
 			float y = (float)(rand() % 101) / (float)(100) * (POOL_Y + 20) + 2;
@@ -83,9 +85,9 @@ public:
 			GameObject* ball = CommonUtils::BuildSphereObject(
 				"ball" + to_string(i),
 				Vector3(x, y, z),
-				0.5f,
+				radius,
 				true,
-				0.1f,
+				0.005f / radius,
 				true,
 				true,
 				color);

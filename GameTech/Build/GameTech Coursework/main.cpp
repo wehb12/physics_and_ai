@@ -16,6 +16,7 @@ const Vector4 status_colour_header = Vector4(0.8f, 0.9f, 1.0f, 1.0f);
 
 bool draw_debug = true;
 bool show_perf_metrics = false;
+float firedRadius = 0.5f;
 PerfTimer timer_total, timer_physics, timer_update, timer_render;
 uint shadowCycleKey = 4;
 
@@ -72,6 +73,9 @@ void PrintStatusEntries()
 	NCLDebug::AddStatusEntry(status_colour, "     Monitor V-Sync: %s (Press V to toggle)", GraphicsPipeline::Instance()->GetVsyncEnabled() ? "Enabled " : "Disabled");
 	NCLDebug::AddStatusEntry(status_colour, "     Octrees       : %s [O]", PhysicsEngine::Instance()->Octrees() ? "Enabled" : "Disabled");
 	NCLDebug::AddStatusEntry(status_colour, "     Sphere-Sphere : %s [L]", PhysicsEngine::Instance()->SphereCheck() ? "Enabled" : "Disabled");
+	NCLDebug::AddStatusEntry(status_colour, "     Fire a sphere [J]");
+	NCLDebug::AddStatusEntry(status_colour, "     Fire a cube [K]");
+	NCLDebug::AddStatusEntry(status_colour, "     Use [+/-] to change fired entity size : %5.1f", firedRadius);
 	NCLDebug::AddStatusEntry(status_colour, "");
 
 	//Print Current Scene Name
@@ -80,7 +84,7 @@ void PrintStatusEntries()
 		SceneManager::Instance()->SceneCount(),
 		SceneManager::Instance()->GetCurrentScene()->GetSceneName().c_str()
 		);
-	NCLDebug::AddStatusEntry(status_colour, "     \x01 T/Y to cycle or R to reload scene");
+	NCLDebug::AddStatusEntry(status_colour, "     [T/Y] to cycle or R to reload scene");
 
 	//Print Performance Timers
 	NCLDebug::AddStatusEntry(status_colour, "     FPS: %5.2f  (Press H for %s info)", 1000.f / timer_total.GetAvg(), show_perf_metrics ? "less" : "more");
@@ -88,7 +92,8 @@ void PrintStatusEntries()
 	{
 		timer_total.PrintOutputToStatusEntry(status_colour, "          Total Time     :");
 		timer_update.PrintOutputToStatusEntry(status_colour, "          Scene Update   :");
-		timer_physics.PrintOutputToStatusEntry(status_colour, "          Physics Update :");
+		timer_physics.PrintOutputToStatusEntry(status_colour, "          Total Physics Update :");
+		PhysicsEngine::Instance()->PrintPerformanceTimers(status_colour);
 		timer_render.PrintOutputToStatusEntry(status_colour, "          Render Scene   :");
 
 		NCLDebug::AddStatusEntry(status_colour, "");
@@ -170,14 +175,14 @@ void HandleKeyboardInputs()
 		GameObject* sphere = CommonUtils::BuildSphereObject(
 			"fired_sphere",					// Optional: Name
 			GraphicsPipeline::Instance()->GetCamera()->GetPosition(),		// Position
-			0.5f,				// Half-Dimensions
+			firedRadius,				// Half-Dimensions
 			true,				// Physics Enabled?
-			0.01f,				// Physical Mass (must have physics enabled)
+			0.005f / firedRadius,				// Physical Mass (must have physics enabled)
 			true,				// Physically Collidable (has collision shape)
 			true,				// Dragable by user?
 			Vector4(1.0f, 1.0f, 0.0f, 1.0f));// Render color
 		Matrix4 view = GraphicsPipeline::Instance()->GetCamera()->BuildViewMatrix();
-		Vector3 dir = Vector3(30 * view[2], 30 * view[6], 30 * view[10]);
+		Vector3 dir = Vector3(60 * firedRadius * view[2], 60 * firedRadius * view[6], 60 * firedRadius * view[10]);
 		sphere->Physics()->SetLinearVelocity(-dir);
 
 		SceneManager::Instance()->GetCurrentScene()->AddGameObject(sphere);
@@ -189,18 +194,23 @@ void HandleKeyboardInputs()
 		GameObject* cuboid = CommonUtils::BuildCuboidObject(
 			"fired_cube",					// Optional: Name
 			GraphicsPipeline::Instance()->GetCamera()->GetPosition(),		// Position
-			Vector3(0.5f, 0.5f, 0.5f),				// Half-Dimensions
+			Vector3(firedRadius, firedRadius, firedRadius),				// Half-Dimensions
 			true,				// Physics Enabled?
-			0.01f,				// Physical Mass (must have physics enabled)
+			0.005f / firedRadius,				// Physical Mass (must have physics enabled)
 			true,				// Physically Collidable (has collision shape)
 			true,				// Dragable by user?
 			Vector4(0.0f, 1.0f, 1.0f, 1.0f));// Render color
 		Matrix4 view = GraphicsPipeline::Instance()->GetCamera()->BuildViewMatrix();
-		Vector3 dir = Vector3(30 * view[2], 30 * view[6], 30 * view[10]);
+		Vector3 dir = Vector3(60 * firedRadius * view[2], 60 * firedRadius * view[6], 60 * firedRadius * view[10]);
 		cuboid->Physics()->SetLinearVelocity(-dir);
 
 		SceneManager::Instance()->GetCurrentScene()->AddGameObject(cuboid);
 	}
+
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_PLUS))
+		firedRadius = (firedRadius >= 0.7f) ? 0.7f : firedRadius + 0.1f;
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_MINUS))
+		firedRadius = (firedRadius <= 0.3f) ? 0.3f : firedRadius - 0.1f;
 
 	PhysicsEngine::Instance()->SetDebugDrawFlags(drawFlags);
 }
